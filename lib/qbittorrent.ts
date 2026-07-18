@@ -17,7 +17,8 @@ export type QBittorrentTorrent = {
 };
 
 type Session = {
-  cookie: string;
+  cookie: string | null;
+  basicAuth: string;
   expiresAt: number;
 };
 
@@ -33,12 +34,21 @@ function getConfig() {
   const baseUrl = readEnv("QBITTORRENT_URL")?.replace(/\/+$/, "");
   const username = readEnv("QBITTORRENT_USERNAME");
   const password = readEnv("QBITTORRENT_PASSWORD");
+  const sidOverride = readEnv("QBITTORRENT_SID");
 
   if (!baseUrl || !username || !password) {
     throw new QBitError("qBittorrent is not configured", 500);
   }
 
-  return { baseUrl, username, password };
+  return { baseUrl, username, password, sidOverride };
+}
+
+function basicAuthHeader(username: string, password: string): string {
+  const raw = `${username}:${password}`;
+  const bytes = new TextEncoder().encode(raw);
+  let binary = "";
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return `Basic ${btoa(binary)}`;
 }
 
 /** Origin without default :443/:80 — qBittorrent CSRF compares these strictly. */
@@ -53,45 +63,107 @@ function requestOrigin(baseUrl: string): string {
   return url.origin;
 }
 
-function qbHeaders(baseUrl: string, extra?: HeadersInit): Headers {
+function qbHeaders(
+  baseUrl: string,
+  session: Pick<Session, "cookie" | "basicAuth">,
+  extra?: HeadersInit
+): Headers {
   const origin = requestOrigin(baseUrl);
   const headers = new Headers(extra);
   headers.set("Referer", `${origin}/`);
   headers.set("Origin", origin);
+  headers.set("Authorization", session.basicAuth);
+  if (session.cookie) {
+    headers.set("Cookie", session.cookie);
+  }
+  if (!headers.has("User-Agent")) {
+    headers.set(
+      "User-Agent",
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    );
+  }
+  if (!headers.has("Accept")) {
+    headers.set("Accept", "text/plain, */*");
+  }
   return headers;
+}
+
+function collectSetCookieHeaders(res: Response): string[] {
+  const headers = res.headers as Headers & {
+    getSetCookie?: () => string[];
+    getAll?: (name: string) => string[];
+  };
+
+  if (typeof headers.getSetCookie === "function") {
+    const list = headers.getSetCookie();
+    if (list.length > 0) return list;
+  }
+
+  if (typeof headers.getAll === "function") {
+    try {
+      const list = headers.getAll("Set-Cookie");
+      if (list.length > 0) return list;
+    } catch {
+      // ignore
+    }
+  }
+
+  const single = headers.get("set-cookie");
+  if (single) return [single];
+
+  return [];
 }
 
 function extractSidCookie(setCookieHeaders: string[]): string | null {
   for (const header of setCookieHeaders) {
-    const match = header.match(/(?:^|,\s*)SID=([^;]+)/i);
-    if (match) {
-      return `SID=${match[1]}`;
-    }
-  }
-  for (const header of setCookieHeaders) {
-    if (header.includes("SID=")) {
-      const part = header.split(";").find((p) => p.trim().startsWith("SID="));
-      if (part) return part.trim();
+    const match = header.match(/(?:^|[,\s])SID=([^;,\s]+)/i);
+    if (match?.[1]) {
+      const value = match[1].replace(/^"|"$/g, "");
+      if (value) return `SID=${value}`;
     }
   }
   return null;
 }
 
-async function login(force = false): Promise<string> {
+async function ensureSession(force = false): Promise<Session> {
   if (!force && cachedSession && cachedSession.expiresAt > Date.now()) {
-    return cachedSession.cookie;
+    return cachedSession;
   }
 
-  const { baseUrl, username, password } = getConfig();
+  const { baseUrl, username, password, sidOverride } = getConfig();
+  const basicAuth = basicAuthHeader(username, password);
+
+  if (sidOverride) {
+    const cookie = sidOverride.startsWith("SID=")
+      ? sidOverride
+      : `SID=${sidOverride}`;
+    cachedSession = {
+      cookie,
+      basicAuth,
+      expiresAt: Date.now() + 55 * 60 * 1000,
+    };
+    return cachedSession;
+  }
+
   const body = new URLSearchParams({ username, password });
+  const origin = requestOrigin(baseUrl);
+
+  // Form login without Basic Auth first — some proxies short-circuit to 204
+  // when Authorization is present and never return qBittorrent's SID cookie.
+  const loginHeaders = new Headers({
+    "Content-Type": "application/x-www-form-urlencoded",
+    Referer: `${origin}/`,
+    Origin: origin,
+    Accept: "text/plain, */*",
+    "User-Agent":
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+  });
 
   let res: Response;
   try {
     res = await fetch(`${baseUrl}/api/v2/auth/login`, {
       method: "POST",
-      headers: qbHeaders(baseUrl, {
-        "Content-Type": "application/x-www-form-urlencoded",
-      }),
+      headers: loginHeaders,
       body,
       cache: "no-store",
       redirect: "manual",
@@ -103,26 +175,16 @@ async function login(force = false): Promise<string> {
   }
 
   const text = (await res.text()).trim();
-
-  const getSetCookie = (
-    res.headers as Headers & { getSetCookie?: () => string[] }
-  ).getSetCookie?.();
-  const setCookieRaw = res.headers.get("set-cookie");
-  const cookies = getSetCookie?.length
-    ? getSetCookie
-    : setCookieRaw
-      ? [setCookieRaw]
-      : [];
-
-  const cookie = extractSidCookie(cookies);
-
-  // Classic qBittorrent: 200 + "Ok."
-  // Some proxies/versions: 204 No Content (empty body) with SID cookie
+  const cookie = extractSidCookie(collectSetCookieHeaders(res));
   const bodyOk = text === "Ok." || text === "Ok";
-  const loginSucceeded =
-    res.ok && (bodyOk || res.status === 204 || Boolean(cookie));
 
-  if (!loginSucceeded) {
+  // Success shapes:
+  // - Classic qBittorrent: 200 + "Ok." (+ SID cookie)
+  // - Proxy/auth_request: 204 with no body/cookie — API may still work via Basic Auth
+  // - SID cookie present on any 2xx
+  const loginOk = res.ok && (bodyOk || res.status === 204 || Boolean(cookie));
+
+  if (!loginOk) {
     cachedSession = null;
     const snippet = text ? `: ${text.slice(0, 80)}` : "";
     throw new QBitError(
@@ -131,20 +193,53 @@ async function login(force = false): Promise<string> {
     );
   }
 
-  if (!cookie) {
+  cachedSession = {
+    cookie,
+    basicAuth,
+    expiresAt: Date.now() + 55 * 60 * 1000,
+  };
+
+  // Verify the session can actually list torrents.
+  const probe = await fetch(`${baseUrl}/api/v2/torrents/info`, {
+    method: "GET",
+    headers: qbHeaders(baseUrl, cachedSession),
+    cache: "no-store",
+  });
+
+  if (!probe.ok) {
+    // Retry probe with Basic Auth only (no cookie) in case SID was required
+    // but missing, and reverse proxy accepts Basic Auth instead.
+    const basicOnly: Session = {
+      cookie: null,
+      basicAuth,
+      expiresAt: cachedSession.expiresAt,
+    };
+    const probeBasic = await fetch(`${baseUrl}/api/v2/torrents/info`, {
+      method: "GET",
+      headers: qbHeaders(baseUrl, basicOnly),
+      cache: "no-store",
+    });
+
+    if (probeBasic.ok) {
+      cachedSession = basicOnly;
+      return cachedSession;
+    }
+
+    const probeText = (await probe.text().catch(() => "")).trim();
     cachedSession = null;
     throw new QBitError(
-      `qBittorrent login did not return SID cookie (${res.status})`,
+      `qBittorrent auth probe failed (${probe.status})${
+        probeText
+          ? `: ${probeText.slice(0, 80)}`
+          : cookie
+            ? ""
+            : " (no SID cookie; Basic Auth also failed)"
+      }`,
       502
     );
   }
 
-  cachedSession = {
-    cookie,
-    expiresAt: Date.now() + 55 * 60 * 1000,
-  };
-
-  return cookie;
+  return cachedSession;
 }
 
 async function qbFetch(
@@ -153,10 +248,9 @@ async function qbFetch(
   retried = false
 ): Promise<Response> {
   const { baseUrl } = getConfig();
-  const cookie = await login(false);
+  const session = await ensureSession(false);
 
-  const headers = qbHeaders(baseUrl, init.headers);
-  headers.set("Cookie", cookie);
+  const headers = qbHeaders(baseUrl, session, init.headers);
 
   const res = await fetch(`${baseUrl}${path}`, {
     ...init,
@@ -164,9 +258,9 @@ async function qbFetch(
     cache: "no-store",
   });
 
-  if (res.status === 403 && !retried) {
+  if ((res.status === 401 || res.status === 403) && !retried) {
     cachedSession = null;
-    await login(true);
+    await ensureSession(true);
     return qbFetch(path, init, true);
   }
 
