@@ -58,7 +58,7 @@ npm run preview
 |------|------|
 | `TELEGRAM_BOT_TOKEN` | BotFather 給的 Bot Token |
 | `ALLOWED_TELEGRAM_USER_IDS` | 允許的 User ID，多個用逗號分隔 |
-| `QBITTORRENT_URL` | qBittorrent 公網基底 URL，例如 `https://qb.example.com`（不要結尾 `/`） |
+| `QBITTORRENT_URL` | qBittorrent 公網基底 URL，例如 `https://qb.example.com`（不要加 `:443`、不要結尾 `/`） |
 | `QBITTORRENT_USERNAME` | Web UI 使用者名稱 |
 | `QBITTORRENT_PASSWORD` | Web UI 密碼 |
 
@@ -92,9 +92,16 @@ npm run preview
 | Variable | 說明 |
 |----------|------|
 | `ALLOWED_TELEGRAM_USER_IDS` | 允許的 User ID，多個用逗號分隔 |
-| `QBITTORRENT_URL` | qBittorrent 公網基底 URL，例如 `https://qb.example.com` |
+| `QBITTORRENT_URL` | qBittorrent 公網基底 URL，例如 `https://qb.example.com`（不要加 `:443`、不要結尾 `/`） |
 
 部署時 Workflow 會把這些值同步到 Cloudflare Worker secrets，不必本機執行 `wrangler secret put`。
+
+若 Mini App 顯示登入失敗，請確認：
+
+1. `QBITTORRENT_URL` / 帳密與瀏覽器能登入 Web UI 的相同
+2. URL 為 `https://host`（不要 `https://host:443`）
+3. qBittorrent Web UI 若開了 CSRF，本 App 會自動帶 `Referer`/`Origin`；仍失敗可暫時關閉 CSRF 測試
+4. 重新整理 Mini App，看錯誤是否含狀態碼與回應內容（例如 `Fails.` 多半是帳密錯誤）
 
 ### 3. 推送到 main / master
 

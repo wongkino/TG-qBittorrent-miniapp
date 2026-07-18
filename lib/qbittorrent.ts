@@ -23,16 +23,42 @@ type Session = {
 
 let cachedSession: Session | null = null;
 
+function readEnv(name: string): string | undefined {
+  const value = process.env[name];
+  if (typeof value === "string" && value.trim()) return value.trim();
+  return undefined;
+}
+
 function getConfig() {
-  const baseUrl = process.env.QBITTORRENT_URL?.replace(/\/+$/, "");
-  const username = process.env.QBITTORRENT_USERNAME;
-  const password = process.env.QBITTORRENT_PASSWORD;
+  const baseUrl = readEnv("QBITTORRENT_URL")?.replace(/\/+$/, "");
+  const username = readEnv("QBITTORRENT_USERNAME");
+  const password = readEnv("QBITTORRENT_PASSWORD");
 
   if (!baseUrl || !username || !password) {
     throw new QBitError("qBittorrent is not configured", 500);
   }
 
   return { baseUrl, username, password };
+}
+
+/** Origin without default :443/:80 — qBittorrent CSRF compares these strictly. */
+function requestOrigin(baseUrl: string): string {
+  const url = new URL(baseUrl);
+  if (
+    (url.protocol === "https:" && url.port === "443") ||
+    (url.protocol === "http:" && url.port === "80")
+  ) {
+    url.port = "";
+  }
+  return url.origin;
+}
+
+function qbHeaders(baseUrl: string, extra?: HeadersInit): Headers {
+  const origin = requestOrigin(baseUrl);
+  const headers = new Headers(extra);
+  headers.set("Referer", `${origin}/`);
+  headers.set("Origin", origin);
+  return headers;
 }
 
 function extractSidCookie(setCookieHeaders: string[]): string | null {
@@ -42,7 +68,6 @@ function extractSidCookie(setCookieHeaders: string[]): string | null {
       return `SID=${match[1]}`;
     }
   }
-  // Some runtimes join cookies; also try simple SID=
   for (const header of setCookieHeaders) {
     if (header.includes("SID=")) {
       const part = header.split(";").find((p) => p.trim().startsWith("SID="));
@@ -60,19 +85,31 @@ async function login(force = false): Promise<string> {
   const { baseUrl, username, password } = getConfig();
   const body = new URLSearchParams({ username, password });
 
-  const res = await fetch(`${baseUrl}/api/v2/auth/login`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body,
-    cache: "no-store",
-  });
-
-  const text = await res.text();
-  if (!res.ok || text.trim() !== "Ok.") {
+  let res: Response;
+  try {
+    res = await fetch(`${baseUrl}/api/v2/auth/login`, {
+      method: "POST",
+      headers: qbHeaders(baseUrl, {
+        "Content-Type": "application/x-www-form-urlencoded",
+      }),
+      body,
+      cache: "no-store",
+      redirect: "manual",
+    });
+  } catch (err) {
     cachedSession = null;
-    throw new QBitError("Failed to login to qBittorrent", 502);
+    const detail = err instanceof Error ? err.message : "network error";
+    throw new QBitError(`Failed to reach qBittorrent (${detail})`, 502);
+  }
+
+  const text = (await res.text()).trim();
+  if (!res.ok || text !== "Ok.") {
+    cachedSession = null;
+    const snippet = text ? `: ${text.slice(0, 80)}` : "";
+    throw new QBitError(
+      `Failed to login to qBittorrent (${res.status})${snippet}`,
+      502
+    );
   }
 
   const getSetCookie = (
@@ -91,7 +128,6 @@ async function login(force = false): Promise<string> {
     throw new QBitError("qBittorrent login did not return SID cookie", 502);
   }
 
-  // Cache for ~55 minutes (SID typically lasts longer; refresh early)
   cachedSession = {
     cookie,
     expiresAt: Date.now() + 55 * 60 * 1000,
@@ -108,7 +144,7 @@ async function qbFetch(
   const { baseUrl } = getConfig();
   const cookie = await login(false);
 
-  const headers = new Headers(init.headers);
+  const headers = qbHeaders(baseUrl, init.headers);
   headers.set("Cookie", cookie);
 
   const res = await fetch(`${baseUrl}${path}`, {
