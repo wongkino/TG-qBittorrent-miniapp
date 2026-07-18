@@ -20,9 +20,12 @@ npm run dev
 |----------|------|
 | `ALLOWED_TELEGRAM_USER_IDS` | 允許的 User ID（Bot / 完成通知） |
 | `QBITTORRENT_URL` | 例如 `https://dl.example.com` |
-| `APP_URL` | 例如 `https://tg-dl.<subdomain>.workers.dev` |
+| `APP_URL` | **部署時自動寫入**（`https://tg-dl.<subdomain>.workers.dev`），通常不必手動設 |
 
-部署時會自動 `setWebhook` 到 `$APP_URL/api/telegram/webhook`。
+每次 Deploy 成功後會：
+1. 向 Cloudflare 查詢 workers.dev 子網域，算出 `APP_URL`
+2. 存成 GitHub Variable `APP_URL`
+3. 自動 `setWebhook` 到 `$APP_URL/api/telegram/webhook`
 
 ## Bot 指令
 
@@ -44,4 +47,4 @@ npm run dev
 
 ## 下載完成通知
 
-[notify workflow](.github/workflows/notify-completions.yml) 每 2 分鐘檢查一次近 15 分鐘內完成的種子。
+[notify workflow](.github/workflows/notify-completions.yml) 每 2 分鐘檢查一次近 15 分鐘內完成的種子（使用自動寫入的 `APP_URL`）。
