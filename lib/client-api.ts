@@ -101,15 +101,20 @@ export function addTorrentUrl(
 /** Proxied HTML for in-app browse (magnet interception). */
 export async function fetchBrowseHtml(
   initData: string,
-  pageUrl: string
-): Promise<string> {
-  const res = await fetch(
-    `/api/browse?url=${encodeURIComponent(pageUrl)}`,
-    {
-      headers: { Authorization: `tma ${initData}` },
-      cache: "no-store",
-    }
-  );
+  pageUrl: string,
+  cookieHeader?: string
+): Promise<{ html: string; finalUrl: string; setCookies: string[] }> {
+  const headers: Record<string, string> = {
+    Authorization: `tma ${initData}`,
+  };
+  if (cookieHeader?.trim()) {
+    headers["X-Browse-Cookie"] = cookieHeader.trim();
+  }
+
+  const res = await fetch(`/api/browse?url=${encodeURIComponent(pageUrl)}`, {
+    headers,
+    cache: "no-store",
+  });
   if (!res.ok) {
     let message = `Browse failed (${res.status})`;
     try {
@@ -120,5 +125,22 @@ export async function fetchBrowseHtml(
     }
     throw new Error(message);
   }
-  return res.text();
+
+  const html = await res.text();
+  const finalUrl = res.headers.get("X-Browse-Final-Url") || pageUrl;
+  let setCookies: string[] = [];
+  const encoded = res.headers.get("X-Browse-Set-Cookie");
+  if (encoded) {
+    try {
+      const json =
+        typeof atob === "function"
+          ? atob(encoded)
+          : Buffer.from(encoded, "base64").toString("utf8");
+      const parsed = JSON.parse(json) as unknown;
+      setCookies = Array.isArray(parsed) ? (parsed as string[]) : [];
+    } catch {
+      setCookies = [];
+    }
+  }
+  return { html, finalUrl, setCookies };
 }

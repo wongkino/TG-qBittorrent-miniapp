@@ -1,4 +1,7 @@
 import { env } from "@/lib/env";
+import { mergeCookieHeader } from "@/lib/browse-cookies";
+
+export { mergeCookieHeader };
 
 const MAX_BYTES = 1_500_000;
 const FETCH_TIMEOUT_MS = 15_000;
@@ -12,6 +15,12 @@ export class BrowseError extends Error {
   }
 }
 
+export type BrowseResult = {
+  html: string;
+  finalUrl: string;
+  setCookies: string[];
+};
+
 function isPrivateIPv4(host: string): boolean {
   const parts = host.split(".").map((p) => Number(p));
   if (parts.length !== 4 || parts.some((n) => !Number.isFinite(n) || n < 0 || n > 255)) {
@@ -24,7 +33,7 @@ function isPrivateIPv4(host: string): boolean {
   if (a === 169 && b === 254) return true;
   if (a === 172 && b >= 16 && b <= 31) return true;
   if (a === 192 && b === 168) return true;
-  if (a === 100 && b >= 64 && b <= 127) return true; // CGNAT
+  if (a === 100 && b >= 64 && b <= 127) return true;
   return false;
 }
 
@@ -75,6 +84,17 @@ export function assertBrowsableUrl(raw: string): URL {
   return url;
 }
 
+function readSetCookies(res: Response): string[] {
+  const headers = res.headers as Headers & {
+    getSetCookie?: () => string[];
+  };
+  if (typeof headers.getSetCookie === "function") {
+    return headers.getSetCookie();
+  }
+  const single = res.headers.get("set-cookie");
+  return single ? [single] : [];
+}
+
 function injectBrowseBridge(html: string, pageUrl: string): string {
   const baseHref = pageUrl;
   const bridge = `
@@ -115,15 +135,23 @@ function injectBrowseBridge(html: string, pageUrl: string): string {
     return false;
   }
 
-  // Many "popup" buttons use window.open instead of <a href>.
-  try {
-    window.open = function (url) {
-      handleUrl(url);
-      return null;
-    };
-  } catch (e) {}
+  function patchOpen() {
+    try {
+      Object.defineProperty(window, "open", {
+        configurable: true,
+        writable: true,
+        value: function (url) {
+          handleUrl(url);
+          return null;
+        }
+      });
+    } catch (e) {
+      try { window.open = function (url) { handleUrl(url); return null; }; } catch (e2) {}
+    }
+  }
+  patchOpen();
+  setInterval(patchOpen, 1000);
 
-  // Some sites assign location to open downloads / magnets.
   try {
     var _assign = Location.prototype.assign;
     Location.prototype.assign = function (url) {
@@ -137,23 +165,38 @@ function injectBrowseBridge(html: string, pageUrl: string): string {
     };
   } catch (e) {}
 
+  // Age-gate (e.g. javdb "請注意"): auto-confirm so cookies can be stored by parent.
+  try {
+    var age = document.querySelector(".over18-modal.is-active a.button.is-success[href]");
+    if (age) {
+      var ageHref = age.getAttribute("href") || age.href;
+      if (ageHref) {
+        setTimeout(function () { handleUrl(ageHref); }, 50);
+      }
+    }
+  } catch (e) {}
+
   document.addEventListener("click", function (e) {
-    var a = e.target && e.target.closest ? e.target.closest("a") : null;
+    var t = e.target;
+    if (!t || !t.closest) return;
+
+    // ClipboardJS "複製" magnet buttons
+    var copyBtn = t.closest(".copy-to-clipboard, [data-clipboard-text]");
+    if (copyBtn) {
+      var clip = copyBtn.getAttribute("data-clipboard-text") || "";
+      if (clip.indexOf("magnet:") === 0 || /\\.torrent(\\?|#|$)/i.test(clip)) {
+        e.preventDefault();
+        e.stopPropagation();
+        send("add", clip);
+        return;
+      }
+    }
+
+    var a = t.closest("a");
     if (!a) return;
     var href = a.getAttribute("href") || a.href;
     if (!href || href.charAt(0) === "#") return;
-    if (handleUrl(href)) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-  }, true);
-
-  // Catch delayed popup patterns (e.g. setTimeout + open).
-  document.addEventListener("auxclick", function (e) {
-    if (e.button !== 1) return;
-    var a = e.target && e.target.closest ? e.target.closest("a") : null;
-    if (!a) return;
-    var href = a.getAttribute("href") || a.href;
+    if (href.indexOf("javascript:") === 0) return;
     if (handleUrl(href)) {
       e.preventDefault();
       e.stopPropagation();
@@ -175,31 +218,66 @@ function injectBrowseBridge(html: string, pageUrl: string): string {
   return out;
 }
 
-export async function fetchBrowsableHtml(target: URL): Promise<string> {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
-  let res: Response;
-  try {
-    res = await fetch(target.toString(), {
-      redirect: "follow",
-      signal: controller.signal,
-      headers: {
+export async function fetchBrowsableHtml(
+  target: URL,
+  cookieHeader?: string
+): Promise<BrowseResult> {
+  let cookie = cookieHeader?.trim() || "";
+  let current = target.toString();
+  const allSetCookies: string[] = [];
+  let res: Response | null = null;
+
+  for (let hop = 0; hop < 8; hop++) {
+    assertBrowsableUrl(current);
+
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+    try {
+      const headers: Record<string, string> = {
         "User-Agent":
-          "Mozilla/5.0 (compatible; tg-dl-browse/1.0; +https://github.com/wongkino/TG-qBittorrent-miniapp)",
+          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
         Accept: "text/html,application/xhtml+xml;q=0.9,*/*;q=0.8",
-      },
-    });
-  } catch (err) {
-    if (err instanceof Error && err.name === "AbortError") {
-      throw new BrowseError("連線逾時", 504);
+        "Accept-Language": "zh-TW,zh;q=0.9,en;q=0.8",
+      };
+      if (cookie) headers.Cookie = cookie;
+
+      res = await fetch(current, {
+        redirect: "manual",
+        signal: controller.signal,
+        headers,
+      });
+    } catch (err) {
+      if (err instanceof Error && err.name === "AbortError") {
+        throw new BrowseError("連線逾時", 504);
+      }
+      throw new BrowseError("無法連線目標網站", 502);
+    } finally {
+      clearTimeout(timer);
     }
-    throw new BrowseError("無法連線目標網站", 502);
-  } finally {
-    clearTimeout(timer);
+
+    const setCookies = readSetCookies(res);
+    if (setCookies.length) {
+      allSetCookies.push(...setCookies);
+      cookie = mergeCookieHeader(cookie, setCookies);
+    }
+
+    if (res.status >= 300 && res.status < 400) {
+      const location = res.headers.get("location");
+      if (!location) {
+        throw new BrowseError("重新導向缺少 Location", 502);
+      }
+      current = new URL(location, current).toString();
+      continue;
+    }
+
+    break;
   }
 
-  // Re-validate after redirects
-  assertBrowsableUrl(res.url);
+  if (!res) {
+    throw new BrowseError("無法連線目標網站", 502);
+  }
+
+  assertBrowsableUrl(current);
 
   if (!res.ok) {
     throw new BrowseError(`目標網站回傳 ${res.status}`, 502);
@@ -219,5 +297,9 @@ export async function fetchBrowsableHtml(target: URL): Promise<string> {
   }
 
   const html = new TextDecoder("utf-8", { fatal: false }).decode(buf);
-  return injectBrowseBridge(html, res.url);
+  return {
+    html: injectBrowseBridge(html, current),
+    finalUrl: current,
+    setCookies: allSetCookies,
+  };
 }

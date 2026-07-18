@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { addTorrentUrl, fetchBrowseHtml } from "@/lib/client-api";
+import { mergeCookieHeader } from "@/lib/browse-cookies";
 
 type Shortcut = { id: string; label: string; url: string };
 
@@ -12,12 +13,13 @@ type Props = {
 };
 
 const STORAGE_KEY = "tg-dl-browse-shortcuts";
+const COOKIE_KEY = "tg-dl-browse-cookies";
 
 const DEFAULT_SHORTCUTS: Shortcut[] = [
   {
-    id: "example",
-    label: "範例（可刪）",
-    url: "https://example.com",
+    id: "javdb",
+    label: "JavDB",
+    url: "https://javdb.com",
   },
 ];
 
@@ -37,12 +39,35 @@ function saveShortcuts(list: Shortcut[]) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
 }
 
+function loadCookieJar(): Record<string, string> {
+  try {
+    const raw = localStorage.getItem(COOKIE_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw) as Record<string, string>;
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveCookieJar(jar: Record<string, string>) {
+  localStorage.setItem(COOKIE_KEY, JSON.stringify(jar));
+}
+
+function cookieHost(pageUrl: string): string {
+  try {
+    return new URL(pageUrl).hostname;
+  } catch {
+    return pageUrl;
+  }
+}
+
 function errMessage(err: unknown, fallback: string) {
   return err instanceof Error ? err.message : fallback;
 }
 
 export function BrowserPanel({ initData, categories, onAdded }: Props) {
-  const [urlInput, setUrlInput] = useState("https://");
+  const [urlInput, setUrlInput] = useState("https://javdb.com");
   const [currentUrl, setCurrentUrl] = useState<string | null>(null);
   const [html, setHtml] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -53,6 +78,10 @@ export function BrowserPanel({ initData, categories, onAdded }: Props) {
     typeof window === "undefined" ? DEFAULT_SHORTCUTS : loadShortcuts()
   );
   const [adding, setAdding] = useState(false);
+  const cookieJar = useRef<Record<string, string>>(
+    typeof window === "undefined" ? {} : loadCookieJar()
+  );
+  const openGen = useRef(0);
 
   const persist = useCallback((next: Shortcut[]) => {
     setShortcuts(next);
@@ -63,19 +92,39 @@ export function BrowserPanel({ initData, categories, onAdded }: Props) {
     async (raw: string) => {
       const trimmed = raw.trim();
       if (!trimmed) return;
+      const gen = ++openGen.current;
       setLoading(true);
       setError(null);
       setStatus(null);
       try {
-        const page = await fetchBrowseHtml(initData, trimmed);
-        setHtml(page);
-        setCurrentUrl(trimmed);
-        setUrlInput(trimmed);
+        const host = cookieHost(trimmed);
+        const existing = cookieJar.current[host] || "";
+        const page = await fetchBrowseHtml(initData, trimmed, existing || undefined);
+        if (gen !== openGen.current) return;
+
+        if (page.setCookies.length > 0) {
+          const merged = mergeCookieHeader(existing, page.setCookies);
+          cookieJar.current = { ...cookieJar.current, [host]: merged };
+          // Also store under final URL host if redirected to another subdomain.
+          const finalHost = cookieHost(page.finalUrl);
+          if (finalHost !== host) {
+            cookieJar.current[finalHost] = mergeCookieHeader(
+              cookieJar.current[finalHost] || "",
+              page.setCookies
+            );
+          }
+          saveCookieJar(cookieJar.current);
+        }
+
+        setHtml(page.html);
+        setCurrentUrl(page.finalUrl);
+        setUrlInput(page.finalUrl);
       } catch (err) {
+        if (gen !== openGen.current) return;
         setHtml(null);
         setError(errMessage(err, "無法載入頁面"));
       } finally {
-        setLoading(false);
+        if (gen === openGen.current) setLoading(false);
       }
     },
     [initData]
@@ -142,7 +191,7 @@ export function BrowserPanel({ initData, categories, onAdded }: Props) {
   return (
     <section className="browse">
       <p className="hint browse__intro">
-        經代理開啟網頁並攔截 magnet／.torrent（含彈窗／window.open）。部分網站可能無法完整顯示。
+        經代理開啟網頁。會自動處理年齡確認（如 JavDB「請注意」），並攔截 magnet／複製按鈕／彈窗下載。
       </p>
 
       <form
