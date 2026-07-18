@@ -1,0 +1,71 @@
+name: Deploy to Cloudflare Workers
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-cloudflare
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Build & Deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Deploy to Cloudflare Workers
+        run: npm run deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Sync Worker secrets from GitHub
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          QBITTORRENT_USERNAME: ${{ secrets.QBITTORRENT_USERNAME }}
+          QBITTORRENT_PASSWORD: ${{ secrets.QBITTORRENT_PASSWORD }}
+          ALLOWED_TELEGRAM_USER_IDS: ${{ vars.ALLOWED_TELEGRAM_USER_IDS }}
+          QBITTORRENT_URL: ${{ vars.QBITTORRENT_URL }}
+        run: |
+          python3 <<'PY'
+          import json
+          import os
+          import sys
+
+          keys = [
+              "TELEGRAM_BOT_TOKEN",
+              "ALLOWED_TELEGRAM_USER_IDS",
+              "QBITTORRENT_URL",
+              "QBITTORRENT_USERNAME",
+              "QBITTORRENT_PASSWORD",
+          ]
+          missing = [k for k in keys if not os.environ.get(k, "").strip()]
+          if missing:
+              print(
+                  "Missing required GitHub Actions secrets/vars: "
+                  + ", ".join(missing),
+                  file=sys.stderr,
+              )
+              sys.exit(1)
+
+          with open("worker-secrets.json", "w", encoding="utf-8") as f:
+              json.dump({k: os.environ[k] for k in keys}, f)
+          PY
+          npx wrangler secret bulk worker-secrets.json
+          rm -f worker-secrets.json
