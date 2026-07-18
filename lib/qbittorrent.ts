@@ -34,13 +34,12 @@ function getConfig() {
   const baseUrl = readEnv("QBITTORRENT_URL")?.replace(/\/+$/, "");
   const username = readEnv("QBITTORRENT_USERNAME");
   const password = readEnv("QBITTORRENT_PASSWORD");
-  const sidOverride = readEnv("QBITTORRENT_SID");
 
   if (!baseUrl || !username || !password) {
     throw new QBitError("qBittorrent is not configured", 500);
   }
 
-  return { baseUrl, username, password, sidOverride };
+  return { baseUrl, username, password };
 }
 
 function basicAuthHeader(username: string, password: string): string {
@@ -130,20 +129,8 @@ async function ensureSession(force = false): Promise<Session> {
     return cachedSession;
   }
 
-  const { baseUrl, username, password, sidOverride } = getConfig();
+  const { baseUrl, username, password } = getConfig();
   const basicAuth = basicAuthHeader(username, password);
-
-  if (sidOverride) {
-    const cookie = sidOverride.startsWith("SID=")
-      ? sidOverride
-      : `SID=${sidOverride}`;
-    cachedSession = {
-      cookie,
-      basicAuth,
-      expiresAt: Date.now() + 55 * 60 * 1000,
-    };
-    return cachedSession;
-  }
 
   const body = new URLSearchParams({ username, password });
   const origin = requestOrigin(baseUrl);

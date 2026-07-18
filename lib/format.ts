@@ -38,15 +38,6 @@ const PAUSED_STATES = new Set([
   "stoppedUP",
 ]);
 
-const ACTIVE_DOWNLOAD = new Set([
-  "downloading",
-  "metaDL",
-  "forcedDL",
-  "stalledDL",
-  "queuedDL",
-  "checkingDL",
-]);
-
 export function isPausedState(state: string): boolean {
   return PAUSED_STATES.has(state);
 }
@@ -75,8 +66,4 @@ export function stateLabel(state: string): string {
     unknown: "未知",
   };
   return map[state] ?? state;
-}
-
-export function isDownloading(state: string): boolean {
-  return ACTIVE_DOWNLOAD.has(state);
 }
