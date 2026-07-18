@@ -5,6 +5,7 @@ import {
   escapeHtml,
   isAllowedChatUser,
   sendTelegramMessage,
+  type ReplyKeyboard,
 } from "@/lib/telegram-bot";
 
 type TelegramUser = { id: number; first_name?: string; username?: string };
@@ -27,12 +28,21 @@ type TelegramUpdate = {
   message?: TelegramMessage;
 };
 
+const BTN_STATUS = "狀態";
+const BTN_LIST = "列表";
+const BTN_HELP = "說明";
+
+const MAIN_KEYBOARD: ReplyKeyboard = {
+  keyboard: [[{ text: BTN_STATUS }, { text: BTN_LIST }, { text: BTN_HELP }]],
+  resize_keyboard: true,
+  is_persistent: true,
+};
+
 const HELP_TEXT = [
-  "<b>可用指令</b>",
-  "/start — 開始使用",
-  "/help — 顯示說明",
-  "/status — 目前下載狀態",
-  "/list — 列出進行中的種子",
+  "<b>可用操作</b>",
+  `• ${BTN_STATUS} — 目前下載狀態`,
+  `• ${BTN_LIST} — 列出進行中的種子`,
+  `• ${BTN_HELP} — 顯示說明`,
   "",
   "也可直接傳：",
   "• magnet / .torrent 連結文字",
@@ -50,8 +60,16 @@ function magnetOrTorrentUrl(text: string): string | null {
   return null;
 }
 
-async function reply(chatId: number, text: string) {
-  await sendTelegramMessage(chatId, text);
+async function reply(
+  chatId: number,
+  text: string,
+  withKeyboard = false
+) {
+  await sendTelegramMessage(
+    chatId,
+    text,
+    withKeyboard ? { replyMarkup: MAIN_KEYBOARD } : undefined
+  );
 }
 
 async function handleStatus(chatId: number) {
@@ -151,19 +169,20 @@ export async function handleTelegramUpdate(update: TelegramUpdate): Promise<void
   if (command === "/start") {
     await reply(
       chatId,
-      ["👋 已連線到 qBittorrent Mini App Bot。", "", HELP_TEXT].join("\n")
+      ["👋 已連線到 qBittorrent Mini App Bot。", "", HELP_TEXT].join("\n"),
+      true
     );
     return;
   }
-  if (command === "/help") {
-    await reply(chatId, HELP_TEXT);
+  if (command === "/help" || text === BTN_HELP) {
+    await reply(chatId, HELP_TEXT, true);
     return;
   }
-  if (command === "/status") {
+  if (command === "/status" || text === BTN_STATUS) {
     await handleStatus(chatId);
     return;
   }
-  if (command === "/list") {
+  if (command === "/list" || text === BTN_LIST) {
     await handleList(chatId);
     return;
   }
@@ -175,6 +194,6 @@ export async function handleTelegramUpdate(update: TelegramUpdate): Promise<void
   }
 
   if (text.startsWith("/")) {
-    await reply(chatId, `未知指令。\n\n${HELP_TEXT}`);
+    await reply(chatId, `未知指令。\n\n${HELP_TEXT}`, true);
   }
 }

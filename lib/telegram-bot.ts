@@ -37,15 +37,24 @@ async function telegramApi<T>(
   return data.result;
 }
 
+export type ReplyKeyboard = {
+  keyboard: Array<Array<{ text: string }>>;
+  resize_keyboard?: boolean;
+  is_persistent?: boolean;
+  one_time_keyboard?: boolean;
+};
+
 export async function sendTelegramMessage(
   chatId: number | string,
-  text: string
+  text: string,
+  options?: { replyMarkup?: ReplyKeyboard }
 ): Promise<void> {
   await telegramApi("sendMessage", {
     chat_id: chatId,
     text,
     parse_mode: "HTML",
     disable_web_page_preview: true,
+    ...(options?.replyMarkup ? { reply_markup: options.replyMarkup } : {}),
   });
 }
 

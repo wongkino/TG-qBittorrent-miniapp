@@ -24,15 +24,15 @@ npm run dev
 
 首次 Deploy 後，到 Cloudflare Dashboard 複製 Workers URL，設成 GitHub Variable `APP_URL`，再重新跑一次 Deploy（才會正確註冊 Telegram webhook）。
 
-## Bot 指令
+## Bot
 
-先對 Bot 發送 `/start`。
+先對 Bot 發送 `/start`，會出現 Reply Keyboard：
 
-| 指令 | 說明 |
+| 按鈕 | 說明 |
 |------|------|
-| `/status` | 總覽狀態與速度 |
-| `/list` | 列出進行中種子 |
-| `/help` | 說明 |
+| 狀態 | 總覽狀態與速度 |
+| 列表 | 列出進行中種子 |
+| 說明 | 顯示說明 |
 
 也可直接傳 **magnet / torrent 連結**，或傳送 **`.torrent` 檔** 給 Bot。
 
