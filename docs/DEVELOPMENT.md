@@ -58,6 +58,9 @@ Bot／cron 可用 curl 打已部署的端點（帶正確 secret）。
 ### 新的 Bot 指令／按鈕
 改 `lib/bot-handler.ts`；若要持久鍵盤，維持每次 `reply` 附 `MAIN_KEYBOARD`。
 
+### 新的瀏覽／代理行為
+改 `lib/browse-proxy.ts` 與 `app/api/browse/route.ts`；前端在 `components/BrowserPanel.tsx`。
+
 ### 新的通知類型
 改 `lib/completions.ts`；用新 tag 去重；排程入口在 `worker.ts` `scheduled`（`wrangler.jsonc` cron）。更新 [USER.md](USER.md)／[ARCHITECTURE.md](ARCHITECTURE.md)。
 

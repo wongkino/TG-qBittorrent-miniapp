@@ -97,3 +97,28 @@ export function addTorrentUrl(
     body: JSON.stringify({ urls, category }),
   });
 }
+
+/** Proxied HTML for in-app browse (magnet interception). */
+export async function fetchBrowseHtml(
+  initData: string,
+  pageUrl: string
+): Promise<string> {
+  const res = await fetch(
+    `/api/browse?url=${encodeURIComponent(pageUrl)}`,
+    {
+      headers: { Authorization: `tma ${initData}` },
+      cache: "no-store",
+    }
+  );
+  if (!res.ok) {
+    let message = `Browse failed (${res.status})`;
+    try {
+      const data = (await res.json()) as { error?: string };
+      if (data.error) message = data.error;
+    } catch {
+      /* ignore */
+    }
+    throw new Error(message);
+  }
+  return res.text();
+}

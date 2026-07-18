@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AddTorrentForm } from "@/components/AddTorrentForm";
+import { BrowserPanel } from "@/components/BrowserPanel";
 import { ListToolbar } from "@/components/ListToolbar";
 import { TorrentList } from "@/components/TorrentList";
 import {
@@ -40,6 +41,7 @@ export function MiniApp() {
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [selectionMode, setSelectionMode] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [tab, setTab] = useState<"downloads" | "browse">("downloads");
   const refreshInflight = useRef(false);
 
   const sortedTorrents = useMemo(
@@ -141,7 +143,7 @@ export function MiniApp() {
   }, [refreshAll]);
 
   useEffect(() => {
-    if (!initData || authError) return;
+    if (!initData || authError || tab !== "downloads") return;
 
     const tick = () => {
       if (document.visibilityState === "hidden") return;
@@ -156,7 +158,7 @@ export function MiniApp() {
       window.clearInterval(id);
       document.removeEventListener("visibilitychange", tick);
     };
-  }, [initData, authError, refreshTorrents]);
+  }, [initData, authError, refreshTorrents, tab]);
 
   async function withBusy(
     hash: string,
@@ -209,84 +211,119 @@ export function MiniApp() {
           <h1 className="title">qBittorrent</h1>
           {userName ? <p className="hint">你好，{userName}</p> : null}
         </div>
+        {tab === "downloads" ? (
+          <button
+            type="button"
+            className="btn btn--sm"
+            onClick={() => {
+              void refreshAll(initData).catch((err) => {
+                setListError(errMessage(err, "重新整理失敗"));
+              });
+            }}
+          >
+            重新整理
+          </button>
+        ) : null}
+      </header>
+
+      <nav className="tabs" aria-label="主選單">
         <button
           type="button"
-          className="btn btn--sm"
-          onClick={() => {
-            void refreshAll(initData).catch((err) => {
-              setListError(errMessage(err, "重新整理失敗"));
-            });
-          }}
+          className={`tabs__btn${tab === "downloads" ? " tabs__btn--active" : ""}`}
+          onClick={() => setTab("downloads")}
         >
-          重新整理
+          下載
         </button>
-      </header>
+        <button
+          type="button"
+          className={`tabs__btn${tab === "browse" ? " tabs__btn--active" : ""}`}
+          onClick={() => setTab("browse")}
+        >
+          瀏覽
+        </button>
+      </nav>
 
       {listError ? <p className="error">{listError}</p> : null}
 
-      <ListToolbar
-        sortKey={sortKey}
-        sortDir={sortDir}
-        selectionMode={selectionMode}
-        selectedCount={selected.size}
-        totalCount={sortedTorrents.length}
-        busy={busyHash !== null}
-        onSortKeyChange={setSortKey}
-        onToggleSortDir={() =>
-          setSortDir((prev) => (prev === "asc" ? "desc" : "asc"))
-        }
-        onToggleSelectionMode={() => {
-          setSelectionMode((prev) => !prev);
-          setSelected(new Set());
-        }}
-        onSelectAll={() =>
-          setSelected(new Set(sortedTorrents.map((t) => t.hash)))
-        }
-        onClearSelection={() => setSelected(new Set())}
-        onBatchPause={() =>
-          void withBusy("*", () => pauseTorrent(initData, selectedHashes))
-        }
-        onBatchResume={() =>
-          void withBusy("*", () => resumeTorrent(initData, selectedHashes))
-        }
-        onBatchDelete={(deleteFiles) =>
-          void withBusy("*", async () => {
-            await deleteTorrent(initData, selectedHashes, deleteFiles);
-            setSelected(new Set());
-          })
-        }
-      />
+      {tab === "browse" ? (
+        <BrowserPanel
+          initData={initData}
+          categories={categories}
+          onAdded={() => {
+            void refreshTorrents(initData).catch(() => {
+              /* ignore */
+            });
+          }}
+        />
+      ) : (
+        <>
+          <ListToolbar
+            sortKey={sortKey}
+            sortDir={sortDir}
+            selectionMode={selectionMode}
+            selectedCount={selected.size}
+            totalCount={sortedTorrents.length}
+            busy={busyHash !== null}
+            onSortKeyChange={setSortKey}
+            onToggleSortDir={() =>
+              setSortDir((prev) => (prev === "asc" ? "desc" : "asc"))
+            }
+            onToggleSelectionMode={() => {
+              setSelectionMode((prev) => !prev);
+              setSelected(new Set());
+            }}
+            onSelectAll={() =>
+              setSelected(new Set(sortedTorrents.map((t) => t.hash)))
+            }
+            onClearSelection={() => setSelected(new Set())}
+            onBatchPause={() =>
+              void withBusy("*", () => pauseTorrent(initData, selectedHashes))
+            }
+            onBatchResume={() =>
+              void withBusy("*", () => resumeTorrent(initData, selectedHashes))
+            }
+            onBatchDelete={(deleteFiles) =>
+              void withBusy("*", async () => {
+                await deleteTorrent(initData, selectedHashes, deleteFiles);
+                setSelected(new Set());
+              })
+            }
+          />
 
-      <TorrentList
-        torrents={sortedTorrents}
-        categories={categories}
-        busyHash={busyHash}
-        selected={selected}
-        selectionMode={selectionMode}
-        onToggleSelect={toggleSelect}
-        onPause={(hash) =>
-          void withBusy(hash, () => pauseTorrent(initData, hash))
-        }
-        onResume={(hash) =>
-          void withBusy(hash, () => resumeTorrent(initData, hash))
-        }
-        onDelete={(hash, deleteFiles) =>
-          void withBusy(hash, () => deleteTorrent(initData, hash, deleteFiles))
-        }
-        onCategoryChange={(hash, category) =>
-          void withBusy(hash, () =>
-            setTorrentCategory(initData, hash, category)
-          )
-        }
-      />
+          <TorrentList
+            torrents={sortedTorrents}
+            categories={categories}
+            busyHash={busyHash}
+            selected={selected}
+            selectionMode={selectionMode}
+            onToggleSelect={toggleSelect}
+            onPause={(hash) =>
+              void withBusy(hash, () => pauseTorrent(initData, hash))
+            }
+            onResume={(hash) =>
+              void withBusy(hash, () => resumeTorrent(initData, hash))
+            }
+            onDelete={(hash, deleteFiles) =>
+              void withBusy(hash, () =>
+                deleteTorrent(initData, hash, deleteFiles)
+              )
+            }
+            onCategoryChange={(hash, category) =>
+              void withBusy(hash, () =>
+                setTorrentCategory(initData, hash, category)
+              )
+            }
+          />
 
-      <AddTorrentForm
-        categories={categories}
-        onSubmit={async (urls, category) => {
-          await addTorrentUrl(initData, urls, category || undefined);
-          await refreshAll(initData);
-        }}
-      />
+          <AddTorrentForm
+            categories={categories}
+            onSubmit={async (urls, category) => {
+              await addTorrentUrl(initData, urls, category || undefined);
+              await refreshAll(initData);
+            }}
+          />
+        </>
+      )}
     </main>
   );
 }

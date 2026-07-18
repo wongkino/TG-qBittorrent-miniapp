@@ -7,3 +7,5 @@ QBITTORRENT_URL=https://your-qb.example.com
 QBITTORRENT_USERNAME=
 QBITTORRENT_PASSWORD=
 CRON_SECRET=
+# Optional browse allowlist (empty = all public hosts)
+BROWSE_ALLOWED_HOSTS=

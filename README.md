@@ -29,7 +29,7 @@
 
 ## 功能速覽
 
-- **Mini App**：列表、排序、批次、加 magnet／URL、分類
+- **Mini App**：列表、排序、批次、加 magnet／URL、分類、**內嵌瀏覽攔截 magnet**
 - **Bot**：狀態／列表／說明鍵盤、magnet、`.torrent` 檔、左側開啟 App
 - **通知**：下載開始（`tg-started`）、下載完成（`tg-notified`）；由 **Cloudflare Cron** 每 5 分鐘檢查
 
@@ -63,6 +63,7 @@ npm run dev
 | `QBITTORRENT_USERNAME` | ✅ | ✅ | ✅ | ✅ | |
 | `QBITTORRENT_PASSWORD` | ✅ | ✅ | ✅ | ✅ | |
 | `CRON_SECRET` | ✅ | ✅ | ✅ | ✅ | |
+| `BROWSE_ALLOWED_HOSTS` | ✅ 可選 | ✅ 可選 | ✅ 可選 | | ✅ 可選 |
 | `APP_URL` | 僅範例註解 | ❌ | ❌ | | ✅ |
 | `CLOUDFLARE_API_TOKEN` | | | | ✅ | |
 | `CLOUDFLARE_ACCOUNT_ID` | | | | ✅ | |

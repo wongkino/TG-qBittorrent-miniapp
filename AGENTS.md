@@ -27,6 +27,7 @@
 | `components/` | 僅 Mini App UI（client） |
 | `app/api/qb/*` | Mini App API；`Authorization: tma <initData>` |
 | `app/api/telegram/webhook` | Bot；`X-Telegram-Bot-Api-Secret-Token` = `CRON_SECRET` |
+| `app/api/browse` | 內嵌瀏覽代理（需 tma auth）；攔截 magnet 靠注入腳本 + postMessage |
 | `app/api/cron/completions` | 通知 HTTP 入口（Cloudflare Cron 內部也打這裡）；`Authorization: Bearer CRON_SECRET` |
 | `worker.ts` | Cloudflare 入口：OpenNext `fetch` + `scheduled` cron |
 | `lib/qbittorrent.ts` | 唯一直接打 qBittorrent 的模組 |
@@ -52,8 +53,9 @@
 
 ## 功能落點
 
-- Mini App：**不能**上傳 `.torrent` 檔；只加 URL／magnet
+- Mini App：**不能**上傳本機 `.torrent` 檔；可用瀏覽代理攔截 magnet／torrent URL
 - `.torrent` 檔：只走 Bot
+- 瀏覽代理有 SSRF 防護；勿關閉私網封鎖。可選 `BROWSE_ALLOWED_HOSTS` 限制網域
 - Reply Keyboard：每次 Bot 回覆都附上
 - Menu Button「開啟 App」：Deploy workflow 的 `setChatMenuButton`
 

@@ -141,5 +141,6 @@ Authorization: Bearer <CRON_SECRET>
 
 ### 能力邊界
 
-- Mini App：無 `.torrent` 檔上傳
+- Mini App：無本機 `.torrent` 檔上傳；可用 **瀏覽** 分頁代理網頁並攔截 magnet／.torrent
+- 瀏覽代理：SSRF 防護；可選 `BROWSE_ALLOWED_HOSTS`；部分站點可能無法完整渲染
 - Bot：可收檔；`allowed_updates` 僅 `message`
