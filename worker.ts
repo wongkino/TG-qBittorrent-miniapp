@@ -1,12 +1,7 @@
+// @ts-nocheck
 // Custom Worker entry: keep OpenNext fetch + add Cloudflare Cron.
-// `.open-next/worker.js` is generated at build time.
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
+// Built by Wrangler after OpenNext generates `.open-next/worker.js`.
 import { default as handler } from "./.open-next/worker.js";
-
-type Env = {
-  CRON_SECRET?: string;
-};
 
 export default {
   fetch: handler.fetch,
@@ -19,11 +14,7 @@ export default {
    *   npx wrangler dev --test-scheduled
    *   curl "http://localhost:8787/__scheduled?cron=*+*+*+*+*"
    */
-  async scheduled(
-    _controller: { cron: string; scheduledTime: number },
-    env: Env,
-    ctx: { waitUntil(promise: Promise<unknown>): void }
-  ) {
+  async scheduled(_controller, env, ctx) {
     const secret = env.CRON_SECRET?.trim() || process.env.CRON_SECRET?.trim();
     if (!secret) {
       console.error("CRON_SECRET is not configured; skipping notify cron");
@@ -53,8 +44,6 @@ export default {
 };
 
 // Required when OpenNext generates these Durable Object exports.
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
 export {
   DOQueueHandler,
   DOShardedTagCache,
