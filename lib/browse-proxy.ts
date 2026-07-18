@@ -165,8 +165,7 @@ function injectBrowseBridge(html: string, pageUrl: string): string {
     };
   } catch (e) {}
 
-  // Age-gate is resolved server-side (see resolveAgeGate). Do not auto-navigate here
-  // or the UI will loop on "請注意" when cookies fail to stick in the WebView.
+  // Age / notice gates are resolved server-side. Do not auto-navigate here.
 
   document.addEventListener("click", function (e) {
     var t = e.target;
@@ -210,37 +209,49 @@ function injectBrowseBridge(html: string, pageUrl: string): string {
   return out;
 }
 
-function isJavdbHost(hostname: string): boolean {
-  return /^(?:www\.)?javdb\d*\.com$/i.test(hostname);
-}
-
-function ensureSiteCookies(hostname: string, cookie: string): string {
-  let next = cookie;
-  if (isJavdbHost(hostname)) {
-    // JavDB age gate — without this every page shows「請注意」.
-    next = mergeCookieHeader(next, ["over18=1"]);
-  }
-  return next;
-}
-
-function extractOver18YesUrl(html: string, pageUrl: string): string | null {
-  const match = html.match(
-    /over18-modal[\s\S]*?<a[^>]+class="[^"]*button[^"]*is-success[^"]*"[^>]+href="([^"]+)"/i
-  ) || html.match(
-    /href="(\/over18\?respond=1[^"]+)"/i
+function hasAgeGateModal(html: string): boolean {
+  return (
+    /class="[^"]*\bover18-modal\b[^"]*\bis-active\b/i.test(html) ||
+    /class="[^"]*\bis-active\b[^"]*\bover18-modal\b/i.test(html) ||
+    /class="[^"]*\bage[-_]?gate\b[^"]*\bis-active\b/i.test(html) ||
+    /class="[^"]*\bage[-_]?verify(?:ication)?\b[^"]*\bis-active\b/i.test(html) ||
+    /id="[^"]*age[-_]?gate[^"]*"[^>]*class="[^"]*\bis-active\b/i.test(html)
   );
-  if (!match?.[1]) return null;
-  const href = match[1].replaceAll("&amp;", "&");
-  try {
-    return new URL(href, pageUrl).toString();
-  } catch {
-    return null;
-  }
 }
 
-function hasActiveOver18Modal(html: string): boolean {
-  return /class="[^"]*over18-modal[^"]*is-active|class="[^"]*is-active[^"]*over18-modal/i.test(
-    html
+function extractAgeGateConfirmUrl(html: string, pageUrl: string): string | null {
+  const patterns = [
+    /over18-modal[\s\S]{0,2500}?<a[^>]+class="[^"]*\bis-success\b[^"]*"[^>]*href="([^"]+)"/i,
+    /over18-modal[\s\S]{0,2500}?<a[^>]+href="([^"]+)"[^>]*class="[^"]*\bis-success\b[^"]*"/i,
+    /age[-_]?gate[\s\S]{0,2500}?<a[^>]+href="([^"]*over18[^"]*)"/i,
+    /href="(\/over18\?[^"]+)"/i,
+    /href="(\/age[-_]?verify(?:ication)?[^"]*)"/i,
+  ];
+  for (const re of patterns) {
+    const match = html.match(re);
+    if (!match?.[1]) continue;
+    const href = match[1].replaceAll("&amp;", "&");
+    try {
+      return new URL(href, pageUrl).toString();
+    } catch {
+      /* try next */
+    }
+  }
+  return null;
+}
+
+/** If confirm URL looks like a common /over18 endpoint, keep cookie even when Set-Cookie is stripped. */
+function cookiesFromAgeGateConfirm(confirmUrl: string): string[] {
+  if (/\/over18\b/i.test(confirmUrl)) return ["over18=1"];
+  if (/\/age[-_]?verify/i.test(confirmUrl)) return ["age_verified=1", "over18=1"];
+  return [];
+}
+
+function deactivateAgeGateModals(html: string): string {
+  return html.replace(
+    /class="([^"]*\b(?:over18-modal|age[-_]?gate|age[-_]?verify(?:ication)?)\b[^"]*)"/gi,
+    (_m, cls: string) =>
+      `class="${cls.replace(/\bis-active\b/g, "").replace(/\s+/g, " ").trim()}"`
   );
 }
 
@@ -261,7 +272,6 @@ async function fetchHtmlOnce(
 
   for (let hop = 0; hop < 8; hop++) {
     assertBrowsableUrl(current);
-    jar = ensureSiteCookies(new URL(current).hostname, jar);
 
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
@@ -271,8 +281,8 @@ async function fetchHtmlOnce(
           "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
         Accept: "text/html,application/xhtml+xml;q=0.9,*/*;q=0.8",
         "Accept-Language": "zh-TW,zh;q=0.9,en;q=0.8",
-        Cookie: jar,
       };
+      if (jar) headers.Cookie = jar;
 
       res = await fetch(current, {
         redirect: "manual",
@@ -341,41 +351,38 @@ export async function fetchBrowsableHtml(
   target: URL,
   cookieHeader?: string
 ): Promise<BrowseResult> {
-  let cookie = ensureSiteCookies(
-    target.hostname,
-    cookieHeader?.trim() || ""
-  );
+  let cookie = cookieHeader?.trim() || "";
   const collected: string[] = [];
 
   let page = await fetchHtmlOnce(target.toString(), cookie);
   collected.push(...page.setCookies);
   cookie = page.cookie;
 
-  // Resolve age gate on the server so the client never loops on「請注意」.
-  for (let i = 0; i < 2 && hasActiveOver18Modal(page.html); i++) {
-    const yesUrl = extractOver18YesUrl(page.html, page.finalUrl);
-    if (!yesUrl) break;
-    // Ensure over18 cookie even if Set-Cookie headers are stripped by the runtime.
-    cookie = mergeCookieHeader(cookie, ["over18=1"]);
-    collected.push("over18=1");
-    page = await fetchHtmlOnce(yesUrl, cookie);
+  // Resolve common age / notice gates on the server (avoid client navigation loops).
+  for (let i = 0; i < 2 && hasAgeGateModal(page.html); i++) {
+    const confirmUrl = extractAgeGateConfirmUrl(page.html, page.finalUrl);
+    if (!confirmUrl) break;
+
+    const inferred = cookiesFromAgeGateConfirm(confirmUrl);
+    if (inferred.length) {
+      cookie = mergeCookieHeader(cookie, inferred);
+      collected.push(...inferred);
+    }
+
+    page = await fetchHtmlOnce(confirmUrl, cookie);
     collected.push(...page.setCookies);
     cookie = page.cookie;
+
+    // Persist inferred cookies again for the client jar if runtime stripped Set-Cookie.
+    if (inferred.length) {
+      collected.push(...inferred);
+      cookie = mergeCookieHeader(cookie, inferred);
+    }
   }
 
-  // Strip a stuck modal if cookie is set but HTML still embeds it.
   let html = page.html;
-  if (hasActiveOver18Modal(html) && /(?:^|;\s*)over18=1(?:;|$)/.test(cookie)) {
-    html = html.replace(
-      /class="([^"]*\bover18-modal\b[^"]*)"/gi,
-      (_m, cls: string) =>
-        `class="${cls.replace(/\bis-active\b/g, "").replace(/\s+/g, " ").trim()}"`
-    );
-  }
-
-  // Always return over18=1 to the client jar for javdb hosts.
-  if (isJavdbHost(new URL(page.finalUrl).hostname)) {
-    collected.push("over18=1");
+  if (hasAgeGateModal(html) && /(?:^|;\s*)over18=1(?:;|$)/.test(cookie)) {
+    html = deactivateAgeGateModals(html);
   }
 
   return {

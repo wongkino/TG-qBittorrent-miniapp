@@ -15,13 +15,7 @@ type Props = {
 const STORAGE_KEY = "tg-dl-browse-shortcuts";
 const COOKIE_KEY = "tg-dl-browse-cookies";
 
-const DEFAULT_SHORTCUTS: Shortcut[] = [
-  {
-    id: "javdb",
-    label: "JavDB",
-    url: "https://javdb.com",
-  },
-];
+const DEFAULT_SHORTCUTS: Shortcut[] = [];
 
 function loadShortcuts(): Shortcut[] {
   try {
@@ -54,12 +48,11 @@ function saveCookieJar(jar: Record<string, string>) {
   localStorage.setItem(COOKIE_KEY, JSON.stringify(jar));
 }
 
+/** Cookie jar key: registrable-ish host (last two labels). */
 function cookieJarKey(pageUrl: string): string {
   try {
     const host = new URL(pageUrl).hostname.toLowerCase();
-    // Share age-gate cookie across javdb.com / javdb574.com / www.
-    if (/^(?:www\.)?javdb\d*\.com$/.test(host)) return "javdb.com";
-    const parts = host.split(".");
+    const parts = host.split(".").filter(Boolean);
     if (parts.length >= 2) return parts.slice(-2).join(".");
     return host;
   } catch {
@@ -72,7 +65,7 @@ function errMessage(err: unknown, fallback: string) {
 }
 
 export function BrowserPanel({ initData, categories, onAdded }: Props) {
-  const [urlInput, setUrlInput] = useState("https://javdb.com");
+  const [urlInput, setUrlInput] = useState("https://");
   const [currentUrl, setCurrentUrl] = useState<string | null>(null);
   const [html, setHtml] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -196,7 +189,7 @@ export function BrowserPanel({ initData, categories, onAdded }: Props) {
   return (
     <section className="browse">
       <p className="hint browse__intro">
-        經代理開啟網頁。JavDB「請注意」年齡門會在伺服器自動帶過，不會每點一次就跳回來。magnet／複製按鈕可直接加入。
+        經代理開啟網頁。常見年齡／注意門檻會在伺服器自動處理；magnet、.torrent 與「複製」按鈕可直接加入 qBittorrent。
       </p>
 
       <form
