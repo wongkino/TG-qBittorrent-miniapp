@@ -18,7 +18,7 @@
 | `APP_URL` | 這個 Mini App 的 Workers URL | **否**（僅 GitHub Actions） |
 | `QBITTORRENT_URL` | qBittorrent Web UI | **是** |
 
-把 qB 網址填進 `APP_URL` 會弄壞 webhook、Menu Button、完成通知。
+把 qB 網址填進 `APP_URL` 會弄壞 webhook、Menu Button。
 
 ## 程式碼邊界
 
@@ -27,7 +27,8 @@
 | `components/` | 僅 Mini App UI（client） |
 | `app/api/qb/*` | Mini App API；`Authorization: tma <initData>` |
 | `app/api/telegram/webhook` | Bot；`X-Telegram-Bot-Api-Secret-Token` = `CRON_SECRET` |
-| `app/api/cron/completions` | 通知；`Authorization: Bearer CRON_SECRET` |
+| `app/api/cron/completions` | 通知 HTTP 入口（Cloudflare Cron 內部也打這裡）；`Authorization: Bearer CRON_SECRET` |
+| `worker.ts` | Cloudflare 入口：OpenNext `fetch` + `scheduled` cron |
 | `lib/qbittorrent.ts` | 唯一直接打 qBittorrent 的模組 |
 | `lib/telegram.ts` | Mini App initData 驗證 |
 | `lib/telegram-bot.ts` | Bot API（發訊、下檔） |
@@ -61,7 +62,7 @@
 - Secrets／Variables 對照見 [`docs/DEPLOY.md`](docs/DEPLOY.md)
 - **不要**用 `GITHUB_TOKEN` 去 `gh variable set APP_URL`（常 403）
 - Deploy 會 `wrangler secret bulk` 同步 runtime secrets；`APP_URL` **不**進 Worker
-- 改通知邏輯後，確認 `notify-completions.yml` 仍打 `POST /api/cron/completions`
+- 改通知邏輯後，確認 `worker.ts` `scheduled` 與 `/api/cron/completions` 仍一致；排程在 `wrangler.jsonc` `triggers.crons`
 
 ## 變更風格
 

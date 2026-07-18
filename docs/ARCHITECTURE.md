@@ -11,8 +11,10 @@
           ▼                             ▼
 ┌─────────────────────────────────────────────────┐
 │     Cloudflare Worker `tg-dl` (Next.js)         │
+│  worker.ts = OpenNext fetch + scheduled()       │
 │  /api/qb/*   /api/telegram/webhook               │
 │  /api/cron/completions                           │
+│  Cron Trigger */2 * * * * ──► scheduled()        │
 └───────────────────────┬─────────────────────────┘
                         │ Web API + CSRF headers
                         ▼
@@ -22,26 +24,30 @@
               └───────────────────┘
 
 GitHub Actions ──deploy──► Worker + secrets + setWebhook/MenuButton
-GitHub Actions ──cron───► POST /api/cron/completions
+Cloudflare Cron ─────────► worker.scheduled() → /api/cron/completions
 ```
 
 技術棧：Next.js App Router、React、TypeScript、`@opennextjs/cloudflare`、`@twa-dev/sdk`、Wrangler。
+
+入口：`worker.ts`（自訂 Worker，包裝 `.open-next/worker.js` 並加上 `scheduled`）。
 
 ---
 
 ## 目錄結構
 
 ```
+worker.ts                  # Cloudflare 入口（fetch + cron）
+wrangler.jsonc             # triggers.crons = */2 * * * *
 app/
   page.tsx                 # 掛載 MiniApp
   layout.tsx               # zh-Hant、viewport
   globals.css
   api/qb/*/route.ts        # Mini App 後端代理
   api/telegram/webhook/    # Bot webhook
-  api/cron/completions/    # 開始／完成通知
+  api/cron/completions/    # 開始／完成通知（Cron 與手動 HTTP）
 components/                # Mini App UI
 lib/                       # 共用邏輯（見下）
-.github/workflows/         # Deploy + 通知 cron
+.github/workflows/         # Deploy only
 ```
 
 ---
@@ -70,12 +76,19 @@ Telegram → `POST {APP_URL}/api/telegram/webhook`
 Header：`X-Telegram-Bot-Api-Secret-Token: <CRON_SECRET>`  
 → `lib/bot-handler.ts` → qBittorrent 與／或回覆訊息
 
-支援：Reply Keyboard（狀態／列表／說明）、magnet、torrent URL、`.torrent` 檔、舊式 `/status` 等指令。
+### 3. 通知 cron（Cloudflare）
 
-### 3. 通知 cron
+`wrangler.jsonc` → `triggers.crons: ["*/2 * * * *"]`  
+→ `worker.ts` `scheduled()`  
+→ 內部呼叫 OpenNext `fetch` → `POST /api/cron/completions`（Bearer `CRON_SECRET`）  
+→ `lib/completions.ts`
 
-GitHub Actions（每 2 分鐘）→ `POST {APP_URL}/api/cron/completions`  
-`Authorization: Bearer <CRON_SECRET>` → `lib/completions.ts`
+也可手動：
+
+```http
+POST {APP_URL}/api/cron/completions
+Authorization: Bearer <CRON_SECRET>
+```
 
 | 事件 | 條件 | Tag |
 |------|------|-----|
@@ -88,12 +101,10 @@ GitHub Actions（每 2 分鐘）→ `POST {APP_URL}/api/cron/completions`
 
 | 介面 | 機制 |
 |------|------|
-| `/api/qb/*` | `Authorization: tma <initData>`；HMAC（WebAppData + bot token）；`auth_date` 24h；user ∈ 白名單 |
+| `/api/qb/*` | `Authorization: tma <initData>`；HMAC；白名單 |
 | Webhook | `secret_token` = `CRON_SECRET` |
-| Cron | `Bearer CRON_SECRET` |
-| 白名單 | `ALLOWED_TELEGRAM_USER_IDS`（逗號分隔） |
-
-`CRON_SECRET` 同時用於 webhook 與 cron，Deploy 時一併設定。
+| Cron HTTP／scheduled 內部請求 | `Bearer CRON_SECRET` |
+| 白名單 | `ALLOWED_TELEGRAM_USER_IDS` |
 
 ---
 
@@ -101,6 +112,7 @@ GitHub Actions（每 2 分鐘）→ `POST {APP_URL}/api/cron/completions`
 
 | 模組 | 職責 |
 |------|------|
+| `worker.ts` | Cloudflare 入口：fetch + scheduled |
 | `lib/env.ts` | env 讀取、白名單解析 |
 | `lib/telegram.ts` | Mini App initData 驗證 |
 | `lib/telegram-bot.ts` | Bot API、通知文案 |
@@ -113,30 +125,19 @@ GitHub Actions（每 2 分鐘）→ `POST {APP_URL}/api/cron/completions`
 
 ---
 
-## UI 元件
-
-| 元件 | 功能 |
-|------|------|
-| `MiniApp` | 初始化 WebApp、輪詢、狀態列 |
-| `ListToolbar` | 排序、批次操作 |
-| `TorrentList` / `TorrentRow` | 列表與單筆操作 |
-| `AddTorrentForm` | 加 URL／剪貼簿 |
-| `CategorySelect` | 分類下拉 |
-
----
-
 ## 重要實作細節
 
 ### qBittorrent CSRF／登入
 
-- 嚴格 `Origin`／`Referer`；預設埠會剝除以免 Origin 比對失敗
-- Form login 不帶 Basic Auth；之後請求可同時帶 SID + Basic
-- Process 內 session 快取約 55 分鐘（Workers 冷啟動可能重登）
+- 嚴格 `Origin`／`Referer`；預設埠會剝除
+- Form login 不帶 Basic Auth；之後可帶 SID + Basic
+- Process 內 session 快取約 55 分鐘
 
 ### `APP_URL` vs `QBITTORRENT_URL`
 
-- `APP_URL`：對外的 Mini App／Webhook 位址（Actions 用）
-- `QBITTORRENT_URL`：後端實際代理目標（Worker secret）
+- `APP_URL`：Deploy 設 webhook／Menu Button（Actions Variable；Worker runtime 不需）
+- `QBITTORRENT_URL`：後端代理目標（Worker secret）
+- 通知 cron **不再**依賴 `APP_URL`（在 Worker 內觸發）
 
 ### 能力邊界
 

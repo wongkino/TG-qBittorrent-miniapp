@@ -8,7 +8,8 @@
 - 本 repo 的 GitHub Actions 權限
 - 你的 Telegram User ID（白名單）
 
-Worker 名稱固定為 **`tg-dl`**（`wrangler.jsonc`）。
+Worker 名稱固定為 **`tg-dl`**（`wrangler.jsonc`）。  
+通知排程由 **Cloudflare Cron**（`*/2 * * * *`）執行，**不是** GitHub Actions。
 
 ---
 
@@ -38,8 +39,9 @@ Worker 名稱固定為 **`tg-dl`**（`wrangler.jsonc`）。
    例如 `https://tg-dl.xxxx.workers.dev`
 4. 設 GitHub Variable **`APP_URL`**（不要尾隨 `/`）
 5. **再跑一次 Deploy**（寫入 webhook + Menu Button）
-6. （可選）BotFather → Configure Mini App → 同一 HTTPS URL
-7. 打開 Bot，確認「開啟 App」與鍵盤；試加一筆 magnet
+6. 確認 Workers → Triggers 有 cron `*/2 * * * *`
+7. （可選）BotFather → Configure Mini App → 同一 HTTPS URL
+8. 打開 Bot 測試；加一筆種子後等約 2 分鐘看「下載開始」通知
 
 ---
 
@@ -51,41 +53,49 @@ Worker 名稱固定為 **`tg-dl`**（`wrangler.jsonc`）。
 
 步驟：
 
-1. `npm ci` + `npm run deploy`（OpenNext build + wrangler deploy）
+1. `npm ci` + `npm run deploy`（OpenNext build + wrangler deploy；含 Cron Trigger）
 2. `wrangler secret bulk` 同步 runtime secrets
 3. `setWebhook` → `{APP_URL}/api/telegram/webhook`（`secret_token` = `CRON_SECRET`）
 4. `setChatMenuButton` → web_app「開啟 App」→ `APP_URL`
 
-### Notify — `.github/workflows/notify-completions.yml`
+### 通知 — Cloudflare Cron（非 GitHub Actions）
 
-觸發：cron `*/2 * * * *`，或手動
+設定在 `wrangler.jsonc`：
 
-呼叫：
+```jsonc
+"triggers": { "crons": ["*/2 * * * *"] }
+```
 
-```http
-POST {APP_URL}/api/cron/completions
-Authorization: Bearer {CRON_SECRET}
-Content-Type: application/json
+執行：`worker.ts` → `scheduled()` → 內部 `POST /api/cron/completions`。
+
+手動測試（已部署後）：
+
+```bash
+curl -X POST "$APP_URL/api/cron/completions" \
+  -H "Authorization: Bearer $CRON_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{}'
+```
+
+本機（需先 build／preview）：
+
+```bash
+npx wrangler dev --test-scheduled
+curl "http://localhost:8787/__scheduled?cron=*/2+*+*+*+*"
 ```
 
 ---
 
 ## Cloudflare API Token 權限（參考）
 
-需能：
-
-- 部署 Workers
-- 管理 Worker secrets
-- （若流程有查 subdomain）讀取 account workers subdomain
-
-Account ID 在 Cloudflare Dashboard 右側可見。
+需能部署 Workers、管理 secrets、設定 Cron Triggers。
 
 ---
 
 ## 本機手動部署（可選）
 
 ```bash
-cp .dev.vars.example .dev.vars   # 填入 runtime 變數
+cp .dev.vars.example .dev.vars
 npm install
 npm run deploy
 ```
@@ -96,13 +106,14 @@ npm run deploy
 
 ## 驗證清單
 
-- [ ] Workers 網址可開（頁面可載入）
+- [ ] Workers 網址可開
 - [ ] `APP_URL` Variable = 該網址
 - [ ] Bot 左側有「開啟 App」
 - [ ] Reply Keyboard 有三鍵
 - [ ] Mini App 能列出種子
 - [ ] Bot 能加 magnet
-- [ ] notify workflow 手動跑一次成功（Actions 日誌）
+- [ ] Cloudflare Worker 有 Cron `*/2 * * * *`
+- [ ] 手動 `POST /api/cron/completions` 回 200（或等自動通知）
 
 ---
 
@@ -112,8 +123,8 @@ npm run deploy
 |------|------|
 | Webhook 無效 | `APP_URL`、是否二次 Deploy、`CRON_SECRET` 一致 |
 | `gh variable set` 403 | 預期；改手動設 Variable |
-| qB 502／登入失敗 | `QBITTORRENT_URL`、帳密、公網連通、反向代理 CSRF |
-| 通知全無 | notify workflow、Bearer、`APP_URL`、白名單、15 分鐘視窗 |
+| qB 502／登入失敗 | `QBITTORRENT_URL`、帳密、公網、CSRF |
+| 通知全無 | Worker Cron 是否啟用、`CRON_SECRET`、白名單、15 分鐘視窗、Workers 日誌 |
 | Menu Button 沒出現 | 二次 Deploy；或 BotFather Configure Mini App |
 
 **切記：** `APP_URL` ≠ `QBITTORRENT_URL`。

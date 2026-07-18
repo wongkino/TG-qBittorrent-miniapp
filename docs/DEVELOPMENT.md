@@ -59,7 +59,7 @@ Bot／cron 可用 curl 打已部署的端點（帶正確 secret）。
 改 `lib/bot-handler.ts`；若要持久鍵盤，維持每次 `reply` 附 `MAIN_KEYBOARD`。
 
 ### 新的通知類型
-改 `lib/completions.ts`；用新 tag 去重；更新 [USER.md](USER.md)／[ARCHITECTURE.md](ARCHITECTURE.md)。
+改 `lib/completions.ts`；用新 tag 去重；排程入口在 `worker.ts` `scheduled`（`wrangler.jsonc` cron）。更新 [USER.md](USER.md)／[ARCHITECTURE.md](ARCHITECTURE.md)。
 
 ---
 
