@@ -166,9 +166,15 @@ async function qbFetch(
 ): Promise<Response> {
   const { baseUrl } = getConfig();
   const session = await ensureSession(false);
+  const headers = qbHeaders(baseUrl, session, init.headers);
+  // Let the runtime set multipart boundary for FormData bodies.
+  if (init.body instanceof FormData) {
+    headers.delete("Content-Type");
+  }
+
   const res = await fetch(`${baseUrl}${path}`, {
     ...init,
-    headers: qbHeaders(baseUrl, session, init.headers),
+    headers,
     cache: "no-store",
   });
 
@@ -228,6 +234,7 @@ function projectTorrent(raw: RawTorrent): Torrent {
     state: String(raw.state ?? "unknown"),
     eta: Number(raw.eta) || 0,
     category: String(raw.category ?? ""),
+    added_on: Number(raw.added_on) || 0,
   };
 }
 
@@ -315,6 +322,28 @@ export async function addTorrent(
   const fields: Record<string, string> = { urls };
   if (category) fields.category = category;
   await postForm("/api/v2/torrents/add", fields);
+}
+
+export async function addTorrentFile(
+  file: Blob,
+  filename: string,
+  category?: string
+): Promise<void> {
+  const form = new FormData();
+  form.append("torrents", file, filename);
+  if (category) form.append("category", category);
+
+  const res = await qbFetch("/api/v2/torrents/add", {
+    method: "POST",
+    body: form,
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new QBitError(
+      `qBittorrent add file failed (${res.status})${text ? `: ${text.slice(0, 120)}` : ""}`,
+      502
+    );
+  }
 }
 
 export class QBitError extends Error {

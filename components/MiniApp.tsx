@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AddTorrentForm } from "@/components/AddTorrentForm";
+import { ListToolbar } from "@/components/ListToolbar";
 import { TorrentList } from "@/components/TorrentList";
 import {
   addTorrentUrl,
@@ -12,7 +13,13 @@ import {
   resumeTorrent,
   setTorrentCategory,
 } from "@/lib/client-api";
-import { torrentsEqual, type Torrent } from "@/lib/types";
+import {
+  sortTorrents,
+  torrentsEqual,
+  type SortDir,
+  type SortKey,
+  type Torrent,
+} from "@/lib/types";
 
 const POLL_MS = 4000;
 
@@ -29,7 +36,16 @@ export function MiniApp() {
   const [listError, setListError] = useState<string | null>(null);
   const [busyHash, setBusyHash] = useState<string | null>(null);
   const [booting, setBooting] = useState(true);
+  const [sortKey, setSortKey] = useState<SortKey>("added_on");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
   const refreshInflight = useRef(false);
+
+  const sortedTorrents = useMemo(
+    () => sortTorrents(torrents, sortKey, sortDir),
+    [torrents, sortKey, sortDir]
+  );
 
   const refreshTorrents = useCallback(async (token: string) => {
     if (refreshInflight.current) return;
@@ -37,6 +53,12 @@ export function MiniApp() {
     try {
       const { torrents: next } = await fetchTorrents(token);
       setTorrents((prev) => (torrentsEqual(prev, next) ? prev : next));
+      setSelected((prev) => {
+        if (prev.size === 0) return prev;
+        const hashes = new Set(next.map((t) => t.hash));
+        const kept = [...prev].filter((hash) => hashes.has(hash));
+        return kept.length === prev.size ? prev : new Set(kept);
+      });
       setListError(null);
     } finally {
       refreshInflight.current = false;
@@ -118,7 +140,10 @@ export function MiniApp() {
     };
   }, [initData, authError, refreshTorrents]);
 
-  async function withBusy(hash: string, action: () => Promise<void>) {
+  async function withBusy(
+    hash: string,
+    action: () => Promise<void>
+  ) {
     if (!initData) return;
     setBusyHash(hash);
     try {
@@ -129,6 +154,15 @@ export function MiniApp() {
     } finally {
       setBusyHash(null);
     }
+  }
+
+  function toggleSelect(hash: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(hash)) next.delete(hash);
+      else next.add(hash);
+      return next;
+    });
   }
 
   if (booting) {
@@ -147,6 +181,8 @@ export function MiniApp() {
       </main>
     );
   }
+
+  const selectedHashes = [...selected];
 
   return (
     <main className="shell">
@@ -170,10 +206,46 @@ export function MiniApp() {
 
       {listError ? <p className="error">{listError}</p> : null}
 
+      <ListToolbar
+        sortKey={sortKey}
+        sortDir={sortDir}
+        selectionMode={selectionMode}
+        selectedCount={selected.size}
+        totalCount={sortedTorrents.length}
+        busy={busyHash !== null}
+        onSortKeyChange={setSortKey}
+        onToggleSortDir={() =>
+          setSortDir((prev) => (prev === "asc" ? "desc" : "asc"))
+        }
+        onToggleSelectionMode={() => {
+          setSelectionMode((prev) => !prev);
+          setSelected(new Set());
+        }}
+        onSelectAll={() =>
+          setSelected(new Set(sortedTorrents.map((t) => t.hash)))
+        }
+        onClearSelection={() => setSelected(new Set())}
+        onBatchPause={() =>
+          void withBusy("*", () => pauseTorrent(initData, selectedHashes))
+        }
+        onBatchResume={() =>
+          void withBusy("*", () => resumeTorrent(initData, selectedHashes))
+        }
+        onBatchDelete={(deleteFiles) =>
+          void withBusy("*", async () => {
+            await deleteTorrent(initData, selectedHashes, deleteFiles);
+            setSelected(new Set());
+          })
+        }
+      />
+
       <TorrentList
-        torrents={torrents}
+        torrents={sortedTorrents}
         categories={categories}
         busyHash={busyHash}
+        selected={selected}
+        selectionMode={selectionMode}
+        onToggleSelect={toggleSelect}
         onPause={(hash) =>
           void withBusy(hash, () => pauseTorrent(initData, hash))
         }

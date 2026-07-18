@@ -89,6 +89,49 @@ body {
   margin-top: 8px;
 }
 
+.torrent-row--selected {
+  outline: 2px solid color-mix(in srgb, var(--button) 65%, transparent);
+}
+
+.torrent-row__check {
+  display: flex;
+  align-items: center;
+  padding-top: 2px;
+}
+
+.torrent-row__check input {
+  width: 18px;
+  height: 18px;
+}
+
+.toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--secondary);
+  border-radius: var(--radius);
+}
+
+.toolbar__row,
+.toolbar__batch {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.toolbar__label {
+  font-size: 0.8rem;
+  color: var(--hint);
+}
+
+.select--inline {
+  width: auto;
+  min-width: 120px;
+  flex: 1;
+}
+
 .torrent-list {
   display: flex;
   flex-direction: column;

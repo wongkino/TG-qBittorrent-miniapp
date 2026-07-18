@@ -15,6 +15,9 @@ type Props = {
   torrent: Torrent;
   categories: string[];
   busy: boolean;
+  selected: boolean;
+  selectionMode: boolean;
+  onToggleSelect: (hash: string) => void;
   onPause: (hash: string) => void;
   onResume: (hash: string) => void;
   onDelete: (hash: string, deleteFiles: boolean) => void;
@@ -25,6 +28,9 @@ export function TorrentRow({
   torrent,
   categories,
   busy,
+  selected,
+  selectionMode,
+  onToggleSelect,
   onPause,
   onResume,
   onDelete,
@@ -40,8 +46,18 @@ export function TorrentRow({
       : categories;
 
   return (
-    <article className="torrent-row">
+    <article className={`torrent-row${selected ? " torrent-row--selected" : ""}`}>
       <div className="torrent-row__header">
+        {selectionMode ? (
+          <label className="torrent-row__check">
+            <input
+              type="checkbox"
+              checked={selected}
+              disabled={busy}
+              onChange={() => onToggleSelect(torrent.hash)}
+            />
+          </label>
+        ) : null}
         <h2 className="torrent-row__name" title={torrent.name}>
           {torrent.name}
         </h2>
@@ -64,63 +80,68 @@ export function TorrentRow({
       </div>
 
       <div className="torrent-row__category">
-        <label className="torrent-row__category-label" htmlFor={`cat-${torrent.hash}`}>
+        <label
+          className="torrent-row__category-label"
+          htmlFor={`cat-${torrent.hash}`}
+        >
           分類
         </label>
         <CategorySelect
           id={`cat-${torrent.hash}`}
           value={torrent.category}
           categories={categoryOptions}
-          disabled={busy}
+          disabled={busy || selectionMode}
           onChange={(category) => onCategoryChange(torrent.hash, category)}
         />
       </div>
 
-      <div className="torrent-row__actions">
-        {paused ? (
-          <button
-            type="button"
-            className="btn btn--primary"
-            disabled={busy}
-            onClick={() => onResume(torrent.hash)}
-          >
-            繼續
-          </button>
-        ) : (
+      {!selectionMode ? (
+        <div className="torrent-row__actions">
+          {paused ? (
+            <button
+              type="button"
+              className="btn btn--primary"
+              disabled={busy}
+              onClick={() => onResume(torrent.hash)}
+            >
+              繼續
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="btn"
+              disabled={busy}
+              onClick={() => onPause(torrent.hash)}
+            >
+              暫停
+            </button>
+          )}
           <button
             type="button"
             className="btn"
             disabled={busy}
-            onClick={() => onPause(torrent.hash)}
+            onClick={() => {
+              if (confirm("只從列表移除，保留已下載檔案？")) {
+                onDelete(torrent.hash, false);
+              }
+            }}
           >
-            暫停
+            移除
           </button>
-        )}
-        <button
-          type="button"
-          className="btn"
-          disabled={busy}
-          onClick={() => {
-            if (confirm("只從列表移除，保留已下載檔案？")) {
-              onDelete(torrent.hash, false);
-            }
-          }}
-        >
-          移除
-        </button>
-        <button
-          type="button"
-          className="btn btn--danger"
-          disabled={busy}
-          onClick={() => {
-            if (confirm("刪除種子並刪除檔案？此操作無法復原。")) {
-              onDelete(torrent.hash, true);
-            }
-          }}
-        >
-          刪檔
-        </button>
-      </div>
+          <button
+            type="button"
+            className="btn btn--danger"
+            disabled={busy}
+            onClick={() => {
+              if (confirm("刪除種子並刪除檔案？此操作無法復原。")) {
+                onDelete(torrent.hash, true);
+              }
+            }}
+          >
+            刪檔
+          </button>
+        </div>
+      ) : null}
     </article>
   );
 }

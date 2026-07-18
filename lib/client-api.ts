@@ -33,6 +33,10 @@ async function api<T>(
   return res.json() as Promise<T>;
 }
 
+function joinHashes(hashes: string | string[]): string {
+  return Array.isArray(hashes) ? hashes.join("|") : hashes;
+}
+
 export function fetchTorrents(initData: string) {
   return api<{ torrents: Torrent[] }>("/api/qb/torrents", initData);
 }
@@ -41,39 +45,39 @@ export function fetchCategories(initData: string) {
   return api<{ categories: string[] }>("/api/qb/categories", initData);
 }
 
-export function pauseTorrent(initData: string, hash: string) {
+export function pauseTorrent(initData: string, hashes: string | string[]) {
   return api<void>("/api/qb/pause", initData, {
     method: "POST",
-    body: JSON.stringify({ hashes: hash }),
+    body: JSON.stringify({ hashes: joinHashes(hashes) }),
   });
 }
 
-export function resumeTorrent(initData: string, hash: string) {
+export function resumeTorrent(initData: string, hashes: string | string[]) {
   return api<void>("/api/qb/resume", initData, {
     method: "POST",
-    body: JSON.stringify({ hashes: hash }),
+    body: JSON.stringify({ hashes: joinHashes(hashes) }),
   });
 }
 
 export function deleteTorrent(
   initData: string,
-  hash: string,
+  hashes: string | string[],
   deleteFiles: boolean
 ) {
   return api<void>("/api/qb/delete", initData, {
     method: "POST",
-    body: JSON.stringify({ hashes: hash, deleteFiles }),
+    body: JSON.stringify({ hashes: joinHashes(hashes), deleteFiles }),
   });
 }
 
 export function setTorrentCategory(
   initData: string,
-  hash: string,
+  hashes: string | string[],
   category: string
 ) {
   return api<void>("/api/qb/category", initData, {
     method: "POST",
-    body: JSON.stringify({ hashes: hash, category }),
+    body: JSON.stringify({ hashes: joinHashes(hashes), category }),
   });
 }
 

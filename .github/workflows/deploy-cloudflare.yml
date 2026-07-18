@@ -71,3 +71,31 @@ jobs:
           PY
           npx wrangler secret bulk worker-secrets.json
           rm -f worker-secrets.json
+
+      - name: Set Telegram webhook
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          APP_URL: ${{ vars.APP_URL }}
+        run: |
+          if [ -z "$APP_URL" ]; then
+            echo "APP_URL variable is required to set webhook" >&2
+            exit 1
+          fi
+          python3 <<'PY'
+          import json, os, urllib.request
+          payload = {
+              "url": os.environ["APP_URL"].rstrip("/") + "/api/telegram/webhook",
+              "secret_token": os.environ["CRON_SECRET"],
+              "allowed_updates": ["message"],
+              "drop_pending_updates": False,
+          }
+          req = urllib.request.Request(
+              f"https://api.telegram.org/bot{os.environ['TELEGRAM_BOT_TOKEN']}/setWebhook",
+              data=json.dumps(payload).encode(),
+              headers={"Content-Type": "application/json"},
+              method="POST",
+          )
+          with urllib.request.urlopen(req) as res:
+              print(res.read().decode())
+          PY

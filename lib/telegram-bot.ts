@@ -10,37 +10,62 @@ function escapeHtml(text: string): string {
     .replaceAll(">", "&gt;");
 }
 
+function botToken(): string {
+  const token = env("TELEGRAM_BOT_TOKEN");
+  if (!token) throw new Error("TELEGRAM_BOT_TOKEN is not configured");
+  return token;
+}
+
+async function telegramApi<T>(
+  method: string,
+  body?: Record<string, unknown>
+): Promise<T> {
+  const res = await fetch(`https://api.telegram.org/bot${botToken()}/${method}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: body ? JSON.stringify(body) : undefined,
+    cache: "no-store",
+  });
+  const data = (await res.json()) as {
+    ok?: boolean;
+    description?: string;
+    result?: T;
+  };
+  if (!res.ok || !data.ok || data.result === undefined) {
+    throw new Error(data.description || `Telegram ${method} failed (${res.status})`);
+  }
+  return data.result;
+}
+
 export async function sendTelegramMessage(
   chatId: number | string,
   text: string
 ): Promise<void> {
-  const token = env("TELEGRAM_BOT_TOKEN");
-  if (!token) {
-    throw new Error("TELEGRAM_BOT_TOKEN is not configured");
-  }
-
-  const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      chat_id: chatId,
-      text,
-      parse_mode: "HTML",
-      disable_web_page_preview: true,
-    }),
-    cache: "no-store",
+  await telegramApi("sendMessage", {
+    chat_id: chatId,
+    text,
+    parse_mode: "HTML",
+    disable_web_page_preview: true,
   });
+}
 
-  const data = (await res.json().catch(() => null)) as {
-    ok?: boolean;
-    description?: string;
-  } | null;
-
-  if (!res.ok || !data?.ok) {
-    throw new Error(
-      data?.description || `Telegram sendMessage failed (${res.status})`
-    );
+export async function downloadTelegramFile(
+  fileId: string
+): Promise<{ bytes: ArrayBuffer; path: string }> {
+  const file = await telegramApi<{ file_path?: string }>("getFile", {
+    file_id: fileId,
+  });
+  if (!file.file_path) {
+    throw new Error("Telegram file path missing");
   }
+  const res = await fetch(
+    `https://api.telegram.org/file/bot${botToken()}/${file.file_path}`,
+    { cache: "no-store" }
+  );
+  if (!res.ok) {
+    throw new Error(`Failed to download Telegram file (${res.status})`);
+  }
+  return { bytes: await res.arrayBuffer(), path: file.file_path };
 }
 
 export function formatCompletionMessage(input: {
@@ -66,3 +91,9 @@ export function getNotifyChatIds(): number[] {
     .map((s) => Number(s.trim()))
     .filter((n) => Number.isFinite(n));
 }
+
+export function isAllowedChatUser(userId: number): boolean {
+  return getNotifyChatIds().includes(userId);
+}
+
+export { escapeHtml };
