@@ -142,7 +142,7 @@ export function BrowserPanel({ initData, categories, onAdded }: Props) {
   return (
     <section className="browse">
       <p className="hint browse__intro">
-        經代理開啟網頁並攔截 magnet／.torrent 連結，直接加入 qBittorrent。部分網站可能無法完整顯示。
+        經代理開啟網頁並攔截 magnet／.torrent（含彈窗／window.open）。部分網站可能無法完整顯示。
       </p>
 
       <form
@@ -231,7 +231,7 @@ export function BrowserPanel({ initData, categories, onAdded }: Props) {
           <iframe
             className="browse__frame"
             title="內嵌瀏覽"
-            sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+            sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-modals"
             srcDoc={html}
           />
         ) : (

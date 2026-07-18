@@ -87,26 +87,76 @@ function injectBrowseBridge(html: string, pageUrl: string): string {
       parent.postMessage({ source: "tg-dl-browse", type: type, url: url }, "*");
     } catch (e) {}
   }
-  document.addEventListener("click", function (e) {
-    var a = e.target && e.target.closest ? e.target.closest("a") : null;
-    if (!a || !a.href) return;
-    var href = a.href;
+
+  function resolveUrl(url) {
+    if (!url) return "";
+    try {
+      return new URL(String(url), document.baseURI || location.href).href;
+    } catch (e) {
+      return String(url);
+    }
+  }
+
+  function handleUrl(raw) {
+    var href = resolveUrl(raw);
+    if (!href) return true;
     if (href.indexOf("magnet:") === 0) {
-      e.preventDefault();
-      e.stopPropagation();
       send("add", href);
-      return;
+      return true;
     }
     if (/^https?:/i.test(href) && /\\.torrent(\\?|#|$)/i.test(href)) {
-      e.preventDefault();
-      e.stopPropagation();
       send("add", href);
-      return;
+      return true;
     }
     if (/^https?:/i.test(href)) {
+      send("navigate", href);
+      return true;
+    }
+    return false;
+  }
+
+  // Many "popup" buttons use window.open instead of <a href>.
+  try {
+    window.open = function (url) {
+      handleUrl(url);
+      return null;
+    };
+  } catch (e) {}
+
+  // Some sites assign location to open downloads / magnets.
+  try {
+    var _assign = Location.prototype.assign;
+    Location.prototype.assign = function (url) {
+      if (handleUrl(url)) return;
+      return _assign.call(this, url);
+    };
+    var _replace = Location.prototype.replace;
+    Location.prototype.replace = function (url) {
+      if (handleUrl(url)) return;
+      return _replace.call(this, url);
+    };
+  } catch (e) {}
+
+  document.addEventListener("click", function (e) {
+    var a = e.target && e.target.closest ? e.target.closest("a") : null;
+    if (!a) return;
+    var href = a.getAttribute("href") || a.href;
+    if (!href || href.charAt(0) === "#") return;
+    if (handleUrl(href)) {
       e.preventDefault();
       e.stopPropagation();
-      send("navigate", href);
+    }
+  }, true);
+
+  // Catch delayed popup patterns (e.g. setTimeout + open).
+  document.addEventListener("auxclick", function (e) {
+    if (e.button !== 1) return;
+    var a = e.target && e.target.closest ? e.target.closest("a") : null;
+    if (!a) return;
+    var href = a.getAttribute("href") || a.href;
+    if (handleUrl(href)) {
+      e.preventDefault();
+      e.stopPropagation();
     }
   }, true);
 })();
