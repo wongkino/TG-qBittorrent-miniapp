@@ -203,10 +203,18 @@ body {
   border-radius: var(--radius);
 }
 
+.add-form__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
 .add-form__label {
   font-size: 0.9rem;
   font-weight: 600;
 }
+
 
 .add-form__input {
   width: 100%;
