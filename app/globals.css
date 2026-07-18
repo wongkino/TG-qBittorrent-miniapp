@@ -39,6 +39,30 @@ body {
   gap: 14px;
 }
 
+.shell--browse {
+  max-width: none;
+  width: 100%;
+  min-height: 100dvh;
+  height: 100dvh;
+  max-height: 100dvh;
+  padding: 8px 8px 6px;
+  gap: 8px;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.shell--browse .header {
+  flex-shrink: 0;
+}
+
+.shell--browse .header .title {
+  font-size: 1.1rem;
+}
+
+.shell--browse .tabs {
+  flex-shrink: 0;
+}
+
 .header {
   display: flex;
   align-items: flex-start;
@@ -282,16 +306,22 @@ body {
 .browse {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
+  flex: 1;
+  min-height: 0;
 }
 
 .browse__intro {
   margin: 0;
+  flex-shrink: 0;
+  font-size: 0.78rem;
+  line-height: 1.35;
 }
 
 .browse__bar {
   display: flex;
   gap: 8px;
+  flex-shrink: 0;
 }
 
 .browse__url {
@@ -304,6 +334,7 @@ body {
   flex-wrap: wrap;
   align-items: flex-end;
   gap: 8px;
+  flex-shrink: 0;
 }
 
 .browse__cat {
@@ -318,6 +349,9 @@ body {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+  flex-shrink: 0;
+  max-height: 4.5rem;
+  overflow-y: auto;
 }
 
 .browse__shortcut {
@@ -332,30 +366,49 @@ body {
   border-radius: var(--radius);
   background: color-mix(in srgb, var(--button) 18%, var(--secondary));
   font-size: 0.85rem;
+  flex-shrink: 0;
 }
 
 .browse__frame-wrap {
-  min-height: 55vh;
+  flex: 1;
+  min-height: min(70dvh, 100%);
   border-radius: var(--radius);
   overflow: hidden;
   border: 1px solid var(--border);
   background: var(--secondary);
+  display: flex;
+  flex-direction: column;
+}
+
+.shell--browse .browse__frame-wrap {
+  min-height: 0;
 }
 
 .browse__frame {
   display: block;
   width: 100%;
-  height: 55vh;
+  flex: 1;
+  height: 100%;
+  min-height: 70dvh;
   border: 0;
   background: #fff;
+}
+
+.shell--browse .browse__frame {
+  min-height: 0;
 }
 
 .browse__placeholder {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 55vh;
+  flex: 1;
+  min-height: 70dvh;
   padding: 16px;
+}
+
+.shell--browse .browse__placeholder {
+  min-height: 0;
 }
 
 .add-form {

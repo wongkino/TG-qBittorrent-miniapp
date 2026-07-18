@@ -189,7 +189,7 @@ export function BrowserPanel({ initData, categories, onAdded }: Props) {
   return (
     <section className="browse">
       <p className="hint browse__intro">
-        經代理開啟網頁。常見年齡／注意門檻會在伺服器自動處理；magnet、.torrent 與「複製」按鈕可直接加入 qBittorrent。
+        代理瀏覽：年齡門自動處理；點 magnet／.torrent／複製即可加入。
       </p>
 
       <form
