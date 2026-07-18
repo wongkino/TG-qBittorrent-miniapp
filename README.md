@@ -18,10 +18,11 @@ npm run dev
 
 | Variable | 說明 |
 |----------|------|
+| `APP_URL` | Mini App Workers URL，例如 `https://tg-dl.<subdomain>.workers.dev`（**不是** qBittorrent URL） |
 | `ALLOWED_TELEGRAM_USER_IDS` | 允許的 User ID（Bot / 完成通知） |
 | `QBITTORRENT_URL` | 例如 `https://dl.example.com` |
 
-`APP_URL` **不必手動設定**。Deploy / 完成通知 workflow 會向 Cloudflare 查詢 workers.dev 子網域，自動組成 `https://tg-dl.<subdomain>.workers.dev`。
+首次 Deploy 後，到 Cloudflare Dashboard 複製 Workers URL，設成 GitHub Variable `APP_URL`，再重新跑一次 Deploy（才會正確註冊 Telegram webhook）。
 
 ## Bot 指令
 
