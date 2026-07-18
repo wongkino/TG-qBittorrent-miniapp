@@ -42,8 +42,11 @@ npm run dev
 
 - 排序：加入時間、名稱、進度、速度、大小、ETA
 - 批次：多選後暫停／繼續／移除／刪檔
-- 分類、貼上剪貼簿、完成通知（`tg-notified` tag）
+- 分類、貼上剪貼簿、開始／完成通知（`tg-started` / `tg-notified` tag）
 
-## 下載完成通知
+## 下載開始／完成通知
 
-[notify workflow](.github/workflows/notify-completions.yml) 每 2 分鐘檢查一次近 15 分鐘內完成的種子。
+[notify workflow](.github/workflows/notify-completions.yml) 每 2 分鐘檢查一次：
+
+- 近 15 分鐘內**新加入**且尚未完成的種子 →「下載開始」
+- 近 15 分鐘內**完成**的種子 →「下載完成」

@@ -253,6 +253,7 @@ export type NotifyTorrent = {
   state: string;
   category: string;
   tags: string;
+  added_on: number;
   completion_on: number;
 };
 
@@ -268,6 +269,7 @@ export async function listTorrentsForNotify(): Promise<NotifyTorrent[]> {
     state: String(t.state ?? "unknown"),
     category: String(t.category ?? ""),
     tags: String(t.tags ?? ""),
+    added_on: Number(t.added_on) || 0,
     completion_on: Number(t.completion_on) || 0,
   }));
 }

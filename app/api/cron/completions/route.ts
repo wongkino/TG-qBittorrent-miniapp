@@ -1,5 +1,5 @@
 import { handleApiError, jsonError, jsonOk } from "@/lib/api";
-import { notifyNewCompletions } from "@/lib/completions";
+import { notifyTorrentEvents } from "@/lib/completions";
 
 function authorizeCron(request: Request): boolean {
   const secret = process.env.CRON_SECRET?.trim();
@@ -13,7 +13,7 @@ async function run(request: Request) {
     return jsonError("Unauthorized", 401);
   }
 
-  const result = await notifyNewCompletions();
+  const result = await notifyTorrentEvents();
   return jsonOk({ ok: true, ...result });
 }
 

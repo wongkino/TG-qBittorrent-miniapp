@@ -77,13 +77,12 @@ export async function downloadTelegramFile(
   return { bytes: await res.arrayBuffer(), path: file.file_path };
 }
 
-export function formatCompletionMessage(input: {
-  name: string;
-  sizeLabel: string;
-  category?: string;
-}): string {
+function formatTorrentEventMessage(
+  title: string,
+  input: { name: string; sizeLabel: string; category?: string }
+): string {
   const lines = [
-    "✅ <b>下載完成</b>",
+    title,
     "",
     escapeHtml(input.name),
     `大小：${escapeHtml(input.sizeLabel)}`,
@@ -92,6 +91,22 @@ export function formatCompletionMessage(input: {
     lines.push(`分類：${escapeHtml(input.category)}`);
   }
   return lines.join("\n");
+}
+
+export function formatStartMessage(input: {
+  name: string;
+  sizeLabel: string;
+  category?: string;
+}): string {
+  return formatTorrentEventMessage("⬇️ <b>下載開始</b>", input);
+}
+
+export function formatCompletionMessage(input: {
+  name: string;
+  sizeLabel: string;
+  category?: string;
+}): string {
+  return formatTorrentEventMessage("✅ <b>下載完成</b>", input);
 }
 
 export function getNotifyChatIds(): number[] {

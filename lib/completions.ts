@@ -6,14 +6,16 @@ import {
 } from "@/lib/qbittorrent";
 import {
   formatCompletionMessage,
+  formatStartMessage,
   getNotifyChatIds,
   sendTelegramMessage,
 } from "@/lib/telegram-bot";
 
 export const COMPLETION_NOTIFY_TAG = "tg-notified";
+export const START_NOTIFY_TAG = "tg-started";
 
-/** Only notify completions that finished within this window. */
-const COMPLETION_WINDOW_SEC = 15 * 60;
+/** Only notify events within this window. */
+const NOTIFY_WINDOW_SEC = 15 * 60;
 
 function hasTag(torrent: NotifyTorrent, tag: string): boolean {
   return torrent.tags
@@ -23,19 +25,35 @@ function hasTag(torrent: NotifyTorrent, tag: string): boolean {
     .includes(tag);
 }
 
+function isRecentlyStarted(torrent: NotifyTorrent, nowSec: number): boolean {
+  if (torrent.added_on <= 0) return false;
+  // Skip torrents that were already finished when added.
+  if (torrent.progress >= 1 && torrent.completion_on > 0) return false;
+  const age = nowSec - torrent.added_on;
+  return age >= 0 && age <= NOTIFY_WINDOW_SEC;
+}
+
 function isRecentlyCompleted(torrent: NotifyTorrent, nowSec: number): boolean {
   if (torrent.progress < 1 || torrent.completion_on <= 0) return false;
   const age = nowSec - torrent.completion_on;
-  return age >= 0 && age <= COMPLETION_WINDOW_SEC;
+  return age >= 0 && age <= NOTIFY_WINDOW_SEC;
 }
 
-export type CompletionNotifyResult = {
+export type EventNotifyResult = {
   checked: number;
-  notified: number;
-  names: string[];
+  started: number;
+  completed: number;
+  startedNames: string[];
+  completedNames: string[];
 };
 
-export async function notifyNewCompletions(): Promise<CompletionNotifyResult> {
+async function notifyChats(text: string, chatIds: number[]): Promise<void> {
+  for (const chatId of chatIds) {
+    await sendTelegramMessage(chatId, text);
+  }
+}
+
+export async function notifyTorrentEvents(): Promise<EventNotifyResult> {
   const chatIds = getNotifyChatIds();
   if (chatIds.length === 0) {
     throw new Error("ALLOWED_TELEGRAM_USER_IDS is not configured");
@@ -43,31 +61,63 @@ export async function notifyNewCompletions(): Promise<CompletionNotifyResult> {
 
   const torrents = await listTorrentsForNotify();
   const nowSec = Math.floor(Date.now() / 1000);
-  const pending = torrents.filter(
+
+  const startedNames: string[] = [];
+  const completedNames: string[] = [];
+
+  const pendingStarts = torrents.filter(
+    (t) =>
+      isRecentlyStarted(t, nowSec) &&
+      !hasTag(t, START_NOTIFY_TAG) &&
+      !hasTag(t, COMPLETION_NOTIFY_TAG)
+  );
+
+  for (const torrent of pendingStarts) {
+    await notifyChats(
+      formatStartMessage({
+        name: torrent.name,
+        sizeLabel: formatBytes(torrent.size),
+        category: torrent.category || undefined,
+      }),
+      chatIds
+    );
+    await addTorrentTags(torrent.hash, START_NOTIFY_TAG);
+    startedNames.push(torrent.name);
+  }
+
+  const pendingCompletions = torrents.filter(
     (t) =>
       isRecentlyCompleted(t, nowSec) && !hasTag(t, COMPLETION_NOTIFY_TAG)
   );
 
-  const names: string[] = [];
-
-  for (const torrent of pending) {
-    const text = formatCompletionMessage({
-      name: torrent.name,
-      sizeLabel: formatBytes(torrent.size),
-      category: torrent.category || undefined,
-    });
-
-    for (const chatId of chatIds) {
-      await sendTelegramMessage(chatId, text);
-    }
-
+  for (const torrent of pendingCompletions) {
+    await notifyChats(
+      formatCompletionMessage({
+        name: torrent.name,
+        sizeLabel: formatBytes(torrent.size),
+        category: torrent.category || undefined,
+      }),
+      chatIds
+    );
     await addTorrentTags(torrent.hash, COMPLETION_NOTIFY_TAG);
-    names.push(torrent.name);
+    completedNames.push(torrent.name);
   }
 
   return {
     checked: torrents.length,
-    notified: names.length,
-    names,
+    started: startedNames.length,
+    completed: completedNames.length,
+    startedNames,
+    completedNames,
+  };
+}
+
+/** @deprecated Prefer notifyTorrentEvents */
+export async function notifyNewCompletions() {
+  const result = await notifyTorrentEvents();
+  return {
+    checked: result.checked,
+    notified: result.completed,
+    names: result.completedNames,
   };
 }
