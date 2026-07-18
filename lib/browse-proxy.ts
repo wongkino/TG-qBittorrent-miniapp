@@ -165,16 +165,8 @@ function injectBrowseBridge(html: string, pageUrl: string): string {
     };
   } catch (e) {}
 
-  // Age-gate (e.g. javdb "請注意"): auto-confirm so cookies can be stored by parent.
-  try {
-    var age = document.querySelector(".over18-modal.is-active a.button.is-success[href]");
-    if (age) {
-      var ageHref = age.getAttribute("href") || age.href;
-      if (ageHref) {
-        setTimeout(function () { handleUrl(ageHref); }, 50);
-      }
-    }
-  } catch (e) {}
+  // Age-gate is resolved server-side (see resolveAgeGate). Do not auto-navigate here
+  // or the UI will loop on "請注意" when cookies fail to stick in the WebView.
 
   document.addEventListener("click", function (e) {
     var t = e.target;
@@ -218,17 +210,58 @@ function injectBrowseBridge(html: string, pageUrl: string): string {
   return out;
 }
 
-export async function fetchBrowsableHtml(
-  target: URL,
-  cookieHeader?: string
-): Promise<BrowseResult> {
-  let cookie = cookieHeader?.trim() || "";
-  let current = target.toString();
+function isJavdbHost(hostname: string): boolean {
+  return /^(?:www\.)?javdb\d*\.com$/i.test(hostname);
+}
+
+function ensureSiteCookies(hostname: string, cookie: string): string {
+  let next = cookie;
+  if (isJavdbHost(hostname)) {
+    // JavDB age gate — without this every page shows「請注意」.
+    next = mergeCookieHeader(next, ["over18=1"]);
+  }
+  return next;
+}
+
+function extractOver18YesUrl(html: string, pageUrl: string): string | null {
+  const match = html.match(
+    /over18-modal[\s\S]*?<a[^>]+class="[^"]*button[^"]*is-success[^"]*"[^>]+href="([^"]+)"/i
+  ) || html.match(
+    /href="(\/over18\?respond=1[^"]+)"/i
+  );
+  if (!match?.[1]) return null;
+  const href = match[1].replaceAll("&amp;", "&");
+  try {
+    return new URL(href, pageUrl).toString();
+  } catch {
+    return null;
+  }
+}
+
+function hasActiveOver18Modal(html: string): boolean {
+  return /class="[^"]*over18-modal[^"]*is-active|class="[^"]*is-active[^"]*over18-modal/i.test(
+    html
+  );
+}
+
+async function fetchHtmlOnce(
+  url: string,
+  cookie: string
+): Promise<{
+  html: string;
+  finalUrl: string;
+  cookie: string;
+  setCookies: string[];
+  status: number;
+}> {
+  let current = url;
+  let jar = cookie;
   const allSetCookies: string[] = [];
   let res: Response | null = null;
 
   for (let hop = 0; hop < 8; hop++) {
     assertBrowsableUrl(current);
+    jar = ensureSiteCookies(new URL(current).hostname, jar);
 
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
@@ -238,8 +271,8 @@ export async function fetchBrowsableHtml(
           "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
         Accept: "text/html,application/xhtml+xml;q=0.9,*/*;q=0.8",
         "Accept-Language": "zh-TW,zh;q=0.9,en;q=0.8",
+        Cookie: jar,
       };
-      if (cookie) headers.Cookie = cookie;
 
       res = await fetch(current, {
         redirect: "manual",
@@ -258,7 +291,7 @@ export async function fetchBrowsableHtml(
     const setCookies = readSetCookies(res);
     if (setCookies.length) {
       allSetCookies.push(...setCookies);
-      cookie = mergeCookieHeader(cookie, setCookies);
+      jar = mergeCookieHeader(jar, setCookies);
     }
 
     if (res.status >= 300 && res.status < 400) {
@@ -276,9 +309,7 @@ export async function fetchBrowsableHtml(
   if (!res) {
     throw new BrowseError("無法連線目標網站", 502);
   }
-
   assertBrowsableUrl(current);
-
   if (!res.ok) {
     throw new BrowseError(`目標網站回傳 ${res.status}`, 502);
   }
@@ -298,8 +329,58 @@ export async function fetchBrowsableHtml(
 
   const html = new TextDecoder("utf-8", { fatal: false }).decode(buf);
   return {
-    html: injectBrowseBridge(html, current),
+    html,
     finalUrl: current,
+    cookie: jar,
     setCookies: allSetCookies,
+    status: res.status,
+  };
+}
+
+export async function fetchBrowsableHtml(
+  target: URL,
+  cookieHeader?: string
+): Promise<BrowseResult> {
+  let cookie = ensureSiteCookies(
+    target.hostname,
+    cookieHeader?.trim() || ""
+  );
+  const collected: string[] = [];
+
+  let page = await fetchHtmlOnce(target.toString(), cookie);
+  collected.push(...page.setCookies);
+  cookie = page.cookie;
+
+  // Resolve age gate on the server so the client never loops on「請注意」.
+  for (let i = 0; i < 2 && hasActiveOver18Modal(page.html); i++) {
+    const yesUrl = extractOver18YesUrl(page.html, page.finalUrl);
+    if (!yesUrl) break;
+    // Ensure over18 cookie even if Set-Cookie headers are stripped by the runtime.
+    cookie = mergeCookieHeader(cookie, ["over18=1"]);
+    collected.push("over18=1");
+    page = await fetchHtmlOnce(yesUrl, cookie);
+    collected.push(...page.setCookies);
+    cookie = page.cookie;
+  }
+
+  // Strip a stuck modal if cookie is set but HTML still embeds it.
+  let html = page.html;
+  if (hasActiveOver18Modal(html) && /(?:^|;\s*)over18=1(?:;|$)/.test(cookie)) {
+    html = html.replace(
+      /class="([^"]*\bover18-modal\b[^"]*)"/gi,
+      (_m, cls: string) =>
+        `class="${cls.replace(/\bis-active\b/g, "").replace(/\s+/g, " ").trim()}"`
+    );
+  }
+
+  // Always return over18=1 to the client jar for javdb hosts.
+  if (isJavdbHost(new URL(page.finalUrl).hostname)) {
+    collected.push("over18=1");
+  }
+
+  return {
+    html: injectBrowseBridge(html, page.finalUrl),
+    finalUrl: page.finalUrl,
+    setCookies: collected,
   };
 }

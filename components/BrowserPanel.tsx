@@ -54,9 +54,14 @@ function saveCookieJar(jar: Record<string, string>) {
   localStorage.setItem(COOKIE_KEY, JSON.stringify(jar));
 }
 
-function cookieHost(pageUrl: string): string {
+function cookieJarKey(pageUrl: string): string {
   try {
-    return new URL(pageUrl).hostname;
+    const host = new URL(pageUrl).hostname.toLowerCase();
+    // Share age-gate cookie across javdb.com / javdb574.com / www.
+    if (/^(?:www\.)?javdb\d*\.com$/.test(host)) return "javdb.com";
+    const parts = host.split(".");
+    if (parts.length >= 2) return parts.slice(-2).join(".");
+    return host;
   } catch {
     return pageUrl;
   }
@@ -97,22 +102,22 @@ export function BrowserPanel({ initData, categories, onAdded }: Props) {
       setError(null);
       setStatus(null);
       try {
-        const host = cookieHost(trimmed);
-        const existing = cookieJar.current[host] || "";
+        const key = cookieJarKey(trimmed);
+        const existing = cookieJar.current[key] || "";
         const page = await fetchBrowseHtml(initData, trimmed, existing || undefined);
         if (gen !== openGen.current) return;
 
         if (page.setCookies.length > 0) {
           const merged = mergeCookieHeader(existing, page.setCookies);
-          cookieJar.current = { ...cookieJar.current, [host]: merged };
-          // Also store under final URL host if redirected to another subdomain.
-          const finalHost = cookieHost(page.finalUrl);
-          if (finalHost !== host) {
-            cookieJar.current[finalHost] = mergeCookieHeader(
-              cookieJar.current[finalHost] || "",
+          const finalKey = cookieJarKey(page.finalUrl);
+          cookieJar.current = {
+            ...cookieJar.current,
+            [key]: merged,
+            [finalKey]: mergeCookieHeader(
+              cookieJar.current[finalKey] || merged,
               page.setCookies
-            );
-          }
+            ),
+          };
           saveCookieJar(cookieJar.current);
         }
 
@@ -191,7 +196,7 @@ export function BrowserPanel({ initData, categories, onAdded }: Props) {
   return (
     <section className="browse">
       <p className="hint browse__intro">
-        經代理開啟網頁。會自動處理年齡確認（如 JavDB「請注意」），並攔截 magnet／複製按鈕／彈窗下載。
+        經代理開啟網頁。JavDB「請注意」年齡門會在伺服器自動帶過，不會每點一次就跳回來。magnet／複製按鈕可直接加入。
       </p>
 
       <form
