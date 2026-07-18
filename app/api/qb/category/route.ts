@@ -1,16 +1,16 @@
 import { handleApiError, jsonError, jsonOk, requireAuth } from "@/lib/api";
-import { addTorrent } from "@/lib/qbittorrent";
+import { setTorrentCategory } from "@/lib/qbittorrent";
 
 export async function POST(request: Request) {
   try {
     requireAuth(request);
     const body = (await request.json()) as {
-      urls?: string;
+      hashes?: string;
       category?: string;
     };
-    const urls = body.urls?.trim();
-    if (!urls) return jsonError("urls is required", 400);
-    await addTorrent(urls, body.category?.trim() || undefined);
+    const hashes = body.hashes?.trim();
+    if (!hashes) return jsonError("hashes is required", 400);
+    await setTorrentCategory(hashes, body.category?.trim() ?? "");
     return jsonOk();
   } catch (err) {
     return handleApiError(err);

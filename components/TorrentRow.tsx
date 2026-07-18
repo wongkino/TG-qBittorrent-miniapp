@@ -1,6 +1,7 @@
 "use client";
 
 import type { Torrent } from "@/lib/types";
+import { CategorySelect } from "@/components/CategorySelect";
 import {
   formatBytes,
   formatEta,
@@ -12,21 +13,31 @@ import {
 
 type Props = {
   torrent: Torrent;
+  categories: string[];
   busy: boolean;
   onPause: (hash: string) => void;
   onResume: (hash: string) => void;
   onDelete: (hash: string, deleteFiles: boolean) => void;
+  onCategoryChange: (hash: string, category: string) => void;
 };
 
 export function TorrentRow({
   torrent,
+  categories,
   busy,
   onPause,
   onResume,
   onDelete,
+  onCategoryChange,
 }: Props) {
   const paused = isPausedState(torrent.state);
   const pct = Math.min(100, Math.max(0, torrent.progress * 100));
+  const categoryOptions =
+    torrent.category && !categories.includes(torrent.category)
+      ? [...categories, torrent.category].sort((a, b) =>
+          a.localeCompare(b, "zh-Hant")
+        )
+      : categories;
 
   return (
     <article className="torrent-row">
@@ -37,7 +48,10 @@ export function TorrentRow({
         <span className="torrent-row__state">{stateLabel(torrent.state)}</span>
       </div>
 
-      <div className="progress" aria-label={`進度 ${formatProgress(torrent.progress)}`}>
+      <div
+        className="progress"
+        aria-label={`進度 ${formatProgress(torrent.progress)}`}
+      >
         <div className="progress__bar" style={{ width: `${pct}%` }} />
       </div>
 
@@ -47,6 +61,19 @@ export function TorrentRow({
         <span>↓ {formatSpeed(torrent.dlspeed)}</span>
         <span>↑ {formatSpeed(torrent.upspeed)}</span>
         <span>ETA {formatEta(torrent.eta)}</span>
+      </div>
+
+      <div className="torrent-row__category">
+        <label className="torrent-row__category-label" htmlFor={`cat-${torrent.hash}`}>
+          分類
+        </label>
+        <CategorySelect
+          id={`cat-${torrent.hash}`}
+          value={torrent.category}
+          categories={categoryOptions}
+          disabled={busy}
+          onChange={(category) => onCategoryChange(torrent.hash, category)}
+        />
       </div>
 
       <div className="torrent-row__actions">

@@ -1,13 +1,16 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { CategorySelect } from "@/components/CategorySelect";
 
 type Props = {
-  onSubmit: (urls: string) => Promise<void>;
+  categories: string[];
+  onSubmit: (urls: string, category: string) => Promise<void>;
 };
 
-export function AddTorrentForm({ onSubmit }: Props) {
+export function AddTorrentForm({ categories, onSubmit }: Props) {
   const [value, setValue] = useState("");
+  const [category, setCategory] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -19,7 +22,7 @@ export function AddTorrentForm({ onSubmit }: Props) {
     setSubmitting(true);
     setError(null);
     try {
-      await onSubmit(urls);
+      await onSubmit(urls, category);
       setValue("");
     } catch (err) {
       setError(err instanceof Error ? err.message : "新增失敗");
@@ -41,6 +44,17 @@ export function AddTorrentForm({ onSubmit }: Props) {
         value={value}
         onChange={(e) => setValue(e.target.value)}
         disabled={submitting}
+      />
+      <label className="add-form__label" htmlFor="torrent-category">
+        下載分類
+      </label>
+      <CategorySelect
+        id="torrent-category"
+        value={category}
+        categories={categories}
+        disabled={submitting}
+        emptyLabel={categories.length ? "無分類" : "尚未建立分類"}
+        onChange={setCategory}
       />
       {error ? <p className="error">{error}</p> : null}
       <button

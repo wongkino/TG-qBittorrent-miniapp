@@ -229,3 +229,34 @@ body {
 .add-form__input::placeholder {
   color: var(--hint);
 }
+
+.select {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  padding: 8px 10px;
+  font: inherit;
+  font-size: 0.85rem;
+}
+
+.select:disabled {
+  opacity: 0.5;
+}
+
+.torrent-row__category {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.torrent-row__category-label {
+  flex-shrink: 0;
+  font-size: 0.8rem;
+  color: var(--hint);
+}
+
+.torrent-row__category .select {
+  flex: 1;
+}

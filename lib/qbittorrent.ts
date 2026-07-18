@@ -227,6 +227,7 @@ function projectTorrent(raw: RawTorrent): Torrent {
     upspeed: Number(raw.upspeed) || 0,
     state: String(raw.state ?? "unknown"),
     eta: Number(raw.eta) || 0,
+    category: String(raw.category ?? ""),
   };
 }
 
@@ -235,6 +236,13 @@ export async function listTorrents(): Promise<Torrent[]> {
   if (!res.ok) throw new QBitError("Failed to fetch torrents", 502);
   const raw = (await res.json()) as RawTorrent[];
   return raw.map(projectTorrent);
+}
+
+export async function listCategories(): Promise<string[]> {
+  const res = await qbFetch("/api/v2/torrents/categories", { method: "GET" });
+  if (!res.ok) throw new QBitError("Failed to fetch categories", 502);
+  const raw = (await res.json()) as Record<string, unknown>;
+  return Object.keys(raw).sort((a, b) => a.localeCompare(b, "zh-Hant"));
 }
 
 export async function pauseTorrents(hashes: string): Promise<void> {
@@ -259,8 +267,20 @@ export async function deleteTorrents(
   });
 }
 
-export async function addTorrent(urls: string): Promise<void> {
-  await postForm("/api/v2/torrents/add", { urls });
+export async function setTorrentCategory(
+  hashes: string,
+  category: string
+): Promise<void> {
+  await postForm("/api/v2/torrents/setCategory", { hashes, category });
+}
+
+export async function addTorrent(
+  urls: string,
+  category?: string
+): Promise<void> {
+  const fields: Record<string, string> = { urls };
+  if (category) fields.category = category;
+  await postForm("/api/v2/torrents/add", fields);
 }
 
 export class QBitError extends Error {

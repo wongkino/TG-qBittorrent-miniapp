@@ -37,6 +37,10 @@ export function fetchTorrents(initData: string) {
   return api<{ torrents: Torrent[] }>("/api/qb/torrents", initData);
 }
 
+export function fetchCategories(initData: string) {
+  return api<{ categories: string[] }>("/api/qb/categories", initData);
+}
+
 export function pauseTorrent(initData: string, hash: string) {
   return api<void>("/api/qb/pause", initData, {
     method: "POST",
@@ -62,9 +66,24 @@ export function deleteTorrent(
   });
 }
 
-export function addTorrentUrl(initData: string, urls: string) {
+export function setTorrentCategory(
+  initData: string,
+  hash: string,
+  category: string
+) {
+  return api<void>("/api/qb/category", initData, {
+    method: "POST",
+    body: JSON.stringify({ hashes: hash, category }),
+  });
+}
+
+export function addTorrentUrl(
+  initData: string,
+  urls: string,
+  category?: string
+) {
   return api<void>("/api/qb/add", initData, {
     method: "POST",
-    body: JSON.stringify({ urls }),
+    body: JSON.stringify({ urls, category }),
   });
 }

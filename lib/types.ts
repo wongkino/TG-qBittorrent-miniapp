@@ -7,6 +7,7 @@ export type Torrent = {
   upspeed: number;
   state: string;
   eta: number;
+  category: string;
 };
 
 export function torrentsEqual(a: Torrent[], b: Torrent[]): boolean {
@@ -22,7 +23,8 @@ export function torrentsEqual(a: Torrent[], b: Torrent[]): boolean {
       x.dlspeed !== y.dlspeed ||
       x.upspeed !== y.upspeed ||
       x.state !== y.state ||
-      x.eta !== y.eta
+      x.eta !== y.eta ||
+      x.category !== y.category
     ) {
       return false;
     }

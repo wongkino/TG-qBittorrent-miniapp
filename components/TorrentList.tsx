@@ -5,18 +5,22 @@ import { TorrentRow } from "@/components/TorrentRow";
 
 type Props = {
   torrents: Torrent[];
+  categories: string[];
   busyHash: string | null;
   onPause: (hash: string) => void;
   onResume: (hash: string) => void;
   onDelete: (hash: string, deleteFiles: boolean) => void;
+  onCategoryChange: (hash: string, category: string) => void;
 };
 
 export function TorrentList({
   torrents,
+  categories,
   busyHash,
   onPause,
   onResume,
   onDelete,
+  onCategoryChange,
 }: Props) {
   if (torrents.length === 0) {
     return (
@@ -33,10 +37,12 @@ export function TorrentList({
         <TorrentRow
           key={t.hash}
           torrent={t}
+          categories={categories}
           busy={busyHash === t.hash}
           onPause={onPause}
           onResume={onResume}
           onDelete={onDelete}
+          onCategoryChange={onCategoryChange}
         />
       ))}
     </div>

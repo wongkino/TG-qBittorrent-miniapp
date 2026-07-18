@@ -6,9 +6,11 @@ import { TorrentList } from "@/components/TorrentList";
 import {
   addTorrentUrl,
   deleteTorrent,
+  fetchCategories,
   fetchTorrents,
   pauseTorrent,
   resumeTorrent,
+  setTorrentCategory,
 } from "@/lib/client-api";
 import { torrentsEqual, type Torrent } from "@/lib/types";
 
@@ -23,12 +25,13 @@ export function MiniApp() {
   const [authError, setAuthError] = useState<string | null>(null);
   const [userName, setUserName] = useState<string | null>(null);
   const [torrents, setTorrents] = useState<Torrent[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
   const [listError, setListError] = useState<string | null>(null);
   const [busyHash, setBusyHash] = useState<string | null>(null);
   const [booting, setBooting] = useState(true);
   const refreshInflight = useRef(false);
 
-  const refresh = useCallback(async (token: string) => {
+  const refreshTorrents = useCallback(async (token: string) => {
     if (refreshInflight.current) return;
     refreshInflight.current = true;
     try {
@@ -39,6 +42,23 @@ export function MiniApp() {
       refreshInflight.current = false;
     }
   }, []);
+
+  const loadCategories = useCallback(async (token: string) => {
+    const { categories: nextCategories } = await fetchCategories(token);
+    setCategories((prev) =>
+      prev.length === nextCategories.length &&
+      prev.every((name, i) => name === nextCategories[i])
+        ? prev
+        : nextCategories
+    );
+  }, []);
+
+  const refreshAll = useCallback(
+    async (token: string) => {
+      await Promise.all([refreshTorrents(token), loadCategories(token)]);
+    },
+    [refreshTorrents, loadCategories]
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -64,7 +84,7 @@ export function MiniApp() {
         setUserName(
           user?.first_name || user?.username || (user ? String(user.id) : null)
         );
-        await refresh(data);
+        await refreshAll(data);
       } catch (err) {
         if (!cancelled) {
           setAuthError(errMessage(err, "初始化失敗"));
@@ -78,14 +98,14 @@ export function MiniApp() {
     return () => {
       cancelled = true;
     };
-  }, [refresh]);
+  }, [refreshAll]);
 
   useEffect(() => {
     if (!initData || authError) return;
 
     const tick = () => {
       if (document.visibilityState === "hidden") return;
-      void refresh(initData).catch((err) => {
+      void refreshTorrents(initData).catch((err) => {
         setListError(errMessage(err, "重新整理失敗"));
       });
     };
@@ -96,14 +116,14 @@ export function MiniApp() {
       window.clearInterval(id);
       document.removeEventListener("visibilitychange", tick);
     };
-  }, [initData, authError, refresh]);
+  }, [initData, authError, refreshTorrents]);
 
   async function withBusy(hash: string, action: () => Promise<void>) {
     if (!initData) return;
     setBusyHash(hash);
     try {
       await action();
-      await refresh(initData);
+      await refreshTorrents(initData);
     } catch (err) {
       setListError(errMessage(err, "操作失敗"));
     } finally {
@@ -139,7 +159,7 @@ export function MiniApp() {
           type="button"
           className="btn btn--sm"
           onClick={() => {
-            void refresh(initData).catch((err) => {
+            void refreshAll(initData).catch((err) => {
               setListError(errMessage(err, "重新整理失敗"));
             });
           }}
@@ -152,6 +172,7 @@ export function MiniApp() {
 
       <TorrentList
         torrents={torrents}
+        categories={categories}
         busyHash={busyHash}
         onPause={(hash) =>
           void withBusy(hash, () => pauseTorrent(initData, hash))
@@ -162,12 +183,18 @@ export function MiniApp() {
         onDelete={(hash, deleteFiles) =>
           void withBusy(hash, () => deleteTorrent(initData, hash, deleteFiles))
         }
+        onCategoryChange={(hash, category) =>
+          void withBusy(hash, () =>
+            setTorrentCategory(initData, hash, category)
+          )
+        }
       />
 
       <AddTorrentForm
-        onSubmit={async (urls) => {
-          await addTorrentUrl(initData, urls);
-          await refresh(initData);
+        categories={categories}
+        onSubmit={async (urls, category) => {
+          await addTorrentUrl(initData, urls, category || undefined);
+          await refreshAll(initData);
         }}
       />
     </main>
