@@ -8,26 +8,13 @@ function authorizeCron(request: Request): boolean {
   return header === `Bearer ${secret}`;
 }
 
-async function run(request: Request) {
-  if (!authorizeCron(request)) {
-    return jsonError("Unauthorized", 401);
-  }
-
-  const result = await notifyTorrentEvents();
-  return jsonOk({ ok: true, ...result });
-}
-
-export async function GET(request: Request) {
-  try {
-    return await run(request);
-  } catch (err) {
-    return handleApiError(err);
-  }
-}
-
 export async function POST(request: Request) {
   try {
-    return await run(request);
+    if (!authorizeCron(request)) {
+      return jsonError("Unauthorized", 401);
+    }
+    const result = await notifyTorrentEvents();
+    return jsonOk({ ok: true, ...result });
   } catch (err) {
     return handleApiError(err);
   }

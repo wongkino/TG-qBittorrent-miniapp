@@ -1,16 +1,15 @@
-import { handleApiError, jsonError, jsonOk, requireAuth } from "@/lib/api";
+import { handleApiError, jsonOk, readHashesBody, requireAuth } from "@/lib/api";
 import { deleteTorrents } from "@/lib/qbittorrent";
 
 export async function POST(request: Request) {
   try {
     requireAuth(request);
-    const body = (await request.json()) as {
+    const parsed = await readHashesBody<{
       hashes?: string;
       deleteFiles?: boolean;
-    };
-    const hashes = body.hashes?.trim();
-    if (!hashes) return jsonError("hashes is required", 400);
-    await deleteTorrents(hashes, Boolean(body.deleteFiles));
+    }>(request);
+    if (parsed instanceof Response) return parsed;
+    await deleteTorrents(parsed.hashes, Boolean(parsed.body.deleteFiles));
     return jsonOk();
   } catch (err) {
     return handleApiError(err);

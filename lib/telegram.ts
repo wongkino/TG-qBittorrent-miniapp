@@ -1,14 +1,9 @@
 import { createHmac, timingSafeEqual } from "crypto";
+import { env, parseAllowedTelegramUserIds } from "@/lib/env";
 
-export type TelegramWebAppUser = {
-  id: number;
-  first_name?: string;
-  last_name?: string;
-  username?: string;
-  language_code?: string;
-};
+type TelegramWebAppUser = { id: number };
 
-export type VerifiedTelegramAuth = {
+type VerifiedTelegramAuth = {
   user: TelegramWebAppUser;
   authDate: number;
 };
@@ -16,30 +11,19 @@ export type VerifiedTelegramAuth = {
 const MAX_AUTH_AGE_SECONDS = 60 * 60 * 24;
 
 function getBotToken(): string {
-  const token = process.env.TELEGRAM_BOT_TOKEN?.trim();
+  const token = env("TELEGRAM_BOT_TOKEN");
   if (!token) throw new AuthError("TELEGRAM_BOT_TOKEN is not configured", 500);
   return token;
 }
 
-function getAllowedUserIds(): Set<number> {
-  return new Set(
-    (process.env.ALLOWED_TELEGRAM_USER_IDS ?? "")
-      .split(",")
-      .map((s) => Number(s.trim()))
-      .filter((n) => Number.isFinite(n))
-  );
-}
-
-export function extractInitData(
-  authorizationHeader: string | null
-): string | null {
+function extractInitData(authorizationHeader: string | null): string | null {
   if (!authorizationHeader) return null;
   const match = authorizationHeader.match(/^tma\s+(.+)$/i);
   return match?.[1]?.trim() || null;
 }
 
 /** https://core.telegram.org/bots/webapps#validating-data-received-via-the-mini-app */
-export function validateInitData(initData: string): VerifiedTelegramAuth {
+function validateInitData(initData: string): VerifiedTelegramAuth {
   const params = new URLSearchParams(initData);
   const hash = params.get("hash");
   if (!hash) throw new AuthError("Missing hash in initData", 401);
@@ -83,11 +67,11 @@ export function validateInitData(initData: string): VerifiedTelegramAuth {
     throw new AuthError("Invalid user id", 401);
   }
 
-  const allowed = getAllowedUserIds();
-  if (allowed.size === 0) {
+  const allowed = parseAllowedTelegramUserIds();
+  if (allowed.length === 0) {
     throw new AuthError("ALLOWED_TELEGRAM_USER_IDS is not configured", 500);
   }
-  if (!allowed.has(user.id)) throw new AuthError("User not allowed", 403);
+  if (!allowed.includes(user.id)) throw new AuthError("User not allowed", 403);
 
   return { user, authDate };
 }

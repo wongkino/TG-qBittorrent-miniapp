@@ -1,6 +1,5 @@
+import { env } from "@/lib/env";
 import type { Torrent } from "@/lib/types";
-
-export type { Torrent };
 
 type Session = {
   cookie: string | null;
@@ -14,11 +13,6 @@ const USER_AGENT =
 
 let cachedSession: Session | null = null;
 let loginInflight: Promise<Session> | null = null;
-
-function env(name: string): string | undefined {
-  const value = process.env[name]?.trim();
-  return value || undefined;
-}
 
 function getConfig() {
   const baseUrl = env("QBITTORRENT_URL")?.replace(/\/+$/, "");
@@ -238,11 +232,14 @@ function projectTorrent(raw: RawTorrent): Torrent {
   };
 }
 
-export async function listTorrents(): Promise<Torrent[]> {
+async function fetchRawTorrents(): Promise<RawTorrent[]> {
   const res = await qbFetch("/api/v2/torrents/info", { method: "GET" });
   if (!res.ok) throw new QBitError("Failed to fetch torrents", 502);
-  const raw = (await res.json()) as RawTorrent[];
-  return raw.map(projectTorrent);
+  return (await res.json()) as RawTorrent[];
+}
+
+export async function listTorrents(): Promise<Torrent[]> {
+  return (await fetchRawTorrents()).map(projectTorrent);
 }
 
 export type NotifyTorrent = {
@@ -258,10 +255,7 @@ export type NotifyTorrent = {
 };
 
 export async function listTorrentsForNotify(): Promise<NotifyTorrent[]> {
-  const res = await qbFetch("/api/v2/torrents/info", { method: "GET" });
-  if (!res.ok) throw new QBitError("Failed to fetch torrents", 502);
-  const raw = (await res.json()) as RawTorrent[];
-  return raw.map((t) => ({
+  return (await fetchRawTorrents()).map((t) => ({
     hash: String(t.hash ?? ""),
     name: String(t.name ?? ""),
     size: Number(t.size) || 0,

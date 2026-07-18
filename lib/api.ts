@@ -14,11 +14,14 @@ export function requireAuth(request: Request) {
   return requireTelegramAuth(request.headers.get("authorization"));
 }
 
-export async function readHashes(request: Request): Promise<string | Response> {
-  const body = (await request.json()) as { hashes?: string };
+/** Parse JSON body and require a non-empty `hashes` field. */
+export async function readHashesBody<T extends { hashes?: string }>(
+  request: Request
+): Promise<{ hashes: string; body: T } | Response> {
+  const body = (await request.json()) as T;
   const hashes = body.hashes?.trim();
   if (!hashes) return jsonError("hashes is required", 400);
-  return hashes;
+  return { hashes, body };
 }
 
 export function handleApiError(err: unknown) {

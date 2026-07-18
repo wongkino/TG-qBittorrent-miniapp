@@ -1,7 +1,4 @@
-function env(name: string): string | undefined {
-  const value = process.env[name]?.trim();
-  return value || undefined;
-}
+import { env, parseAllowedTelegramUserIds } from "@/lib/env";
 
 function escapeHtml(text: string): string {
   return text
@@ -41,7 +38,6 @@ export type ReplyKeyboard = {
   keyboard: Array<Array<{ text: string }>>;
   resize_keyboard?: boolean;
   is_persistent?: boolean;
-  one_time_keyboard?: boolean;
 };
 
 export async function sendTelegramMessage(
@@ -110,10 +106,7 @@ export function formatCompletionMessage(input: {
 }
 
 export function getNotifyChatIds(): number[] {
-  return (env("ALLOWED_TELEGRAM_USER_IDS") ?? "")
-    .split(",")
-    .map((s) => Number(s.trim()))
-    .filter((n) => Number.isFinite(n));
+  return parseAllowedTelegramUserIds();
 }
 
 export function isAllowedChatUser(userId: number): boolean {

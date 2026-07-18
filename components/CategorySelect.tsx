@@ -5,7 +5,6 @@ type Props = {
   value: string;
   categories: string[];
   disabled?: boolean;
-  allowEmpty?: boolean;
   emptyLabel?: string;
   onChange: (category: string) => void;
 };
@@ -15,7 +14,6 @@ export function CategorySelect({
   value,
   categories,
   disabled,
-  allowEmpty = true,
   emptyLabel = "無分類",
   onChange,
 }: Props) {
@@ -27,7 +25,7 @@ export function CategorySelect({
       disabled={disabled}
       onChange={(e) => onChange(e.target.value)}
     >
-      {allowEmpty ? <option value="">{emptyLabel}</option> : null}
+      <option value="">{emptyLabel}</option>
       {categories.map((name) => (
         <option key={name} value={name}>
           {name}

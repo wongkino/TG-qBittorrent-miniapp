@@ -1,7 +1,5 @@
 import type { Torrent } from "@/lib/types";
 
-export type { Torrent };
-
 function headers(initData: string): HeadersInit {
   return {
     Authorization: `tma ${initData}`,

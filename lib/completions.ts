@@ -11,8 +11,8 @@ import {
   sendTelegramMessage,
 } from "@/lib/telegram-bot";
 
-export const COMPLETION_NOTIFY_TAG = "tg-notified";
-export const START_NOTIFY_TAG = "tg-started";
+const COMPLETION_NOTIFY_TAG = "tg-notified";
+const START_NOTIFY_TAG = "tg-started";
 
 /** Only notify events within this window. */
 const NOTIFY_WINDOW_SEC = 15 * 60;
@@ -39,21 +39,13 @@ function isRecentlyCompleted(torrent: NotifyTorrent, nowSec: number): boolean {
   return age >= 0 && age <= NOTIFY_WINDOW_SEC;
 }
 
-export type EventNotifyResult = {
-  checked: number;
-  started: number;
-  completed: number;
-  startedNames: string[];
-  completedNames: string[];
-};
-
 async function notifyChats(text: string, chatIds: number[]): Promise<void> {
   for (const chatId of chatIds) {
     await sendTelegramMessage(chatId, text);
   }
 }
 
-export async function notifyTorrentEvents(): Promise<EventNotifyResult> {
+export async function notifyTorrentEvents() {
   const chatIds = getNotifyChatIds();
   if (chatIds.length === 0) {
     throw new Error("ALLOWED_TELEGRAM_USER_IDS is not configured");
@@ -109,15 +101,5 @@ export async function notifyTorrentEvents(): Promise<EventNotifyResult> {
     completed: completedNames.length,
     startedNames,
     completedNames,
-  };
-}
-
-/** @deprecated Prefer notifyTorrentEvents */
-export async function notifyNewCompletions() {
-  const result = await notifyTorrentEvents();
-  return {
-    checked: result.checked,
-    notified: result.completed,
-    names: result.completedNames,
   };
 }
