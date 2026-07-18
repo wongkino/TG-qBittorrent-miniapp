@@ -1,5 +1,4 @@
-import { NextResponse } from "next/server";
-import { handleApiError, jsonError, requireAuth } from "@/lib/api";
+import { handleApiError, jsonError, jsonOk, requireAuth } from "@/lib/api";
 import { deleteTorrents } from "@/lib/qbittorrent";
 
 export async function POST(request: Request) {
@@ -9,11 +8,10 @@ export async function POST(request: Request) {
       hashes?: string;
       deleteFiles?: boolean;
     };
-    if (!body.hashes?.trim()) {
-      return jsonError("hashes is required", 400);
-    }
-    await deleteTorrents(body.hashes.trim(), Boolean(body.deleteFiles));
-    return NextResponse.json({ ok: true });
+    const hashes = body.hashes?.trim();
+    if (!hashes) return jsonError("hashes is required", 400);
+    await deleteTorrents(hashes, Boolean(body.deleteFiles));
+    return jsonOk();
   } catch (err) {
     return handleApiError(err);
   }

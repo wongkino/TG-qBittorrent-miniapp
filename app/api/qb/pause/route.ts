@@ -1,16 +1,13 @@
-import { NextResponse } from "next/server";
-import { handleApiError, jsonError, requireAuth } from "@/lib/api";
+import { handleApiError, jsonOk, readHashes, requireAuth } from "@/lib/api";
 import { pauseTorrents } from "@/lib/qbittorrent";
 
 export async function POST(request: Request) {
   try {
     requireAuth(request);
-    const body = (await request.json()) as { hashes?: string };
-    if (!body.hashes?.trim()) {
-      return jsonError("hashes is required", 400);
-    }
-    await pauseTorrents(body.hashes.trim());
-    return NextResponse.json({ ok: true });
+    const hashes = await readHashes(request);
+    if (typeof hashes !== "string") return hashes;
+    await pauseTorrents(hashes);
+    return jsonOk();
   } catch (err) {
     return handleApiError(err);
   }

@@ -15,50 +15,18 @@ import {
 
 const POLL_MS = 4000;
 
+function errMessage(err: unknown, fallback: string) {
+  return err instanceof Error ? err.message : fallback;
+}
+
 export function MiniApp() {
   const [initData, setInitData] = useState<string | null>(null);
-  const [ready, setReady] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [userName, setUserName] = useState<string | null>(null);
   const [torrents, setTorrents] = useState<Torrent[]>([]);
   const [listError, setListError] = useState<string | null>(null);
   const [busyHash, setBusyHash] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function initTelegram() {
-      try {
-        const { default: WebApp } = await import("@twa-dev/sdk");
-        if (cancelled) return;
-        WebApp.ready();
-        WebApp.expand();
-        const data = WebApp.initData;
-        if (!data) {
-          setAuthError(
-            "無法取得 Telegram initData。請從 Telegram Bot 內開啟此 Mini App。"
-          );
-          setReady(true);
-          setLoading(false);
-          return;
-        }
-        setInitData(data);
-        setReady(true);
-      } catch {
-        if (!cancelled) {
-          setAuthError("Telegram WebApp SDK 初始化失敗");
-          setReady(true);
-          setLoading(false);
-        }
-      }
-    }
-
-    void initTelegram();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const [booting, setBooting] = useState(true);
 
   const refresh = useCallback(async (token: string) => {
     const { torrents: next } = await fetchTorrents(token);
@@ -67,41 +35,63 @@ export function MiniApp() {
   }, []);
 
   useEffect(() => {
-    if (!initData) return;
-
     let cancelled = false;
 
-    async function bootstrap() {
+    async function boot() {
       try {
-        const me = await fetchMe(initData!);
+        const { default: WebApp } = await import("@twa-dev/sdk");
         if (cancelled) return;
-        setUserName(me.user.first_name || me.user.username || String(me.user.id));
-        await refresh(initData!);
+
+        WebApp.ready();
+        WebApp.expand();
+
+        const data = WebApp.initData;
+        if (!data) {
+          setAuthError(
+            "無法取得 Telegram initData。請從 Telegram Bot 內開啟此 Mini App。"
+          );
+          return;
+        }
+
+        const me = await fetchMe(data);
+        if (cancelled) return;
+
+        setInitData(data);
+        setUserName(
+          me.user.first_name || me.user.username || String(me.user.id)
+        );
+        await refresh(data);
       } catch (err) {
         if (!cancelled) {
-          setAuthError(err instanceof Error ? err.message : "驗證失敗");
+          setAuthError(errMessage(err, "初始化失敗"));
         }
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) setBooting(false);
       }
     }
 
-    void bootstrap();
+    void boot();
     return () => {
       cancelled = true;
     };
-  }, [initData, refresh]);
+  }, [refresh]);
 
   useEffect(() => {
     if (!initData || authError) return;
 
-    const id = window.setInterval(() => {
+    const tick = () => {
+      if (document.visibilityState === "hidden") return;
       void refresh(initData).catch((err) => {
-        setListError(err instanceof Error ? err.message : "重新整理失敗");
+        setListError(errMessage(err, "重新整理失敗"));
       });
-    }, POLL_MS);
+    };
 
-    return () => window.clearInterval(id);
+    const id = window.setInterval(tick, POLL_MS);
+    document.addEventListener("visibilitychange", tick);
+    return () => {
+      window.clearInterval(id);
+      document.removeEventListener("visibilitychange", tick);
+    };
   }, [initData, authError, refresh]);
 
   async function withBusy(hash: string, action: () => Promise<void>) {
@@ -111,13 +101,13 @@ export function MiniApp() {
       await action();
       await refresh(initData);
     } catch (err) {
-      setListError(err instanceof Error ? err.message : "操作失敗");
+      setListError(errMessage(err, "操作失敗"));
     } finally {
       setBusyHash(null);
     }
   }
 
-  if (!ready || loading) {
+  if (booting) {
     return (
       <main className="shell">
         <p className="status">載入中…</p>
@@ -146,7 +136,7 @@ export function MiniApp() {
           className="btn btn--sm"
           onClick={() => {
             void refresh(initData).catch((err) => {
-              setListError(err instanceof Error ? err.message : "重新整理失敗");
+              setListError(errMessage(err, "重新整理失敗"));
             });
           }}
         >

@@ -1,10 +1,9 @@
-import { NextResponse } from "next/server";
-import { handleApiError, requireAuth } from "@/lib/api";
+import { handleApiError, jsonOk, requireAuth } from "@/lib/api";
 
 export async function GET(request: Request) {
   try {
     const { user } = requireAuth(request);
-    return NextResponse.json({
+    return jsonOk({
       ok: true,
       user: {
         id: user.id,

@@ -6,13 +6,11 @@ export type Torrent = {
   dlspeed: number;
   upspeed: number;
   state: string;
-  num_seeds: number;
-  num_leechs: number;
   eta: number;
   ratio: number;
 };
 
-function authHeader(initData: string): HeadersInit {
+function headers(initData: string): HeadersInit {
   return {
     Authorization: `tma ${initData}`,
     "Content-Type": "application/json",
@@ -28,63 +26,60 @@ async function parseError(res: Response): Promise<string> {
   }
 }
 
-export async function fetchMe(initData: string) {
-  const res = await fetch("/api/auth/me", {
-    headers: authHeader(initData),
+async function api<T>(
+  path: string,
+  initData: string,
+  init?: RequestInit
+): Promise<T> {
+  const res = await fetch(path, {
+    ...init,
+    headers: { ...headers(initData), ...init?.headers },
     cache: "no-store",
   });
   if (!res.ok) throw new Error(await parseError(res));
-  return res.json() as Promise<{
+  if (res.status === 204) return undefined as T;
+  return res.json() as Promise<T>;
+}
+
+export function fetchMe(initData: string) {
+  return api<{
     ok: boolean;
     user: { id: number; first_name?: string; username?: string };
-  }>;
+  }>("/api/auth/me", initData);
 }
 
-export async function fetchTorrents(initData: string) {
-  const res = await fetch("/api/qb/torrents", {
-    headers: authHeader(initData),
-    cache: "no-store",
-  });
-  if (!res.ok) throw new Error(await parseError(res));
-  return res.json() as Promise<{ torrents: Torrent[] }>;
+export function fetchTorrents(initData: string) {
+  return api<{ torrents: Torrent[] }>("/api/qb/torrents", initData);
 }
 
-export async function pauseTorrent(initData: string, hash: string) {
-  const res = await fetch("/api/qb/pause", {
+export function pauseTorrent(initData: string, hash: string) {
+  return api<void>("/api/qb/pause", initData, {
     method: "POST",
-    headers: authHeader(initData),
     body: JSON.stringify({ hashes: hash }),
   });
-  if (!res.ok) throw new Error(await parseError(res));
 }
 
-export async function resumeTorrent(initData: string, hash: string) {
-  const res = await fetch("/api/qb/resume", {
+export function resumeTorrent(initData: string, hash: string) {
+  return api<void>("/api/qb/resume", initData, {
     method: "POST",
-    headers: authHeader(initData),
     body: JSON.stringify({ hashes: hash }),
   });
-  if (!res.ok) throw new Error(await parseError(res));
 }
 
-export async function deleteTorrent(
+export function deleteTorrent(
   initData: string,
   hash: string,
   deleteFiles: boolean
 ) {
-  const res = await fetch("/api/qb/delete", {
+  return api<void>("/api/qb/delete", initData, {
     method: "POST",
-    headers: authHeader(initData),
     body: JSON.stringify({ hashes: hash, deleteFiles }),
   });
-  if (!res.ok) throw new Error(await parseError(res));
 }
 
-export async function addTorrentUrl(initData: string, urls: string) {
-  const res = await fetch("/api/qb/add", {
+export function addTorrentUrl(initData: string, urls: string) {
+  return api<void>("/api/qb/add", initData, {
     method: "POST",
-    headers: authHeader(initData),
     body: JSON.stringify({ urls }),
   });
-  if (!res.ok) throw new Error(await parseError(res));
 }
