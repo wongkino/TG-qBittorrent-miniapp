@@ -238,6 +238,40 @@ export async function listTorrents(): Promise<Torrent[]> {
   return raw.map(projectTorrent);
 }
 
+export type NotifyTorrent = {
+  hash: string;
+  name: string;
+  size: number;
+  progress: number;
+  state: string;
+  category: string;
+  tags: string;
+  completion_on: number;
+};
+
+export async function listTorrentsForNotify(): Promise<NotifyTorrent[]> {
+  const res = await qbFetch("/api/v2/torrents/info", { method: "GET" });
+  if (!res.ok) throw new QBitError("Failed to fetch torrents", 502);
+  const raw = (await res.json()) as RawTorrent[];
+  return raw.map((t) => ({
+    hash: String(t.hash ?? ""),
+    name: String(t.name ?? ""),
+    size: Number(t.size) || 0,
+    progress: Number(t.progress) || 0,
+    state: String(t.state ?? "unknown"),
+    category: String(t.category ?? ""),
+    tags: String(t.tags ?? ""),
+    completion_on: Number(t.completion_on) || 0,
+  }));
+}
+
+export async function addTorrentTags(
+  hashes: string,
+  tags: string
+): Promise<void> {
+  await postForm("/api/v2/torrents/addTags", { hashes, tags });
+}
+
 export async function listCategories(): Promise<string[]> {
   const res = await qbFetch("/api/v2/torrents/categories", { method: "GET" });
   if (!res.ok) throw new QBitError("Failed to fetch categories", 502);

@@ -1,0 +1,30 @@
+name: Notify download completions
+
+on:
+  schedule:
+    # Every 2 minutes
+    - cron: "*/2 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: notify-completions
+  cancel-in-progress: true
+
+jobs:
+  notify:
+    name: Check completions
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Call completion webhook
+        env:
+          APP_URL: ${{ vars.APP_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$APP_URL" ] || [ -z "$CRON_SECRET" ]; then
+            echo "APP_URL (variable) and CRON_SECRET (secret) are required" >&2
+            exit 1
+          fi
+          curl -fsS -X POST "${APP_URL%/}/api/cron/completions" \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            -H "Content-Type: application/json"

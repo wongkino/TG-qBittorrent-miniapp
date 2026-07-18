@@ -40,6 +40,7 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           QBITTORRENT_USERNAME: ${{ secrets.QBITTORRENT_USERNAME }}
           QBITTORRENT_PASSWORD: ${{ secrets.QBITTORRENT_PASSWORD }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
           ALLOWED_TELEGRAM_USER_IDS: ${{ vars.ALLOWED_TELEGRAM_USER_IDS }}
           QBITTORRENT_URL: ${{ vars.QBITTORRENT_URL }}
         run: |
@@ -54,6 +55,7 @@ jobs:
               "QBITTORRENT_URL",
               "QBITTORRENT_USERNAME",
               "QBITTORRENT_PASSWORD",
+              "CRON_SECRET",
           ]
           missing = [k for k in keys if not os.environ.get(k, "").strip()]
           if missing:
