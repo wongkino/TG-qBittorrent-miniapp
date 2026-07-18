@@ -106,7 +106,7 @@ Workflow [`.github/workflows/deploy-cloudflare.yml`](.github/workflows/deploy-cl
 
 部署成功後會得到類似：
 
-`https://tg-qbittorrent-miniapp.<你的子網域>.workers.dev`
+`https://tg-dl.<你的子網域>.workers.dev`
 
 把此 URL 設進 BotFather Mini App，再到 Telegram 開啟即可。
 
