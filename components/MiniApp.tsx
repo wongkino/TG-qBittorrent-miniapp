@@ -205,7 +205,7 @@ export function MiniApp() {
   const selectedHashes = [...selected];
 
   return (
-    <main className="shell">
+    <main className={`shell${tab === "browse" ? " shell--browse" : ""}`}>
       <header className="header">
         <div>
           <h1 className="title">qBittorrent</h1>
