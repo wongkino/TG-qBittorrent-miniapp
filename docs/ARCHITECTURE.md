@@ -14,7 +14,7 @@
 │  worker.ts = OpenNext fetch + scheduled()       │
 │  /api/qb/*   /api/telegram/webhook               │
 │  /api/cron/completions                           │
-│  Cron Trigger */2 * * * * ──► scheduled()        │
+│  Cron Trigger */5 * * * * ──► scheduled()        │
 └───────────────────────┬─────────────────────────┘
                         │ Web API + CSRF headers
                         ▼
@@ -37,7 +37,7 @@ Cloudflare Cron ─────────► worker.scheduled() → /api/cron/
 
 ```
 worker.ts                  # Cloudflare 入口（fetch + cron）
-wrangler.jsonc             # triggers.crons = */2 * * * *
+wrangler.jsonc             # triggers.crons = */5 * * * *
 app/
   page.tsx                 # 掛載 MiniApp
   layout.tsx               # zh-Hant、viewport
@@ -68,7 +68,7 @@ lib/                       # 共用邏輯（見下）
 | `deleteTorrent` | `POST /api/qb/delete` | `POST /api/v2/torrents/delete` |
 | `setTorrentCategory` | `POST /api/qb/category` | `POST /api/v2/torrents/setCategory` |
 
-多 hash 以 `|` 串接。Mini App 約每 4 秒輪詢（頁面隱藏時跳過）。
+多 hash 以 `|` 串接。Mini App 約每 4 秒輪詢種子列表（頁面隱藏時跳過）；開機／手動重整／加種後用 `/api/qb/snapshot` 一次取 torrents+categories。
 
 ### 2. Bot webhook
 
@@ -78,7 +78,7 @@ Header：`X-Telegram-Bot-Api-Secret-Token: <CRON_SECRET>`
 
 ### 3. 通知 cron（Cloudflare）
 
-`wrangler.jsonc` → `triggers.crons: ["*/2 * * * *"]`  
+`wrangler.jsonc` → `triggers.crons: ["*/5 * * * *"]`  
 → `worker.ts` `scheduled()`  
 → 內部呼叫 OpenNext `fetch` → `POST /api/cron/completions`（Bearer `CRON_SECRET`）  
 → `lib/completions.ts`

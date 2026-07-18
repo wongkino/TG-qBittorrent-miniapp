@@ -43,6 +43,14 @@ export function fetchCategories(initData: string) {
   return api<{ categories: string[] }>("/api/qb/categories", initData);
 }
 
+/** Torrents + categories in one HTTP request (boot / full refresh). */
+export function fetchSnapshot(initData: string) {
+  return api<{ torrents: Torrent[]; categories: string[] }>(
+    "/api/qb/snapshot",
+    initData
+  );
+}
+
 export function pauseTorrent(initData: string, hashes: string | string[]) {
   return api<void>("/api/qb/pause", initData, {
     method: "POST",

@@ -7,7 +7,7 @@ import { TorrentList } from "@/components/TorrentList";
 import {
   addTorrentUrl,
   deleteTorrent,
-  fetchCategories,
+  fetchSnapshot,
   fetchTorrents,
   pauseTorrent,
   resumeTorrent,
@@ -65,21 +65,39 @@ export function MiniApp() {
     }
   }, []);
 
-  const loadCategories = useCallback(async (token: string) => {
-    const { categories: nextCategories } = await fetchCategories(token);
-    setCategories((prev) =>
-      prev.length === nextCategories.length &&
-      prev.every((name, i) => name === nextCategories[i])
-        ? prev
-        : nextCategories
-    );
-  }, []);
+  const applySnapshot = useCallback(
+    (next: Torrent[], nextCategories: string[]) => {
+      setTorrents((prev) => (torrentsEqual(prev, next) ? prev : next));
+      setCategories((prev) =>
+        prev.length === nextCategories.length &&
+        prev.every((name, i) => name === nextCategories[i])
+          ? prev
+          : nextCategories
+      );
+      setSelected((prev) => {
+        if (prev.size === 0) return prev;
+        const hashes = new Set(next.map((t) => t.hash));
+        const kept = [...prev].filter((hash) => hashes.has(hash));
+        return kept.length === prev.size ? prev : new Set(kept);
+      });
+      setListError(null);
+    },
+    []
+  );
 
   const refreshAll = useCallback(
     async (token: string) => {
-      await Promise.all([refreshTorrents(token), loadCategories(token)]);
+      if (refreshInflight.current) return;
+      refreshInflight.current = true;
+      try {
+        const { torrents: next, categories: nextCategories } =
+          await fetchSnapshot(token);
+        applySnapshot(next, nextCategories);
+      } finally {
+        refreshInflight.current = false;
+      }
     },
-    [refreshTorrents, loadCategories]
+    [applySnapshot]
   );
 
   useEffect(() => {

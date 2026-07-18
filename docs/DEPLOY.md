@@ -9,7 +9,7 @@
 - 你的 Telegram User ID（白名單）
 
 Worker 名稱固定為 **`tg-dl`**（`wrangler.jsonc`）。  
-通知排程由 **Cloudflare Cron**（`*/2 * * * *`）執行，**不是** GitHub Actions。
+通知排程由 **Cloudflare Cron**（`*/5 * * * *`）執行，**不是** GitHub Actions。
 
 ---
 
@@ -39,9 +39,9 @@ Worker 名稱固定為 **`tg-dl`**（`wrangler.jsonc`）。
    例如 `https://tg-dl.xxxx.workers.dev`
 4. 設 GitHub Variable **`APP_URL`**（不要尾隨 `/`）
 5. **再跑一次 Deploy**（寫入 webhook + Menu Button）
-6. 確認 Workers → Triggers 有 cron `*/2 * * * *`
+6. 確認 Workers → Triggers 有 cron `*/5 * * * *`
 7. （可選）BotFather → Configure Mini App → 同一 HTTPS URL
-8. 打開 Bot 測試；加一筆種子後等約 2 分鐘看「下載開始」通知
+8. 打開 Bot 測試；加一筆種子後等約 5 分鐘內看「下載開始」通知
 
 ---
 
@@ -63,7 +63,7 @@ Worker 名稱固定為 **`tg-dl`**（`wrangler.jsonc`）。
 設定在 `wrangler.jsonc`：
 
 ```jsonc
-"triggers": { "crons": ["*/2 * * * *"] }
+"triggers": { "crons": ["*/5 * * * *"] }
 ```
 
 執行：`worker.ts` → `scheduled()` → 內部 `POST /api/cron/completions`。
@@ -112,7 +112,7 @@ npm run deploy
 - [ ] Reply Keyboard 有三鍵
 - [ ] Mini App 能列出種子
 - [ ] Bot 能加 magnet
-- [ ] Cloudflare Worker 有 Cron `*/2 * * * *`
+- [ ] Cloudflare Worker 有 Cron `*/5 * * * *`
 - [ ] 手動 `POST /api/cron/completions` 回 200（或等自動通知）
 
 ---

@@ -12,7 +12,7 @@
     "enabled": true
   },
   "triggers": {
-    // Download start/complete Telegram notifications
-    "crons": ["*/2 * * * *"]
+    // Notify window is 15 minutes; 5-minute cadence still catches start/complete.
+    "crons": ["*/5 * * * *"]
   }
 }

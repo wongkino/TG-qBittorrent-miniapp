@@ -66,8 +66,8 @@
 
 | 通知 | 何時 |
 |------|------|
-| ⬇️ 下載開始 | 新種子加入後約 0–2 分鐘內（Cloudflare Cron） |
-| ✅ 下載完成 | 完成後約 0–2 分鐘內 |
+| ⬇️ 下載開始 | 新種子加入後約 0–5 分鐘內（Cloudflare Cron） |
+| ✅ 下載完成 | 完成後約 0–5 分鐘內 |
 
 注意：
 
@@ -89,7 +89,7 @@
 qBittorrent 可能連不上，或帳密／URL 設定錯誤；請管理員查 Worker／Actions 日誌。
 
 **沒有開始／完成通知**  
-確認 Cloudflare Worker 已啟用 Cron（`*/2 * * * *`），且 `CRON_SECRET`、白名單正確；可手動 `POST /api/cron/completions` 測試。
+確認 Cloudflare Worker 已啟用 Cron（`*/5 * * * *`），且 `CRON_SECRET`、白名單正確；可手動 `POST /api/cron/completions` 測試。
 
 **誤刪檔案**  
 「刪除」會連下載檔一起刪；只要從列表移除請用「移除」。
