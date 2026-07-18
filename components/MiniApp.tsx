@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AddTorrentForm } from "@/components/AddTorrentForm";
 import { BrowserPanel } from "@/components/BrowserPanel";
 import { ListToolbar } from "@/components/ListToolbar";
+import { RssPanel } from "@/components/RssPanel";
 import { TorrentList } from "@/components/TorrentList";
 import {
   addTorrentUrl,
@@ -41,7 +42,7 @@ export function MiniApp() {
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [selectionMode, setSelectionMode] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [tab, setTab] = useState<"downloads" | "browse">("downloads");
+  const [tab, setTab] = useState<"downloads" | "browse" | "rss">("downloads");
   const refreshInflight = useRef(false);
 
   const sortedTorrents = useMemo(
@@ -241,12 +242,29 @@ export function MiniApp() {
         >
           瀏覽
         </button>
+        <button
+          type="button"
+          className={`tabs__btn${tab === "rss" ? " tabs__btn--active" : ""}`}
+          onClick={() => setTab("rss")}
+        >
+          RSS
+        </button>
       </nav>
 
       {listError ? <p className="error">{listError}</p> : null}
 
       {tab === "browse" ? (
         <BrowserPanel
+          initData={initData}
+          categories={categories}
+          onAdded={() => {
+            void refreshTorrents(initData).catch(() => {
+              /* ignore */
+            });
+          }}
+        />
+      ) : tab === "rss" ? (
+        <RssPanel
           initData={initData}
           categories={categories}
           onAdded={() => {

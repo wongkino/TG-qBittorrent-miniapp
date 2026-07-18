@@ -26,6 +26,7 @@
 |------------|------|
 | `components/` | 僅 Mini App UI（client） |
 | `app/api/qb/*` | Mini App API；`Authorization: tma <initData>` |
+| `app/api/qb/rss*` | RSS 列表／新增／移除／重整／已讀（代理 qB `/api/v2/rss/*`） |
 | `app/api/telegram/webhook` | Bot；`X-Telegram-Bot-Api-Secret-Token` = `CRON_SECRET` |
 | `app/api/browse` | 內嵌瀏覽代理（需 tma auth）；攔截 magnet 靠注入腳本 + postMessage |
 | `app/api/cron/completions` | 通知 HTTP 入口（Cloudflare Cron 內部也打這裡）；`Authorization: Bearer CRON_SECRET` |

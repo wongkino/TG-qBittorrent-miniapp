@@ -98,6 +98,60 @@ export function addTorrentUrl(
   });
 }
 
+export type ClientRssArticle = {
+  id: string;
+  title: string;
+  torrentUrl: string;
+  link: string;
+  date: string;
+  isRead: boolean;
+};
+
+export type ClientRssFeed = {
+  path: string;
+  url: string;
+  title: string;
+  isLoading: boolean;
+  hasError: boolean;
+  articles: ClientRssArticle[];
+};
+
+export function fetchRssFeeds(initData: string) {
+  return api<{ feeds: ClientRssFeed[] }>("/api/qb/rss", initData);
+}
+
+export function addRssFeed(initData: string, url: string, path?: string) {
+  return api<void>("/api/qb/rss/add", initData, {
+    method: "POST",
+    body: JSON.stringify({ url, path }),
+  });
+}
+
+export function removeRssFeed(initData: string, path: string) {
+  return api<void>("/api/qb/rss/remove", initData, {
+    method: "POST",
+    body: JSON.stringify({ path }),
+  });
+}
+
+export function refreshRssFeed(initData: string, path: string) {
+  return api<void>("/api/qb/rss/refresh", initData, {
+    method: "POST",
+    body: JSON.stringify({ path }),
+  });
+}
+
+export function markRssRead(
+  initData: string,
+  path: string,
+  articleId?: string
+) {
+  return api<void>("/api/qb/rss/read", initData, {
+    method: "POST",
+    body: JSON.stringify({ path, articleId }),
+  });
+}
+
 /** Proxied HTML for in-app browse (magnet interception). */
 export async function fetchBrowseHtml(
   initData: string,

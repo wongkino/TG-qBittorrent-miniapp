@@ -342,6 +342,121 @@ export async function addTorrentFile(
   }
 }
 
+export type RssArticle = {
+  id: string;
+  title: string;
+  torrentUrl: string;
+  link: string;
+  date: string;
+  isRead: boolean;
+};
+
+export type RssFeed = {
+  path: string;
+  url: string;
+  title: string;
+  isLoading: boolean;
+  hasError: boolean;
+  articles: RssArticle[];
+};
+
+function isRssFeedNode(value: unknown): value is Record<string, unknown> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const obj = value as Record<string, unknown>;
+  return typeof obj.url === "string" || Array.isArray(obj.articles);
+}
+
+function projectArticle(raw: Record<string, unknown>): RssArticle {
+  const torrentUrl =
+    String(raw.torrentURL ?? raw.torrentUrl ?? raw.link ?? "").trim() ||
+    String(raw.link ?? "").trim();
+  return {
+    id: String(raw.id ?? raw.guid ?? raw.title ?? ""),
+    title: String(raw.title ?? "未命名"),
+    torrentUrl,
+    link: String(raw.link ?? ""),
+    date: String(raw.date ?? raw.pubDate ?? ""),
+    isRead: Boolean(raw.isRead),
+  };
+}
+
+function flattenRssItems(
+  node: unknown,
+  parentPath = ""
+): RssFeed[] {
+  if (!node || typeof node !== "object") return [];
+  const feeds: RssFeed[] = [];
+
+  for (const [name, value] of Object.entries(node as Record<string, unknown>)) {
+    const path = parentPath ? `${parentPath}\\${name}` : name;
+
+    if (typeof value === "string") {
+      feeds.push({
+        path,
+        url: value,
+        title: name,
+        isLoading: false,
+        hasError: false,
+        articles: [],
+      });
+      continue;
+    }
+
+    if (isRssFeedNode(value)) {
+      const articlesRaw = Array.isArray(value.articles) ? value.articles : [];
+      feeds.push({
+        path,
+        url: String(value.url ?? ""),
+        title: String(value.title ?? name),
+        isLoading: Boolean(value.isLoading),
+        hasError: Boolean(value.hasError),
+        articles: articlesRaw
+          .filter((a): a is Record<string, unknown> => !!a && typeof a === "object")
+          .map(projectArticle),
+      });
+      continue;
+    }
+
+    if (value && typeof value === "object") {
+      feeds.push(...flattenRssItems(value, path));
+    }
+  }
+
+  return feeds;
+}
+
+export async function listRssFeeds(): Promise<RssFeed[]> {
+  const res = await qbFetch("/api/v2/rss/items?withData=true", { method: "GET" });
+  if (!res.ok) throw new QBitError("Failed to fetch RSS items", 502);
+  const raw = (await res.json()) as Record<string, unknown>;
+  return flattenRssItems(raw).sort((a, b) =>
+    a.path.localeCompare(b.path, "zh-Hant")
+  );
+}
+
+export async function addRssFeed(url: string, path?: string): Promise<void> {
+  const fields: Record<string, string> = { url };
+  if (path?.trim()) fields.path = path.trim();
+  await postForm("/api/v2/rss/addFeed", fields);
+}
+
+export async function removeRssItem(path: string): Promise<void> {
+  await postForm("/api/v2/rss/removeItem", { path });
+}
+
+export async function refreshRssItem(itemPath: string): Promise<void> {
+  await postForm("/api/v2/rss/refreshItem", { itemPath });
+}
+
+export async function markRssArticleRead(
+  itemPath: string,
+  articleId?: string
+): Promise<void> {
+  const fields: Record<string, string> = { itemPath };
+  if (articleId) fields.articleId = articleId;
+  await postForm("/api/v2/rss/markAsRead", fields);
+}
+
 export class QBitError extends Error {
   status: number;
   constructor(message: string, status: number) {
