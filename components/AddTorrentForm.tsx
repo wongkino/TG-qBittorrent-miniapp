@@ -3,11 +3,10 @@
 import { FormEvent, useState } from "react";
 
 type Props = {
-  disabled?: boolean;
   onSubmit: (urls: string) => Promise<void>;
 };
 
-export function AddTorrentForm({ disabled, onSubmit }: Props) {
+export function AddTorrentForm({ onSubmit }: Props) {
   const [value, setValue] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -41,13 +40,13 @@ export function AddTorrentForm({ disabled, onSubmit }: Props) {
         placeholder="magnet:?xt=... 或 https://.../*.torrent"
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        disabled={disabled || submitting}
+        disabled={submitting}
       />
       {error ? <p className="error">{error}</p> : null}
       <button
         type="submit"
         className="btn btn--primary btn--block"
-        disabled={disabled || submitting || !value.trim()}
+        disabled={submitting || !value.trim()}
       >
         {submitting ? "新增中…" : "新增"}
       </button>

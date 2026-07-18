@@ -1,17 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AddTorrentForm } from "@/components/AddTorrentForm";
 import { TorrentList } from "@/components/TorrentList";
 import {
   addTorrentUrl,
   deleteTorrent,
-  fetchMe,
   fetchTorrents,
   pauseTorrent,
   resumeTorrent,
-  type Torrent,
 } from "@/lib/client-api";
+import { torrentsEqual, type Torrent } from "@/lib/types";
 
 const POLL_MS = 4000;
 
@@ -27,11 +26,18 @@ export function MiniApp() {
   const [listError, setListError] = useState<string | null>(null);
   const [busyHash, setBusyHash] = useState<string | null>(null);
   const [booting, setBooting] = useState(true);
+  const refreshInflight = useRef(false);
 
   const refresh = useCallback(async (token: string) => {
-    const { torrents: next } = await fetchTorrents(token);
-    setTorrents(next);
-    setListError(null);
+    if (refreshInflight.current) return;
+    refreshInflight.current = true;
+    try {
+      const { torrents: next } = await fetchTorrents(token);
+      setTorrents((prev) => (torrentsEqual(prev, next) ? prev : next));
+      setListError(null);
+    } finally {
+      refreshInflight.current = false;
+    }
   }, []);
 
   useEffect(() => {
@@ -53,12 +59,10 @@ export function MiniApp() {
           return;
         }
 
-        const me = await fetchMe(data);
-        if (cancelled) return;
-
+        const user = WebApp.initDataUnsafe.user;
         setInitData(data);
         setUserName(
-          me.user.first_name || me.user.username || String(me.user.id)
+          user?.first_name || user?.username || (user ? String(user.id) : null)
         );
         await refresh(data);
       } catch (err) {

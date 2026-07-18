@@ -1,14 +1,6 @@
-export type Torrent = {
-  hash: string;
-  name: string;
-  size: number;
-  progress: number;
-  dlspeed: number;
-  upspeed: number;
-  state: string;
-  eta: number;
-  ratio: number;
-};
+import type { Torrent } from "@/lib/types";
+
+export type { Torrent };
 
 function headers(initData: string): HeadersInit {
   return {
@@ -39,13 +31,6 @@ async function api<T>(
   if (!res.ok) throw new Error(await parseError(res));
   if (res.status === 204) return undefined as T;
   return res.json() as Promise<T>;
-}
-
-export function fetchMe(initData: string) {
-  return api<{
-    ok: boolean;
-    user: { id: number; first_name?: string; username?: string };
-  }>("/api/auth/me", initData);
 }
 
 export function fetchTorrents(initData: string) {

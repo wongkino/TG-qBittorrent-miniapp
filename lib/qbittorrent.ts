@@ -1,14 +1,6 @@
-export type QBittorrentTorrent = {
-  hash: string;
-  name: string;
-  size: number;
-  progress: number;
-  dlspeed: number;
-  upspeed: number;
-  state: string;
-  eta: number;
-  ratio: number;
-};
+import type { Torrent } from "@/lib/types";
+
+export type { Torrent };
 
 type Session = {
   cookie: string | null;
@@ -21,6 +13,7 @@ const USER_AGENT =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
 
 let cachedSession: Session | null = null;
+let loginInflight: Promise<Session> | null = null;
 
 function env(name: string): string | undefined {
   const value = process.env[name]?.trim();
@@ -96,11 +89,7 @@ function extractSidCookie(res: Response): string | null {
   return null;
 }
 
-async function ensureSession(force = false): Promise<Session> {
-  if (!force && cachedSession && cachedSession.expiresAt > Date.now()) {
-    return cachedSession;
-  }
-
+async function login(): Promise<Session> {
   const { baseUrl, username, password } = getConfig();
   const basicAuth = basicAuthHeader(username, password);
   const origin = requestOrigin(baseUrl);
@@ -123,7 +112,6 @@ async function ensureSession(force = false): Promise<Session> {
       redirect: "manual",
     });
   } catch (err) {
-    cachedSession = null;
     const detail = err instanceof Error ? err.message : "network error";
     throw new QBitError(`Failed to reach qBittorrent (${detail})`, 502);
   }
@@ -134,7 +122,6 @@ async function ensureSession(force = false): Promise<Session> {
   const loginOk = res.ok && (bodyOk || res.status === 204 || Boolean(cookie));
 
   if (!loginOk) {
-    cachedSession = null;
     const snippet = text ? `: ${text.slice(0, 80)}` : "";
     throw new QBitError(
       `Failed to login to qBittorrent (${res.status})${snippet}`,
@@ -142,12 +129,34 @@ async function ensureSession(force = false): Promise<Session> {
     );
   }
 
-  cachedSession = {
+  return {
     cookie,
     basicAuth,
     expiresAt: Date.now() + SESSION_TTL_MS,
   };
-  return cachedSession;
+}
+
+async function ensureSession(force = false): Promise<Session> {
+  if (force) cachedSession = null;
+  if (!force && cachedSession && cachedSession.expiresAt > Date.now()) {
+    return cachedSession;
+  }
+  if (loginInflight) return loginInflight;
+
+  loginInflight = login()
+    .then((session) => {
+      cachedSession = session;
+      return session;
+    })
+    .catch((err) => {
+      cachedSession = null;
+      throw err;
+    })
+    .finally(() => {
+      loginInflight = null;
+    });
+
+  return loginInflight;
 }
 
 async function qbFetch(
@@ -164,7 +173,6 @@ async function qbFetch(
   });
 
   if ((res.status === 401 || res.status === 403) && !retried) {
-    cachedSession = null;
     await ensureSession(true);
     return qbFetch(path, init, true);
   }
@@ -207,10 +215,26 @@ async function postWithFallback(
   }
 }
 
-export async function listTorrents(): Promise<QBittorrentTorrent[]> {
+type RawTorrent = Record<string, unknown>;
+
+function projectTorrent(raw: RawTorrent): Torrent {
+  return {
+    hash: String(raw.hash ?? ""),
+    name: String(raw.name ?? ""),
+    size: Number(raw.size) || 0,
+    progress: Number(raw.progress) || 0,
+    dlspeed: Number(raw.dlspeed) || 0,
+    upspeed: Number(raw.upspeed) || 0,
+    state: String(raw.state ?? "unknown"),
+    eta: Number(raw.eta) || 0,
+  };
+}
+
+export async function listTorrents(): Promise<Torrent[]> {
   const res = await qbFetch("/api/v2/torrents/info", { method: "GET" });
   if (!res.ok) throw new QBitError("Failed to fetch torrents", 502);
-  return (await res.json()) as QBittorrentTorrent[];
+  const raw = (await res.json()) as RawTorrent[];
+  return raw.map(projectTorrent);
 }
 
 export async function pauseTorrents(hashes: string): Promise<void> {

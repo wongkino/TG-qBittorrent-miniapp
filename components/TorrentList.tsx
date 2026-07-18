@@ -1,6 +1,6 @@
 "use client";
 
-import type { Torrent } from "@/lib/client-api";
+import type { Torrent } from "@/lib/types";
 import { TorrentRow } from "@/components/TorrentRow";
 
 type Props = {
