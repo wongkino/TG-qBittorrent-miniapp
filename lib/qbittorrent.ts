@@ -103,14 +103,6 @@ async function login(force = false): Promise<string> {
   }
 
   const text = (await res.text()).trim();
-  if (!res.ok || text !== "Ok.") {
-    cachedSession = null;
-    const snippet = text ? `: ${text.slice(0, 80)}` : "";
-    throw new QBitError(
-      `Failed to login to qBittorrent (${res.status})${snippet}`,
-      502
-    );
-  }
 
   const getSetCookie = (
     res.headers as Headers & { getSetCookie?: () => string[] }
@@ -123,9 +115,28 @@ async function login(force = false): Promise<string> {
       : [];
 
   const cookie = extractSidCookie(cookies);
+
+  // Classic qBittorrent: 200 + "Ok."
+  // Some proxies/versions: 204 No Content (empty body) with SID cookie
+  const bodyOk = text === "Ok." || text === "Ok";
+  const loginSucceeded =
+    res.ok && (bodyOk || res.status === 204 || Boolean(cookie));
+
+  if (!loginSucceeded) {
+    cachedSession = null;
+    const snippet = text ? `: ${text.slice(0, 80)}` : "";
+    throw new QBitError(
+      `Failed to login to qBittorrent (${res.status})${snippet}`,
+      502
+    );
+  }
+
   if (!cookie) {
     cachedSession = null;
-    throw new QBitError("qBittorrent login did not return SID cookie", 502);
+    throw new QBitError(
+      `qBittorrent login did not return SID cookie (${res.status})`,
+      502
+    );
   }
 
   cachedSession = {
