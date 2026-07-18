@@ -72,7 +72,7 @@ jobs:
           npx wrangler secret bulk worker-secrets.json
           rm -f worker-secrets.json
 
-      - name: Set Telegram webhook
+      - name: Set Telegram webhook and menu button
         env:
           APP_URL: ${{ vars.APP_URL }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
@@ -84,6 +84,7 @@ jobs:
           import sys
           import urllib.request
 
+          token = os.environ["TELEGRAM_BOT_TOKEN"]
           app_url = os.environ.get("APP_URL", "").strip().rstrip("/")
           if not app_url:
               print(
@@ -93,18 +94,34 @@ jobs:
               )
               sys.exit(1)
 
-          payload = {
-              "url": f"{app_url}/api/telegram/webhook",
-              "secret_token": os.environ["CRON_SECRET"],
-              "allowed_updates": ["message"],
-              "drop_pending_updates": False,
-          }
-          hook_req = urllib.request.Request(
-              f"https://api.telegram.org/bot{os.environ['TELEGRAM_BOT_TOKEN']}/setWebhook",
-              data=json.dumps(payload).encode(),
-              headers={"Content-Type": "application/json"},
-              method="POST",
+          def call(method: str, payload: dict) -> None:
+              req = urllib.request.Request(
+                  f"https://api.telegram.org/bot{token}/{method}",
+                  data=json.dumps(payload).encode(),
+                  headers={"Content-Type": "application/json"},
+                  method="POST",
+              )
+              with urllib.request.urlopen(req) as res:
+                  print(f"{method}: {res.read().decode()}")
+
+          call(
+              "setWebhook",
+              {
+                  "url": f"{app_url}/api/telegram/webhook",
+                  "secret_token": os.environ["CRON_SECRET"],
+                  "allowed_updates": ["message"],
+                  "drop_pending_updates": False,
+              },
           )
-          with urllib.request.urlopen(hook_req) as res:
-              print(res.read().decode())
+          # Input-field left menu button → opens Mini App
+          call(
+              "setChatMenuButton",
+              {
+                  "menu_button": {
+                      "type": "web_app",
+                      "text": "開啟 App",
+                      "web_app": {"url": app_url},
+                  }
+              },
+          )
           PY

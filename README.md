@@ -22,11 +22,13 @@ npm run dev
 | `ALLOWED_TELEGRAM_USER_IDS` | 允許的 User ID（Bot / 完成通知） |
 | `QBITTORRENT_URL` | 例如 `https://dl.example.com` |
 
-首次 Deploy 後，到 Cloudflare Dashboard 複製 Workers URL，設成 GitHub Variable `APP_URL`，再重新跑一次 Deploy（才會正確註冊 Telegram webhook）。
+首次 Deploy 後，到 Cloudflare Dashboard 複製 Workers URL，設成 GitHub Variable `APP_URL`，再重新跑一次 Deploy（會註冊 webhook，並把輸入框左側 Menu Button 設成開啟 Mini App）。
+
+也可在 [@BotFather](https://t.me/BotFather) → Bot Settings → Configure Mini App 綁定同一個 HTTPS URL。
 
 ## Bot
 
-Bot 每次回覆都會附上 Reply Keyboard：
+輸入框左側會出現 **開啟 App**（Menu Button）。Bot 每次回覆也會附上 Reply Keyboard：
 
 | 按鈕 | 說明 |
 |------|------|
