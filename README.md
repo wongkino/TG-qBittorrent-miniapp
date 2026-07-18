@@ -26,7 +26,7 @@ npm run dev
 
 ## Bot
 
-先對 Bot 發送 `/start`，會出現 Reply Keyboard：
+Bot 每次回覆都會附上 Reply Keyboard：
 
 | 按鈕 | 說明 |
 |------|------|

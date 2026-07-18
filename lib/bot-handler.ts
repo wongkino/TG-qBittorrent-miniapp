@@ -60,16 +60,8 @@ function magnetOrTorrentUrl(text: string): string | null {
   return null;
 }
 
-async function reply(
-  chatId: number,
-  text: string,
-  withKeyboard = false
-) {
-  await sendTelegramMessage(
-    chatId,
-    text,
-    withKeyboard ? { replyMarkup: MAIN_KEYBOARD } : undefined
-  );
+async function reply(chatId: number, text: string) {
+  await sendTelegramMessage(chatId, text, { replyMarkup: MAIN_KEYBOARD });
 }
 
 async function handleStatus(chatId: number) {
@@ -169,13 +161,12 @@ export async function handleTelegramUpdate(update: TelegramUpdate): Promise<void
   if (command === "/start") {
     await reply(
       chatId,
-      ["👋 已連線到 qBittorrent Mini App Bot。", "", HELP_TEXT].join("\n"),
-      true
+      ["👋 已連線到 qBittorrent Mini App Bot。", "", HELP_TEXT].join("\n")
     );
     return;
   }
   if (command === "/help" || text === BTN_HELP) {
-    await reply(chatId, HELP_TEXT, true);
+    await reply(chatId, HELP_TEXT);
     return;
   }
   if (command === "/status" || text === BTN_STATUS) {
@@ -194,6 +185,6 @@ export async function handleTelegramUpdate(update: TelegramUpdate): Promise<void
   }
 
   if (text.startsWith("/")) {
-    await reply(chatId, `未知指令。\n\n${HELP_TEXT}`, true);
+    await reply(chatId, `未知指令。\n\n${HELP_TEXT}`);
   }
 }
