@@ -1,5 +1,7 @@
 // Custom Worker entry: keep OpenNext fetch + add Cloudflare Cron.
-// @ts-expect-error `.open-next/worker.js` is generated at build time
+// `.open-next/worker.js` is generated at build time.
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
 import { default as handler } from "./.open-next/worker.js";
 
 type Env = {
@@ -18,9 +20,9 @@ export default {
    *   curl "http://localhost:8787/__scheduled?cron=*+*+*+*+*"
    */
   async scheduled(
-    _controller: ScheduledController,
+    _controller: { cron: string; scheduledTime: number },
     env: Env,
-    ctx: ExecutionContext
+    ctx: { waitUntil(promise: Promise<unknown>): void }
   ) {
     const secret = env.CRON_SECRET?.trim() || process.env.CRON_SECRET?.trim();
     if (!secret) {
@@ -51,7 +53,8 @@ export default {
 };
 
 // Required when OpenNext generates these Durable Object exports.
-// @ts-expect-error generated at build time
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
 export {
   DOQueueHandler,
   DOShardedTagCache,
