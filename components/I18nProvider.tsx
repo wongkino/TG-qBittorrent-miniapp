@@ -4,6 +4,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
@@ -30,12 +31,15 @@ type Props = {
 };
 
 export function I18nProvider({ children }: Props) {
-  const [locale, setLocaleState] = useState<Locale>(() => {
-    if (typeof window === "undefined") return DEFAULT_LOCALE;
+  // Always start with DEFAULT_LOCALE so SSR and hydration match; sync
+  // from localStorage after mount.
+  const [locale, setLocaleState] = useState<Locale>(DEFAULT_LOCALE);
+
+  useEffect(() => {
     const initial = resolveInitialLocale();
+    setLocaleState(initial);
     persistLocale(initial);
-    return initial;
-  });
+  }, []);
 
   const setLocale = useCallback((next: Locale) => {
     setLocaleState(next);

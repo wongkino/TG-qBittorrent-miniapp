@@ -1,8 +1,10 @@
 "use client";
 
 import type { Torrent } from "@/lib/types";
-import { TorrentRow } from "@/components/TorrentRow";
+import { EmptyState } from "@/components/EmptyState";
 import { useI18n } from "@/components/I18nProvider";
+import { InboxIcon } from "@/components/icons";
+import { TorrentRow } from "@/components/TorrentRow";
 
 type Props = {
   torrents: Torrent[];
@@ -35,17 +37,16 @@ export function TorrentList({
 
   if (torrents.length === 0) {
     return (
-      <div className="empty">
-        <p>{filterActive ? t("list.emptyFiltered") : t("list.empty")}</p>
-        {filterActive ? null : (
-          <p className="hint">{t("list.emptyHint")}</p>
-        )}
-      </div>
+      <EmptyState
+        icon={<InboxIcon size={28} />}
+        title={filterActive ? t("list.emptyFiltered") : t("list.empty")}
+        hint={filterActive ? undefined : t("list.emptyHint")}
+      />
     );
   }
 
   return (
-    <div className="torrent-list">
+    <div className="inset-group torrent-list">
       {torrents.map((torrent) => (
         <TorrentRow
           key={torrent.hash}

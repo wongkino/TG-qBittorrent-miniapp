@@ -1,13 +1,19 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { GoogleSignIn } from "@/components/GoogleSignIn";
 import { I18nProvider, useI18n } from "@/components/I18nProvider";
+import { InstallBanner } from "@/components/InstallBanner";
 import { LanguageToggle } from "@/components/LanguageToggle";
-import { QbDashboard } from "@/components/QbDashboard";
+import { LoadingState } from "@/components/LoadingState";
+import {
+  QbDashboard,
+  type SnapshotData,
+} from "@/components/QbDashboard";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { fetchSnapshot } from "@/lib/client-api";
 import type { ClientAuth } from "@/lib/client-auth";
+import { errMessage } from "@/lib/client-errors";
 import { DEV_PREVIEW_BEARER } from "@/lib/dev/preview";
 import {
   clearStoredGoogleCredential,
@@ -21,16 +27,24 @@ const DEV_PREVIEW =
   process.env.NODE_ENV === "development" &&
   process.env.NEXT_PUBLIC_DEV_PREVIEW === "1";
 
-function errMessage(err: unknown, fallback: string) {
-  return err instanceof Error ? err.message : fallback;
-}
-
 function HeaderTools() {
   return (
     <div className="header__actions">
-      <LanguageToggle />
       <ThemeToggle />
+      <LanguageToggle />
     </div>
+  );
+}
+
+function AuthShell({ children }: { children: ReactNode }) {
+  return (
+    <main className="shell">
+      <header className="header">
+        <h1 className="title">qBittorrent</h1>
+        <HeaderTools />
+      </header>
+      {children}
+    </main>
   );
 }
 
@@ -45,6 +59,7 @@ export function WebApp() {
 function WebAppInner() {
   const { t } = useI18n();
   const [auth, setAuth] = useState<ClientAuth | null>(null);
+  const [snapshot, setSnapshot] = useState<SnapshotData | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
   const [needsSignIn, setNeedsSignIn] = useState(false);
   const [standalone] = useState(
@@ -56,6 +71,7 @@ function WebAppInner() {
   const handleAuthExpired = useCallback(() => {
     clearStoredGoogleCredential();
     setAuth(null);
+    setSnapshot(null);
     setNeedsSignIn(true);
     setUserName(null);
     setAuthError(null);
@@ -63,8 +79,9 @@ function WebAppInner() {
 
   const connectWithGoogleCredential = useCallback(async (credential: string) => {
     const session: ClientAuth = { token: credential };
-    await fetchSnapshot(session);
+    const next = await fetchSnapshot(session);
     storeGoogleCredential(credential);
+    setSnapshot(next);
     setAuth(session);
     setUserName(readEmailFromIdToken(credential));
     setNeedsSignIn(false);
@@ -78,7 +95,7 @@ function WebAppInner() {
       try {
         if (DEV_PREVIEW) {
           await connectWithGoogleCredential(DEV_PREVIEW_BEARER);
-          setUserName(t("app.previewUser"));
+          if (!cancelled) setUserName(t("app.previewUser"));
           return;
         }
 
@@ -92,7 +109,7 @@ function WebAppInner() {
           }
         }
 
-        setNeedsSignIn(true);
+        if (!cancelled) setNeedsSignIn(true);
       } catch (err) {
         if (!cancelled) {
           setAuthError(errMessage(err, t("signIn.failed")));
@@ -110,35 +127,23 @@ function WebAppInner() {
 
   if (booting) {
     return (
-      <main className="shell">
-        <header className="header">
-          <h1 className="title">qBittorrent</h1>
-          <HeaderTools />
-        </header>
-        <p className="status">{t("app.loading")}</p>
-      </main>
+      <AuthShell>
+        <LoadingState />
+      </AuthShell>
     );
   }
 
   if (authError) {
     return (
-      <main className="shell">
-        <header className="header">
-          <h1 className="title">qBittorrent</h1>
-          <HeaderTools />
-        </header>
+      <AuthShell>
         <p className="error">{authError}</p>
-      </main>
+      </AuthShell>
     );
   }
 
   if (!auth && needsSignIn) {
     return (
-      <main className="shell">
-        <header className="header">
-          <h1 className="title">qBittorrent</h1>
-          <HeaderTools />
-        </header>
+      <AuthShell>
         <GoogleSignIn
           standalone={standalone}
           onCredential={(credential) => {
@@ -147,13 +152,19 @@ function WebAppInner() {
             });
           }}
         />
-      </main>
+        <InstallBanner />
+      </AuthShell>
     );
   }
 
-  if (!auth) {
-    return null;
-  }
+  if (!auth) return null;
 
-  return <QbDashboard auth={auth} userName={userName} onAuthExpired={handleAuthExpired} />;
+  return (
+    <QbDashboard
+      auth={auth}
+      userName={userName}
+      initialSnapshot={snapshot}
+      onAuthExpired={handleAuthExpired}
+    />
+  );
 }

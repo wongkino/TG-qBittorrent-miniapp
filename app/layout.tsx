@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import Script from "next/script";
-import { THEME_BOOT_SCRIPT } from "@/lib/theme";
+import { ThemeBootScript } from "@/components/ThemeBootScript";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -41,14 +40,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh-Hant" suppressHydrationWarning data-theme="dark">
-      <body suppressHydrationWarning>
-        <Script
-          id="theme-boot"
-          strategy="beforeInteractive"
-          dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }}
-        />
-        {children}
-      </body>
+      <head>
+        <ThemeBootScript />
+      </head>
+      <body suppressHydrationWarning>{children}</body>
     </html>
   );
 }

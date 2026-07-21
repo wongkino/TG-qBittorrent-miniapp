@@ -11,14 +11,23 @@ import {
   type ClientRssFeed,
 } from "@/lib/client-api";
 import type { ClientAuth } from "@/lib/client-auth";
-import { AuthSessionError } from "@/lib/client-auth";
+import { CategorySelect } from "@/components/CategorySelect";
+import { EmptyState } from "@/components/EmptyState";
 import { useI18n } from "@/components/I18nProvider";
+import { LoadingState } from "@/components/LoadingState";
 import {
   AddIcon,
-  JoinIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  DownloadIcon,
+  InboxIcon,
   RefreshIcon,
   RemoveIcon,
 } from "@/components/icons";
+import {
+  classifyClientError,
+  errMessage,
+} from "@/lib/client-errors";
 
 type Props = {
   auth: ClientAuth;
@@ -27,18 +36,11 @@ type Props = {
   onAuthExpired?: () => void;
 };
 
-function errMessage(err: unknown, fallback: string) {
-  return err instanceof Error ? err.message : fallback;
-}
-
-function isAuthExpired(err: unknown): boolean {
-  return err instanceof AuthSessionError;
-}
-
 export function RssPanel({ auth, categories, onAdded, onAuthExpired }: Props) {
   const { t } = useI18n();
   const [feeds, setFeeds] = useState<ClientRssFeed[]>([]);
   const [selectedPath, setSelectedPath] = useState<string | null>(null);
+  const [pushed, setPushed] = useState(false);
   const [url, setUrl] = useState("");
   const [name, setName] = useState("");
   const [category, setCategory] = useState("");
@@ -52,6 +54,17 @@ export function RssPanel({ auth, categories, onAdded, onAuthExpired }: Props) {
     [feeds, selectedPath]
   );
 
+  const handleError = useCallback(
+    (err: unknown) => {
+      if (classifyClientError(err) === "auth") {
+        onAuthExpired?.();
+        return;
+      }
+      setError(errMessage(err, t("app.actionFailed")));
+    },
+    [onAuthExpired, t]
+  );
+
   const reload = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -63,7 +76,7 @@ export function RssPanel({ auth, categories, onAdded, onAuthExpired }: Props) {
         return next[0]?.path ?? null;
       });
     } catch (err) {
-      if (isAuthExpired(err)) {
+      if (classifyClientError(err) === "auth") {
         onAuthExpired?.();
         return;
       }
@@ -74,35 +87,8 @@ export function RssPanel({ auth, categories, onAdded, onAuthExpired }: Props) {
   }, [auth, onAuthExpired, t]);
 
   useEffect(() => {
-    let cancelled = false;
-
-    fetchRssFeeds(auth)
-      .then(({ feeds: next }) => {
-        if (cancelled) return;
-        setFeeds(next);
-        setSelectedPath((prev) => {
-          if (prev && next.some((f) => f.path === prev)) return prev;
-          return next[0]?.path ?? null;
-        });
-        setError(null);
-      })
-      .catch((err) => {
-        if (!cancelled) {
-          if (isAuthExpired(err)) {
-            onAuthExpired?.();
-            return;
-          }
-          setError(errMessage(err, t("rss.loadFailed")));
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [auth, onAuthExpired, t]);
+    void reload();
+  }, [reload]);
 
   async function withBusy(action: () => Promise<void>, okMessage?: string) {
     setBusy(true);
@@ -113,18 +99,14 @@ export function RssPanel({ auth, categories, onAdded, onAuthExpired }: Props) {
       if (okMessage) setStatus(okMessage);
       await reload();
     } catch (err) {
-      if (isAuthExpired(err)) {
-        onAuthExpired?.();
-        return;
-      }
-      setError(errMessage(err, t("app.actionFailed")));
+      handleError(err);
     } finally {
       setBusy(false);
     }
   }
 
   return (
-    <section className="rss">
+    <section className={`rss${pushed ? " rss--pushed" : ""}`}>
       <p className="hint rss__intro">{t("rss.intro")}</p>
 
       <form
@@ -170,19 +152,13 @@ export function RssPanel({ auth, categories, onAdded, onAuthExpired }: Props) {
       <div className="rss__toolbar">
         <label className="rss__cat">
           <span className="hint">{t("rss.categoryOnAdd")}</span>
-          <select
-            className="select"
+          <CategorySelect
             value={category}
-            onChange={(e) => setCategory(e.target.value)}
+            categories={categories}
             disabled={busy}
-          >
-            <option value="">{t("rss.noCategory")}</option>
-            {categories.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </select>
+            emptyLabel={t("rss.noCategory")}
+            onChange={setCategory}
+          />
         </label>
         <button
           type="button"
@@ -200,48 +176,60 @@ export function RssPanel({ auth, categories, onAdded, onAuthExpired }: Props) {
       {status ? <p className="rss__status">{status}</p> : null}
 
       {loading ? (
-        <p className="hint">{t("rss.loading")}</p>
+        <LoadingState label={t("rss.loading")} />
       ) : feeds.length === 0 ? (
-        <div className="empty">
-          <p>{t("rss.empty")}</p>
-          <p className="hint">{t("rss.emptyHint")}</p>
-        </div>
+        <EmptyState
+          icon={<InboxIcon size={28} />}
+          title={t("rss.empty")}
+          hint={t("rss.emptyHint")}
+        />
       ) : (
         <div className="rss__layout">
           <div className="rss__feeds">
-            {feeds.map((feed) => (
-              <button
-                key={feed.path}
-                type="button"
-                className={`rss__feed${selectedPath === feed.path ? " rss__feed--active" : ""}`}
-                onClick={() => setSelectedPath(feed.path)}
-                disabled={busy}
-              >
-                <span className="rss__feed-title">
-                  {feed.title || feed.path}
-                </span>
-                <span className="hint">
-                  {feed.articles.filter((a) => !a.isRead).length}/
-                  {feed.articles.length}
-                  {feed.hasError ? t("rss.errorTag") : ""}
-                  {feed.isLoading ? t("rss.loadingTag") : ""}
-                </span>
-              </button>
-            ))}
+            <p className="settings-group__header">{t("rss.feedsSection")}</p>
+            <div className="inset-group">
+              {feeds.map((feed) => (
+                <button
+                  key={feed.path}
+                  type="button"
+                  className={`list-row list-row--button${selectedPath === feed.path ? " list-row--selected" : ""}`}
+                  onClick={() => {
+                    setSelectedPath(feed.path);
+                    setPushed(true);
+                  }}
+                  disabled={busy}
+                >
+                  <span className="list-row__body">
+                    <span className="list-row__title">
+                      {feed.title || feed.path}
+                    </span>
+                    <span className="list-row__subtitle">
+                      {feed.articles.filter((a) => !a.isRead).length}/
+                      {feed.articles.length}
+                      {feed.hasError ? t("rss.errorTag") : ""}
+                      {feed.isLoading ? t("rss.loadingTag") : ""}
+                    </span>
+                  </span>
+                  <span className="list-row__chevron" aria-hidden>
+                    <ChevronRightIcon size={16} />
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="rss__detail">
             {selected ? (
               <>
                 <div className="rss__detail-head">
-                  <div>
-                    <h2 className="rss__detail-title">
-                      {selected.title || selected.path}
-                    </h2>
-                    <p className="hint rss__detail-url">
-                      {selected.url || selected.path}
-                    </p>
-                  </div>
+                  <button
+                    type="button"
+                    className="btn btn--sm rss__back"
+                    onClick={() => setPushed(false)}
+                  >
+                    <ChevronLeftIcon size={16} />
+                    <span>{t("rss.back")}</span>
+                  </button>
                   <div className="rss__detail-actions">
                     <button
                       type="button"
@@ -276,6 +264,7 @@ export function RssPanel({ auth, categories, onAdded, onAuthExpired }: Props) {
                         }
                         void withBusy(async () => {
                           await removeRssFeed(auth, selected.path);
+                          setPushed(false);
                         }, t("rss.removed"));
                       }}
                     >
@@ -284,22 +273,33 @@ export function RssPanel({ auth, categories, onAdded, onAuthExpired }: Props) {
                   </div>
                 </div>
 
+                <h2 className="rss__detail-title">
+                  {selected.title || selected.path}
+                </h2>
+                <p className="hint rss__detail-url">
+                  {selected.url || selected.path}
+                </p>
+
+                <p className="settings-group__header">
+                  {t("rss.articlesSection")}
+                </p>
+
                 {selected.articles.length === 0 ? (
                   <p className="hint">{t("rss.noArticles")}</p>
                 ) : (
-                  <ul className="rss__articles">
+                  <ul className="inset-group rss__articles">
                     {selected.articles.map((article) => (
                       <li
                         key={`${selected.path}:${article.id}:${article.title}`}
-                        className={`rss__article${article.isRead ? " rss__article--read" : ""}`}
+                        className={`list-row${article.isRead ? " list-row--muted" : ""}`}
                       >
-                        <div className="rss__article-main">
-                          <p className="rss__article-title">{article.title}</p>
+                        <div className="list-row__body">
+                          <p className="list-row__title">{article.title}</p>
                           {article.date ? (
-                            <p className="hint">{article.date}</p>
+                            <p className="list-row__subtitle">{article.date}</p>
                           ) : null}
                         </div>
-                        <div className="rss__article-actions">
+                        <div className="list-row__trailing">
                           <button
                             type="button"
                             className="btn btn--icon btn--sm btn--primary"
@@ -324,7 +324,7 @@ export function RssPanel({ auth, categories, onAdded, onAuthExpired }: Props) {
                               }, t("rss.addedDownload"))
                             }
                           >
-                            <JoinIcon />
+                            <DownloadIcon size={16} />
                           </button>
                         </div>
                       </li>

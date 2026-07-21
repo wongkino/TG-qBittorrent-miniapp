@@ -1,4 +1,5 @@
 import { authHeaders, AuthSessionError, type ClientAuth } from "@/lib/client-auth";
+import type { RssFeed } from "@/lib/qbittorrent";
 import type { Torrent } from "@/lib/types";
 
 async function parseError(res: Response): Promise<string> {
@@ -93,47 +94,29 @@ export function addTorrentUrl(
   });
 }
 
-export type ClientRssArticle = {
-  id: string;
-  title: string;
-  torrentUrl: string;
-  link: string;
-  date: string;
-  isRead: boolean;
-};
-
-export type ClientRssFeed = {
-  path: string;
-  url: string;
-  title: string;
-  isLoading: boolean;
-  hasError: boolean;
-  articles: ClientRssArticle[];
-};
+export type ClientRssFeed = RssFeed;
 
 export function fetchRssFeeds(auth: ClientAuth) {
   return api<{ feeds: ClientRssFeed[] }>("/api/qb/rss", auth);
 }
 
-export function addRssFeed(auth: ClientAuth, url: string, path?: string) {
-  return api<void>("/api/qb/rss/add", auth, {
+function postJson(path: string, auth: ClientAuth, body: Record<string, unknown>) {
+  return api<void>(path, auth, {
     method: "POST",
-    body: JSON.stringify({ url, path }),
+    body: JSON.stringify(body),
   });
+}
+
+export function addRssFeed(auth: ClientAuth, url: string, path?: string) {
+  return postJson("/api/qb/rss/add", auth, { url, path });
 }
 
 export function removeRssFeed(auth: ClientAuth, path: string) {
-  return api<void>("/api/qb/rss/remove", auth, {
-    method: "POST",
-    body: JSON.stringify({ path }),
-  });
+  return postJson("/api/qb/rss/remove", auth, { path });
 }
 
 export function refreshRssFeed(auth: ClientAuth, path: string) {
-  return api<void>("/api/qb/rss/refresh", auth, {
-    method: "POST",
-    body: JSON.stringify({ path }),
-  });
+  return postJson("/api/qb/rss/refresh", auth, { path });
 }
 
 export function markRssRead(
@@ -141,8 +124,5 @@ export function markRssRead(
   path: string,
   articleId?: string
 ) {
-  return api<void>("/api/qb/rss/read", auth, {
-    method: "POST",
-    body: JSON.stringify({ path, articleId }),
-  });
+  return postJson("/api/qb/rss/read", auth, { path, articleId });
 }

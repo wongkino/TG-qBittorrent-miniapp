@@ -8,17 +8,17 @@ import { AddIcon, PasteIcon } from "@/components/icons";
 type Props = {
   categories: string[];
   onSubmit: (urls: string, category: string) => Promise<void>;
+  onSuccess?: () => void;
 };
 
 async function readClipboardText(clipboardFailed: string): Promise<string> {
   if (navigator.clipboard?.readText) {
     return (await navigator.clipboard.readText()).trim();
   }
-
   throw new Error(clipboardFailed);
 }
 
-export function AddTorrentForm({ categories, onSubmit }: Props) {
+export function AddTorrentForm({ categories, onSubmit, onSuccess }: Props) {
   const { t } = useI18n();
   const [value, setValue] = useState("");
   const [category, setCategory] = useState("");
@@ -53,6 +53,7 @@ export function AddTorrentForm({ categories, onSubmit }: Props) {
     try {
       await onSubmit(urls, category);
       setValue("");
+      onSuccess?.();
     } catch (err) {
       setError(err instanceof Error ? err.message : t("add.failed"));
     } finally {
@@ -65,11 +66,9 @@ export function AddTorrentForm({ categories, onSubmit }: Props) {
   const pasteLabel = pasting ? t("add.pasting") : t("add.paste");
 
   return (
-    <form className="add-form" onSubmit={handleSubmit}>
+    <form className="add-form add-form--sheet" onSubmit={handleSubmit}>
       <div className="add-form__header">
-        <label className="add-form__label" htmlFor="torrent-url">
-          {t("add.title")}
-        </label>
+        <span className="add-form__label">{t("add.paste")}</span>
         <button
           type="button"
           className="btn btn--icon btn--sm"
@@ -84,11 +83,12 @@ export function AddTorrentForm({ categories, onSubmit }: Props) {
       <textarea
         id="torrent-url"
         className="add-form__input"
-        rows={3}
+        rows={4}
         placeholder={t("add.placeholder")}
         value={value}
         onChange={(e) => setValue(e.target.value)}
         disabled={busy}
+        autoFocus
       />
       <label className="add-form__label" htmlFor="torrent-category">
         {t("add.category")}
@@ -106,12 +106,11 @@ export function AddTorrentForm({ categories, onSubmit }: Props) {
       {error ? <p className="error">{error}</p> : null}
       <button
         type="submit"
-        className="btn btn--icon btn--primary"
+        className="btn btn--primary add-form__submit"
         disabled={busy || !value.trim()}
-        aria-label={submitLabel}
-        title={submitLabel}
       >
         <AddIcon />
+        <span>{submitLabel}</span>
       </button>
     </form>
   );

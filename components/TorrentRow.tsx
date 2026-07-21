@@ -1,9 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import type { Torrent } from "@/lib/types";
 import { CategorySelect } from "@/components/CategorySelect";
 import { useI18n } from "@/components/I18nProvider";
 import {
+  ChevronRightIcon,
   DeleteFilesIcon,
   PauseIcon,
   RemoveIcon,
@@ -44,6 +46,7 @@ export function TorrentRow({
   onCategoryChange,
 }: Props) {
   const { t, locale } = useI18n();
+  const [open, setOpen] = useState(false);
   const paused = isPausedState(torrent.state);
   const pct = Math.min(100, Math.max(0, torrent.progress * 100));
   const categoryOptions =
@@ -54,10 +57,12 @@ export function TorrentRow({
       : categories;
 
   return (
-    <article className={`torrent-row${selected ? " torrent-row--selected" : ""}`}>
-      <div className="torrent-row__header">
+    <article
+      className={`list-row${selected ? " list-row--selected" : ""}${open ? " list-row--open" : ""}`}
+    >
+      <div className="list-row__main">
         {selectionMode ? (
-          <label className="torrent-row__check">
+          <label className="list-row__check">
             <input
               type="checkbox"
               checked={selected}
@@ -66,101 +71,120 @@ export function TorrentRow({
             />
           </label>
         ) : null}
-        <h2 className="torrent-row__name" title={torrent.name}>
-          {torrent.name}
-        </h2>
-        <span className="torrent-row__state">
-          {stateLabel(torrent.state, locale)}
-        </span>
-      </div>
 
-      <div
-        className="progress"
-        aria-label={t("torrent.progress", {
-          progress: formatProgress(torrent.progress),
-        })}
-      >
-        <div className="progress__bar" style={{ width: `${pct}%` }} />
-      </div>
-
-      <div className="torrent-row__meta">
-        <span>{formatProgress(torrent.progress)}</span>
-        <span>{formatBytes(torrent.size)}</span>
-        <span>↓ {formatSpeed(torrent.dlspeed)}</span>
-        <span>↑ {formatSpeed(torrent.upspeed)}</span>
-        <span>ETA {formatEta(torrent.eta)}</span>
-      </div>
-
-      <div className="torrent-row__category">
-        <label
-          className="torrent-row__category-label"
-          htmlFor={`cat-${torrent.hash}`}
+        <button
+          type="button"
+          className="list-row__body"
+          disabled={selectionMode}
+          onClick={() => setOpen((prev) => !prev)}
+          aria-expanded={open}
         >
-          {t("torrent.category")}
-        </label>
-        <CategorySelect
-          id={`cat-${torrent.hash}`}
-          value={torrent.category}
-          categories={categoryOptions}
-          disabled={busy || selectionMode}
-          emptyLabel={t("add.noCategory")}
-          onChange={(category) => onCategoryChange(torrent.hash, category)}
-        />
+          <span className="list-row__title" title={torrent.name}>
+            {torrent.name}
+          </span>
+          <span className="list-row__subtitle">
+            {stateLabel(torrent.state, locale)}
+            {" · "}
+            {formatProgress(torrent.progress)}
+            {" · "}
+            {formatBytes(torrent.size)}
+          </span>
+          <span className="list-row__meta">
+            <span>↓ {formatSpeed(torrent.dlspeed)}</span>
+            <span>↑ {formatSpeed(torrent.upspeed)}</span>
+            <span>ETA {formatEta(torrent.eta)}</span>
+          </span>
+          <span
+            className="progress progress--thin"
+            aria-label={t("torrent.progress", {
+              progress: formatProgress(torrent.progress),
+            })}
+          >
+            <span className="progress__bar" style={{ width: `${pct}%` }} />
+          </span>
+        </button>
+
+        <div className="list-row__trailing">
+          {!selectionMode ? (
+            paused ? (
+              <button
+                type="button"
+                className="btn btn--icon btn--sm btn--primary"
+                disabled={busy}
+                aria-label={t("torrent.resume")}
+                title={t("torrent.resume")}
+                onClick={() => onResume(torrent.hash)}
+              >
+                <ResumeIcon size={16} />
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="btn btn--icon btn--sm"
+                disabled={busy}
+                aria-label={t("torrent.pause")}
+                title={t("torrent.pause")}
+                onClick={() => onPause(torrent.hash)}
+              >
+                <PauseIcon size={16} />
+              </button>
+            )
+          ) : null}
+          <span
+            className={`list-row__chevron${open ? " list-row__chevron--open" : ""}`}
+            aria-hidden
+          >
+            <ChevronRightIcon size={16} />
+          </span>
+        </div>
       </div>
 
-      {!selectionMode ? (
-        <div className="torrent-row__actions">
-          {paused ? (
+      {open && !selectionMode ? (
+        <div className="list-row__detail">
+          <div className="list-row__category">
+            <label
+              className="list-row__category-label"
+              htmlFor={`cat-${torrent.hash}`}
+            >
+              {t("torrent.category")}
+            </label>
+            <CategorySelect
+              id={`cat-${torrent.hash}`}
+              value={torrent.category}
+              categories={categoryOptions}
+              disabled={busy}
+              emptyLabel={t("add.noCategory")}
+              onChange={(category) => onCategoryChange(torrent.hash, category)}
+            />
+          </div>
+          <div className="list-row__actions">
             <button
               type="button"
-              className="btn btn--icon btn--primary"
+              className="btn btn--sm"
               disabled={busy}
-              aria-label={t("torrent.resume")}
-              title={t("torrent.resume")}
-              onClick={() => onResume(torrent.hash)}
+              onClick={() => {
+                if (confirm(t("torrent.confirmRemove"))) {
+                  onDelete(torrent.hash, false);
+                }
+              }}
             >
-              <ResumeIcon />
+              <RemoveIcon size={16} />
+              <span>{t("torrent.remove")}</span>
             </button>
-          ) : (
             <button
               type="button"
-              className="btn btn--icon"
+              className="btn btn--sm btn--danger"
               disabled={busy}
-              aria-label={t("torrent.pause")}
-              title={t("torrent.pause")}
-              onClick={() => onPause(torrent.hash)}
+              onClick={() => {
+                if (confirm(t("torrent.confirmDelete"))) {
+                  onDelete(torrent.hash, true);
+                }
+              }}
             >
-              <PauseIcon />
+              <DeleteFilesIcon size={16} />
+              <span>{t("torrent.deleteFiles")}</span>
             </button>
-          )}
-          <button
-            type="button"
-            className="btn btn--icon"
-            disabled={busy}
-            aria-label={t("torrent.remove")}
-            title={t("torrent.remove")}
-            onClick={() => {
-              if (confirm(t("torrent.confirmRemove"))) {
-                onDelete(torrent.hash, false);
-              }
-            }}
-          >
-            <RemoveIcon />
-          </button>
-          <button
-            type="button"
-            className="btn btn--icon btn--danger"
-            disabled={busy}
-            aria-label={t("torrent.deleteFiles")}
-            title={t("torrent.deleteFiles")}
-            onClick={() => {
-              if (confirm(t("torrent.confirmDelete"))) {
-                onDelete(torrent.hash, true);
-              }
-            }}
-          >
-            <DeleteFilesIcon />
-          </button>
+          </div>
         </div>
       ) : null}
     </article>

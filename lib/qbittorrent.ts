@@ -242,39 +242,6 @@ export async function listTorrents(): Promise<Torrent[]> {
   return (await fetchRawTorrents()).map(projectTorrent);
 }
 
-export type NotifyTorrent = {
-  hash: string;
-  name: string;
-  size: number;
-  progress: number;
-  state: string;
-  category: string;
-  tags: string;
-  added_on: number;
-  completion_on: number;
-};
-
-export async function listTorrentsForNotify(): Promise<NotifyTorrent[]> {
-  return (await fetchRawTorrents()).map((t) => ({
-    hash: String(t.hash ?? ""),
-    name: String(t.name ?? ""),
-    size: Number(t.size) || 0,
-    progress: Number(t.progress) || 0,
-    state: String(t.state ?? "unknown"),
-    category: String(t.category ?? ""),
-    tags: String(t.tags ?? ""),
-    added_on: Number(t.added_on) || 0,
-    completion_on: Number(t.completion_on) || 0,
-  }));
-}
-
-export async function addTorrentTags(
-  hashes: string,
-  tags: string
-): Promise<void> {
-  await postForm("/api/v2/torrents/addTags", { hashes, tags });
-}
-
 export async function listCategories(): Promise<string[]> {
   const res = await qbFetch("/api/v2/torrents/categories", { method: "GET" });
   if (!res.ok) throw new QBitError("Failed to fetch categories", 502);
@@ -318,28 +285,6 @@ export async function addTorrent(
   const fields: Record<string, string> = { urls };
   if (category) fields.category = category;
   await postForm("/api/v2/torrents/add", fields);
-}
-
-export async function addTorrentFile(
-  file: Blob,
-  filename: string,
-  category?: string
-): Promise<void> {
-  const form = new FormData();
-  form.append("torrents", file, filename);
-  if (category) form.append("category", category);
-
-  const res = await qbFetch("/api/v2/torrents/add", {
-    method: "POST",
-    body: form,
-  });
-  if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    throw new QBitError(
-      `qBittorrent add file failed (${res.status})${text ? `: ${text.slice(0, 120)}` : ""}`,
-      502
-    );
-  }
 }
 
 export type RssArticle = {

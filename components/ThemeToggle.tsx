@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useI18n } from "@/components/I18nProvider";
 import { MoonIcon, SunIcon } from "@/components/icons";
 import {
@@ -15,9 +15,13 @@ type Props = {
 
 export function ThemeToggle({ className }: Props) {
   const { t } = useI18n();
-  const [theme, setTheme] = useState<AppTheme>(() =>
-    typeof window === "undefined" ? "dark" : resolveInitialTheme()
-  );
+  // Match SSR/hydration with default; sync from storage after mount.
+  // data-theme on <html> is already set by ThemeBootScript.
+  const [theme, setTheme] = useState<AppTheme>("dark");
+
+  useEffect(() => {
+    setTheme(resolveInitialTheme());
+  }, []);
 
   function toggle() {
     const next: AppTheme = theme === "dark" ? "light" : "dark";

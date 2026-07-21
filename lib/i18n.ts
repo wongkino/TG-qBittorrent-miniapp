@@ -4,17 +4,32 @@ export type MessageKey = keyof typeof zhHant;
 
 const zhHant = {
   "app.loading": "載入中…",
+  "app.loadingHint": "請稍候",
   "app.hello": "你好，{name}",
-  "app.unauthorized": "未授權",
   "app.nav": "主選單",
   "app.tab.downloads": "下載",
   "app.tab.rss": "RSS",
+  "app.tab.more": "更多",
   "app.refresh": "重新整理",
   "app.refreshFailed": "重新整理失敗",
+  "app.pullToRefresh": "下拉重新整理",
+  "app.refreshing": "重新整理中…",
   "app.actionFailed": "操作失敗",
-  "app.initFailed": "初始化失敗",
   "app.previewUser": "本機預覽",
-  "app.previewInitFailed": "本機預覽初始化失敗",
+
+  "sheet.close": "關閉",
+  "sheet.done": "完成",
+  "more.title": "更多",
+  "more.appearance": "外觀與語言",
+
+  "pwa.installTitle": "加到主畫面",
+  "pwa.installHint": "安裝後可像 App 一樣全螢幕使用。",
+  "pwa.installHintIos": "Safari：分享 → 加入主畫面",
+  "pwa.installAction": "安裝",
+  "pwa.installDismiss": "稍後",
+  "pwa.offlineTitle": "目前離線",
+  "pwa.offlineHint": "恢復連線後下拉重新整理",
+  "pwa.offlineBanner": "離線中 — 下拉可重試",
 
   "signIn.title": "qBittorrent Web App",
   "signIn.hintStandalone":
@@ -62,8 +77,14 @@ const zhHant = {
     "刪除選取的 {count} 個種子與檔案？此操作無法復原。",
 
   "list.empty": "目前沒有種子",
-  "list.emptyHint": "用下方表單貼上 magnet 或 torrent 網址",
+  "list.emptyHint": "點右下角 ＋ 貼上 magnet 或 torrent 網址",
   "list.emptyFiltered": "沒有符合此狀態的種子",
+  "list.options": "列表選項",
+  "list.sortSection": "排序",
+  "list.batchSection": "批次",
+  "rss.back": "返回",
+  "rss.feedsSection": "訂閱",
+  "rss.articlesSection": "文章",
 
   "torrent.progress": "進度 {progress}",
   "torrent.category": "分類",
@@ -96,6 +117,7 @@ const zhHant = {
   "state.unknown": "未知",
 
   "add.title": "新增種子",
+  "add.fab": "新增種子",
   "add.paste": "貼上",
   "add.pasting": "貼上中…",
   "add.placeholder": "magnet:?xt=... 或 https://.../*.torrent",
@@ -137,17 +159,32 @@ const zhHant = {
 
 const zhHans: Record<MessageKey, string> = {
   "app.loading": "加载中…",
+  "app.loadingHint": "请稍候",
   "app.hello": "你好，{name}",
-  "app.unauthorized": "未授权",
   "app.nav": "主菜单",
   "app.tab.downloads": "下载",
   "app.tab.rss": "RSS",
+  "app.tab.more": "更多",
   "app.refresh": "刷新",
   "app.refreshFailed": "刷新失败",
+  "app.pullToRefresh": "下拉刷新",
+  "app.refreshing": "刷新中…",
   "app.actionFailed": "操作失败",
-  "app.initFailed": "初始化失败",
   "app.previewUser": "本地预览",
-  "app.previewInitFailed": "本地预览初始化失败",
+
+  "sheet.close": "关闭",
+  "sheet.done": "完成",
+  "more.title": "更多",
+  "more.appearance": "外观与语言",
+
+  "pwa.installTitle": "添加到主屏幕",
+  "pwa.installHint": "安装后可像 App 一样全屏使用。",
+  "pwa.installHintIos": "Safari：分享 → 添加到主屏幕",
+  "pwa.installAction": "安装",
+  "pwa.installDismiss": "稍后",
+  "pwa.offlineTitle": "当前离线",
+  "pwa.offlineHint": "恢复连接后下拉刷新",
+  "pwa.offlineBanner": "离线中 — 下拉可重试",
 
   "signIn.title": "qBittorrent Web App",
   "signIn.hintStandalone":
@@ -195,8 +232,14 @@ const zhHans: Record<MessageKey, string> = {
     "删除选取的 {count} 个种子与文件？此操作无法复原。",
 
   "list.empty": "目前没有种子",
-  "list.emptyHint": "用下方表单粘贴 magnet 或 torrent 网址",
+  "list.emptyHint": "点右下角 ＋ 粘贴 magnet 或 torrent 网址",
   "list.emptyFiltered": "没有符合此状态的种子",
+  "list.options": "列表选项",
+  "list.sortSection": "排序",
+  "list.batchSection": "批量",
+  "rss.back": "返回",
+  "rss.feedsSection": "订阅",
+  "rss.articlesSection": "文章",
 
   "torrent.progress": "进度 {progress}",
   "torrent.category": "分类",
@@ -229,6 +272,7 @@ const zhHans: Record<MessageKey, string> = {
   "state.unknown": "未知",
 
   "add.title": "新增种子",
+  "add.fab": "新增种子",
   "add.paste": "粘贴",
   "add.pasting": "粘贴中…",
   "add.placeholder": "magnet:?xt=... 或 https://.../*.torrent",
@@ -270,17 +314,32 @@ const zhHans: Record<MessageKey, string> = {
 
 const en: Record<MessageKey, string> = {
   "app.loading": "Loading…",
+  "app.loadingHint": "Just a moment",
   "app.hello": "Hi, {name}",
-  "app.unauthorized": "Unauthorized",
   "app.nav": "Main menu",
   "app.tab.downloads": "Downloads",
   "app.tab.rss": "RSS",
+  "app.tab.more": "More",
   "app.refresh": "Refresh",
   "app.refreshFailed": "Refresh failed",
+  "app.pullToRefresh": "Pull to refresh",
+  "app.refreshing": "Refreshing…",
   "app.actionFailed": "Action failed",
-  "app.initFailed": "Initialization failed",
   "app.previewUser": "Local preview",
-  "app.previewInitFailed": "Local preview failed to start",
+
+  "sheet.close": "Close",
+  "sheet.done": "Done",
+  "more.title": "More",
+  "more.appearance": "Appearance & language",
+
+  "pwa.installTitle": "Add to Home Screen",
+  "pwa.installHint": "Install for a full-screen app experience.",
+  "pwa.installHintIos": "Safari: Share → Add to Home Screen",
+  "pwa.installAction": "Install",
+  "pwa.installDismiss": "Not now",
+  "pwa.offlineTitle": "You’re offline",
+  "pwa.offlineHint": "When back online, pull to refresh",
+  "pwa.offlineBanner": "Offline — pull to retry",
 
   "signIn.title": "qBittorrent Web App",
   "signIn.hintStandalone":
@@ -331,8 +390,14 @@ const en: Record<MessageKey, string> = {
     "Delete {count} selected torrents and files? This cannot be undone.",
 
   "list.empty": "No torrents yet",
-  "list.emptyHint": "Paste a magnet or torrent URL in the form below",
+  "list.emptyHint": "Tap ＋ to paste a magnet or torrent URL",
   "list.emptyFiltered": "No torrents match this status",
+  "list.options": "List options",
+  "list.sortSection": "Sort",
+  "list.batchSection": "Batch",
+  "rss.back": "Back",
+  "rss.feedsSection": "Feeds",
+  "rss.articlesSection": "Articles",
 
   "torrent.progress": "Progress {progress}",
   "torrent.category": "Category",
@@ -367,6 +432,7 @@ const en: Record<MessageKey, string> = {
   "state.unknown": "Unknown",
 
   "add.title": "Add torrent",
+  "add.fab": "Add torrent",
   "add.paste": "Paste",
   "add.pasting": "Pasting…",
   "add.placeholder": "magnet:?xt=... or https://.../*.torrent",
@@ -408,17 +474,32 @@ const en: Record<MessageKey, string> = {
 
 const ja: Record<MessageKey, string> = {
   "app.loading": "読み込み中…",
+  "app.loadingHint": "少々お待ちください",
   "app.hello": "こんにちは、{name}",
-  "app.unauthorized": "未承認",
   "app.nav": "メインメニュー",
   "app.tab.downloads": "ダウンロード",
   "app.tab.rss": "RSS",
+  "app.tab.more": "その他",
   "app.refresh": "更新",
   "app.refreshFailed": "更新に失敗しました",
+  "app.pullToRefresh": "引っ張りで更新",
+  "app.refreshing": "更新中…",
   "app.actionFailed": "操作に失敗しました",
-  "app.initFailed": "初期化に失敗しました",
   "app.previewUser": "ローカルプレビュー",
-  "app.previewInitFailed": "ローカルプレビューの初期化に失敗しました",
+
+  "sheet.close": "閉じる",
+  "sheet.done": "完了",
+  "more.title": "その他",
+  "more.appearance": "外観と言語",
+
+  "pwa.installTitle": "ホーム画面に追加",
+  "pwa.installHint": "インストールすると App のように全画面で使えます。",
+  "pwa.installHintIos": "Safari：共有 → ホーム画面に追加",
+  "pwa.installAction": "インストール",
+  "pwa.installDismiss": "後で",
+  "pwa.offlineTitle": "オフラインです",
+  "pwa.offlineHint": "接続が戻ったら引っ張って更新",
+  "pwa.offlineBanner": "オフライン — 引っ張って再試行",
 
   "signIn.title": "qBittorrent Web App",
   "signIn.hintStandalone":
@@ -469,9 +550,14 @@ const ja: Record<MessageKey, string> = {
     "選択した {count} 件のトレントとファイルを削除しますか？この操作は元に戻せません。",
 
   "list.empty": "トレントはありません",
-  "list.emptyHint":
-    "下のフォームに magnet または torrent URL を貼り付けてください",
+  "list.emptyHint": "右下の ＋ から magnet または torrent URL を追加",
   "list.emptyFiltered": "この状態のトレントはありません",
+  "list.options": "リストオプション",
+  "list.sortSection": "並べ替え",
+  "list.batchSection": "一括",
+  "rss.back": "戻る",
+  "rss.feedsSection": "フィード",
+  "rss.articlesSection": "記事",
 
   "torrent.progress": "進捗 {progress}",
   "torrent.category": "カテゴリ",
@@ -506,6 +592,7 @@ const ja: Record<MessageKey, string> = {
   "state.unknown": "不明",
 
   "add.title": "トレントを追加",
+  "add.fab": "トレントを追加",
   "add.paste": "貼り付け",
   "add.pasting": "貼り付け中…",
   "add.placeholder": "magnet:?xt=... または https://.../*.torrent",

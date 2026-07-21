@@ -145,11 +145,11 @@ export function AddIcon(props: IconProps) {
   );
 }
 
-export function JoinIcon(props: IconProps) {
+export function DownloadIcon(props: IconProps) {
   return (
     <Icon {...props}>
-      <path d="M12 4v12" />
-      <path d="m7 11 5 5 5-5" />
+      <path d="M12 3v12" />
+      <path d="m7 10 5 5 5-5" />
       <path d="M5 19h14" />
     </Icon>
   );
@@ -172,6 +172,60 @@ export function SelectAllIcon(props: IconProps) {
       <rect x="13" y="4" width="7" height="7" rx="1" />
       <rect x="4" y="13" width="7" height="7" rx="1" />
       <path d="m14 15.5 2 2 3.5-4" />
+    </Icon>
+  );
+}
+
+export function RssIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M4 11a9 9 0 0 1 9 9" />
+      <path d="M4 4a16 16 0 0 1 16 16" />
+      <circle cx="5" cy="19" r="1.5" fill="currentColor" stroke="none" />
+    </Icon>
+  );
+}
+
+export function EllipsisIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <circle cx="6" cy="12" r="1.25" fill="currentColor" stroke="none" />
+      <circle cx="12" cy="12" r="1.25" fill="currentColor" stroke="none" />
+      <circle cx="18" cy="12" r="1.25" fill="currentColor" stroke="none" />
+    </Icon>
+  );
+}
+
+export function ChevronRightIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="m9 6 6 6-6 6" />
+    </Icon>
+  );
+}
+
+export function ChevronLeftIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="m15 6-6 6 6 6" />
+    </Icon>
+  );
+}
+
+export function InboxIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M4 8h16v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8z" />
+      <path d="M4 8 8.5 3h7L20 8" />
+      <path d="M4 13h4l1.5 2h5L16 13h4" />
+    </Icon>
+  );
+}
+
+export function SpinnerIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M12 3a9 9 0 1 1-6.36 2.64" />
     </Icon>
   );
 }
