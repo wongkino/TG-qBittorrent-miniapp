@@ -34,7 +34,7 @@ npm run dev
 | 指令 | 說明 |
 |------|------|
 | `npm run dev:env` | 複製 development 範本到 `.env.development.local` |
-| `npm run dev` | Next 開發伺服器（`/` Mini App、`/webapp/` iOS Web App） |
+| `npm run dev` | Next 開發伺服器（Web App 於 `/`） |
 | `npm run build` / `start` | Next production build |
 | `npm run lint` | ESLint |
 | `npm run preview` | OpenNext build + Wrangler preview |
@@ -42,39 +42,18 @@ npm run dev
 
 ---
 
-## 本機測 Mini App
+## 本機測 Web App
 
 | 方式 | 說明 |
 |------|------|
 | **本機預覽**（改 UI） | `DEV_PREVIEW=1` + `NEXT_PUBLIC_DEV_PREVIEW=1` |
-| Deploy 後測真資料 | Telegram「開啟 App」 |
-| 真 qB 本機聯調 | 關掉 PREVIEW，填 bot／qB；需合法 initData（tunnel + TG） |
+| Deploy 後測真資料 | 開啟 `APP_URL`，Google 登入 |
+| 真 qB 本機聯調 | 關掉 PREVIEW，填 `GOOGLE_CLIENT_ID`／`ALLOWED_GOOGLE_EMAILS` 與 qB |
 | 介面語系 | App 內 **EN／繁／简／日** 手動切換（localStorage + 同步 KV，Bot 共用） |
 
 Bot／cron 可用 curl 打已部署端點（帶 secret）。
 
----
-
-## 本機測 iOS Web App（Next.js React + Google OAuth）
-
-路徑 `{APP_URL}/webapp/`（與 Mini App 同一個 Next.js app）。登入使用 **Google OAuth**（email 須在 `ALLOWED_GOOGLE_EMAILS` 白名單）。
-
-1. [Google Cloud Console](https://console.cloud.google.com/) 建立 OAuth Web client  
-   - Authorized JavaScript origins：`http://localhost:3000`、`https://你的-workers-url`
-2. 本機 `.env.development.local` / `.dev.vars`：
-
-```bash
-GOOGLE_CLIENT_ID=你的-client-id.apps.googleusercontent.com
-ALLOWED_GOOGLE_EMAILS=you@gmail.com
-```
-
-```bash
-npm run dev
-```
-
-瀏覽器開 http://localhost:3000/webapp/ → Google 登入。
-
-正式環境：Deploy 時 GitHub Variable `GOOGLE_CLIENT_ID` 會用於 Worker 驗證與前端登入按鈕（無需另設 `NEXT_PUBLIC_*`）。
+Google OAuth 本機設定見 [`env/development.example`](../env/development.example)（`GOOGLE_CLIENT_ID`、`ALLOWED_GOOGLE_EMAILS`）。Authorized JavaScript origins 需包含 `http://localhost:3000` 與正式 Workers URL。
 
 ---
 
@@ -87,7 +66,7 @@ npm run dev
 4. 接到 `components/*`；UI 字串加進 `lib/i18n.ts`（四語）
 
 ### 新的 Bot 指令／按鈕
-改 `lib/bot-handler.ts` 與 `lib/i18n.ts` 的 `bot.*`；回覆附語系對應的 Reply Keyboard。語系由 Mini App 同步到 KV（`lib/user-locale.ts`）。
+改 `lib/bot-handler.ts` 與 `lib/i18n.ts` 的 `bot.*`；回覆附語系對應的 Reply Keyboard。語系由 Web App 同步到 KV（`lib/user-locale.ts`）。
 
 ### 新的通知類型
 改 `lib/completions.ts`；新 tag 去重；確認 `worker.ts` scheduled。更新 [USER.md](USER.md)／[ARCHITECTURE.md](ARCHITECTURE.md)。

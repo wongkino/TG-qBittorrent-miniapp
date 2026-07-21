@@ -11,21 +11,6 @@ type Props = {
 };
 
 async function readClipboardText(clipboardFailed: string): Promise<string> {
-  try {
-    const { default: WebApp } = await import("@twa-dev/sdk");
-    if (
-      typeof WebApp.readTextFromClipboard === "function" &&
-      WebApp.isVersionAtLeast("6.4")
-    ) {
-      const text = await new Promise<string | null>((resolve) => {
-        WebApp.readTextFromClipboard((value) => resolve(value ?? null));
-      });
-      if (text?.trim()) return text.trim();
-    }
-  } catch {
-    // Fall through to browser clipboard API.
-  }
-
   if (navigator.clipboard?.readText) {
     return (await navigator.clipboard.readText()).trim();
   }

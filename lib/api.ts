@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { type VerifiedAuth } from "@/lib/auth";
-import { AuthError } from "@/lib/telegram";
+import { AuthError } from "@/lib/auth";
 import { QBitError } from "@/lib/qbittorrent";
 
 export function jsonError(message: string, status: number) {

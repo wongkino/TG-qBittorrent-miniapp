@@ -2,14 +2,21 @@ import {
   googleSubToUserId,
   verifyGoogleIdToken,
 } from "@/lib/google-auth";
-import {
-  AuthError,
-  requireTelegramAuth,
-  type VerifiedTelegramAuth,
-} from "@/lib/telegram";
+import { isDevPreviewBearer } from "@/lib/dev/preview";
 
-export type VerifiedAuth = VerifiedTelegramAuth & {
-  webApp?: boolean;
+export class AuthError extends Error {
+  status: number;
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = "AuthError";
+    this.status = status;
+  }
+}
+
+export type VerifiedAuth = {
+  user: { id: number };
+  authDate: number;
+  preview?: boolean;
   google?: boolean;
   email?: string;
 };
@@ -21,19 +28,24 @@ function extractBearerToken(header: string | null): string | null {
 }
 
 export async function requireAuth(request: Request): Promise<VerifiedAuth> {
-  const header = request.headers.get("authorization");
-  const bearer = extractBearerToken(header);
-  if (bearer) {
-    const { email, sub } = await verifyGoogleIdToken(bearer);
+  const bearer = extractBearerToken(request.headers.get("authorization"));
+  if (!bearer) {
+    throw new AuthError("Missing Authorization: Bearer <token>", 401);
+  }
+
+  if (isDevPreviewBearer(bearer)) {
     return {
-      user: { id: googleSubToUserId(sub) },
+      user: { id: 0 },
       authDate: Math.floor(Date.now() / 1000),
-      webApp: true,
-      google: true,
-      email,
+      preview: true,
     };
   }
-  return requireTelegramAuth(header);
-}
 
-export { AuthError };
+  const { email, sub } = await verifyGoogleIdToken(bearer);
+  return {
+    user: { id: googleSubToUserId(sub) },
+    authDate: Math.floor(Date.now() / 1000),
+    google: true,
+    email,
+  };
+}

@@ -1,13 +1,11 @@
-/** Client credential for `/api/qb/*` (Telegram initData or Google ID token). */
-export type ClientAuth =
-  | { mode: "tma"; initData: string }
-  | { mode: "bearer"; token: string };
+/** Google ID token or local `dev-preview` bearer for `/api/qb/*`. */
+export type ClientAuth = {
+  token: string;
+};
 
 export function authHeaders(auth: ClientAuth): HeadersInit {
-  const authorization =
-    auth.mode === "tma" ? `tma ${auth.initData}` : `Bearer ${auth.token}`;
   return {
-    Authorization: authorization,
+    Authorization: `Bearer ${auth.token}`,
     "Content-Type": "application/json",
   };
 }

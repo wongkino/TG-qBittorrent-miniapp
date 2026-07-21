@@ -1,13 +1,13 @@
-# Telegram Mini App → qBittorrent
+# qBittorrent Web App + Telegram Bot
 
-個人專用 Telegram Bot + Mini App，經 **Cloudflare Workers**（OpenNext）代理 **qBittorrent Web API**。
+個人專用 Web App（Google 登入）+ Telegram Bot，經 **Cloudflare Workers**（OpenNext）代理 **qBittorrent Web API**。
 
 | | |
 |--|--|
 | Worker | `tg-dl` |
 | 預設 URL | `https://tg-dl.<subdomain>.workers.dev` |
-| 認證 | Mini App `initData` + User ID 白名單 |
-| Mini App 語系 | 英／繁中／簡中／日文（App 內切換；Bot／通知同步） |
+| Web App 認證 | Google OAuth + email 白名單 |
+| 語系 | 英／繁中／簡中／日文（App 內切換；Bot／通知同步） |
 
 ---
 

@@ -169,7 +169,7 @@ jobs:
                   "drop_pending_updates": False,
               },
           )
-          # Input-field left menu button → opens Mini App
+          # Menu button → opens Web App at APP_URL root
           call(
               "setChatMenuButton",
               {

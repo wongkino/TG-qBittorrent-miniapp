@@ -8,6 +8,7 @@ import { QbDashboard } from "@/components/QbDashboard";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { fetchSnapshot } from "@/lib/client-api";
 import type { ClientAuth } from "@/lib/client-auth";
+import { DEV_PREVIEW_BEARER } from "@/lib/dev/preview";
 import {
   clearStoredGoogleCredential,
   getStoredGoogleCredential,
@@ -15,6 +16,10 @@ import {
   readEmailFromIdToken,
   storeGoogleCredential,
 } from "@/lib/webapp";
+
+const DEV_PREVIEW =
+  process.env.NODE_ENV === "development" &&
+  process.env.NEXT_PUBLIC_DEV_PREVIEW === "1";
 
 function errMessage(err: unknown, fallback: string) {
   return err instanceof Error ? err.message : fallback;
@@ -47,7 +52,7 @@ function WebAppInner() {
   const [booting, setBooting] = useState(true);
 
   const connectWithGoogleCredential = useCallback(async (credential: string) => {
-    const session: ClientAuth = { mode: "bearer", token: credential };
+    const session: ClientAuth = { token: credential };
     await fetchSnapshot(session);
     storeGoogleCredential(credential);
     setAuth(session);
@@ -62,6 +67,12 @@ function WebAppInner() {
     async function boot() {
       try {
         setStandalone(isStandaloneWebApp());
+
+        if (DEV_PREVIEW) {
+          await connectWithGoogleCredential(DEV_PREVIEW_BEARER);
+          setUserName(t("app.previewUser"));
+          return;
+        }
 
         const stored = getStoredGoogleCredential();
         if (stored) {

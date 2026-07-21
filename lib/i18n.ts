@@ -15,8 +15,6 @@ const zhHant = {
   "app.initFailed": "初始化失敗",
   "app.previewUser": "本機預覽",
   "app.previewInitFailed": "本機預覽初始化失敗",
-  "app.noInitData":
-    "無法取得 Telegram initData。請從 Telegram Bot 內開啟此 Mini App，或使用 /webapp/ 的 iOS Web App。",
 
   "webapp.title": "iOS Web App",
   "webapp.hintStandalone":
@@ -26,7 +24,7 @@ const zhHant = {
   "webapp.signInFailed": "Google 登入失敗，請確認帳號是否在白名單內",
   "webapp.missingClientId": "未設定 GOOGLE_CLIENT_ID，無法顯示登入按鈕",
   "webapp.footer":
-    "在 Safari 開啟 /webapp/ → 分享 → 加入主畫面，即可像 App 一樣全螢幕使用。",
+    "在 Safari 分享 → 加入主畫面，即可像 App 一樣全螢幕使用。",
 
   "theme.toLight": "日間",
   "theme.toDark": "夜間",
@@ -179,8 +177,6 @@ const zhHans: Record<MessageKey, string> = {
   "app.initFailed": "初始化失败",
   "app.previewUser": "本地预览",
   "app.previewInitFailed": "本地预览初始化失败",
-  "app.noInitData":
-    "无法取得 Telegram initData。请从 Telegram Bot 内打开此 Mini App，或使用 /webapp/ 的 iOS Web App。",
 
   "webapp.title": "iOS Web App",
   "webapp.hintStandalone":
@@ -190,7 +186,7 @@ const zhHans: Record<MessageKey, string> = {
   "webapp.signInFailed": "Google 登录失败，请确认账号是否在白名单内",
   "webapp.missingClientId": "未设置 GOOGLE_CLIENT_ID，无法显示登录按钮",
   "webapp.footer":
-    "在 Safari 打开 /webapp/ → 分享 → 加入主画面，即可像 App 一样全屏使用。",
+    "在 Safari 分享 → 加入主画面，即可像 App 一样全屏使用。",
 
   "theme.toLight": "日间",
   "theme.toDark": "夜间",
@@ -343,8 +339,6 @@ const en: Record<MessageKey, string> = {
   "app.initFailed": "Initialization failed",
   "app.previewUser": "Local preview",
   "app.previewInitFailed": "Local preview failed to start",
-  "app.noInitData":
-    "Missing Telegram initData. Open this Mini App from the Telegram Bot, or use the iOS Web App at /webapp/.",
 
   "webapp.title": "iOS Web App",
   "webapp.hintStandalone":
@@ -356,7 +350,7 @@ const en: Record<MessageKey, string> = {
   "webapp.missingClientId":
     "GOOGLE_CLIENT_ID is not set; the sign-in button cannot be shown.",
   "webapp.footer":
-    "In Safari, open /webapp/ → Share → Add to Home Screen for a full-screen app experience.",
+    "In Safari: Share → Add to Home Screen for a full-screen app experience.",
 
   "theme.toLight": "Light",
   "theme.toDark": "Dark",
@@ -513,8 +507,6 @@ const ja: Record<MessageKey, string> = {
   "app.initFailed": "初期化に失敗しました",
   "app.previewUser": "ローカルプレビュー",
   "app.previewInitFailed": "ローカルプレビューの初期化に失敗しました",
-  "app.noInitData":
-    "Telegram initData を取得できません。Telegram Bot から Mini App を開くか、/webapp/ の iOS Web App を使用してください。",
 
   "webapp.title": "iOS Web App",
   "webapp.hintStandalone":
@@ -526,7 +518,7 @@ const ja: Record<MessageKey, string> = {
   "webapp.missingClientId":
     "GOOGLE_CLIENT_ID が未設定のため、サインインボタンを表示できません。",
   "webapp.footer":
-    "Safari で /webapp/ を開き、共有 → ホーム画面に追加するとフルスクリーンで使えます。",
+    "Safari で共有 → ホーム画面に追加するとフルスクリーンで使えます。",
 
   "theme.toLight": "ライト",
   "theme.toDark": "ダーク",

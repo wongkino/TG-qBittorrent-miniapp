@@ -1,6 +1,6 @@
 import { createRemoteJWKSet, jwtVerify } from "jose";
 import { env, parseAllowedGoogleEmails } from "@/lib/env";
-import { AuthError } from "@/lib/telegram";
+import { AuthError } from "@/lib/auth";
 
 const JWKS = createRemoteJWKSet(
   new URL("https://www.googleapis.com/oauth2/v3/certs")

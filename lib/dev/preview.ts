@@ -2,8 +2,8 @@ import type { Torrent } from "@/lib/types";
 import type { ClientRssFeed } from "@/lib/client-api";
 import { env } from "@/lib/env";
 
-/** Sent as `Authorization: tma <this>` in local preview. */
-export const DEV_PREVIEW_INIT_DATA = "dev-preview";
+/** Sent as `Authorization: Bearer <this>` in local preview. */
+export const DEV_PREVIEW_BEARER = "dev-preview";
 
 /** Only when Next is in development and both flags are set. */
 export function isDevPreviewEnabled(): boolean {
@@ -14,11 +14,11 @@ export function isDevPreviewEnabled(): boolean {
   );
 }
 
-export function isDevPreviewInitData(initData: string | null | undefined): boolean {
+export function isDevPreviewBearer(token: string | null | undefined): boolean {
   return (
     isDevPreviewEnabled() &&
-    typeof initData === "string" &&
-    initData.trim() === DEV_PREVIEW_INIT_DATA
+    typeof token === "string" &&
+    token.trim() === DEV_PREVIEW_BEARER
   );
 }
 
