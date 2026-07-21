@@ -1,9 +1,10 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment -- OpenNext generated worker is untyped */
 // @ts-nocheck
 // Custom Worker entry: keep OpenNext fetch + add Cloudflare Cron.
 // Built by Wrangler after OpenNext generates `.open-next/worker.js`.
 import { default as handler } from "./.open-next/worker.js";
 
-export default {
+const worker = {
   fetch: handler.fetch,
 
   /**
@@ -42,6 +43,8 @@ export default {
     console.log(`Notify cron ok: ${body}`);
   },
 };
+
+export default worker;
 
 // Required when OpenNext generates these Durable Object exports.
 export {

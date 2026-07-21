@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useI18n } from "@/components/I18nProvider";
 import { MoonIcon, SunIcon } from "@/components/icons";
 import {
@@ -15,13 +15,9 @@ type Props = {
 
 export function ThemeToggle({ className }: Props) {
   const { t } = useI18n();
-  const [theme, setTheme] = useState<AppTheme>("dark");
-
-  useEffect(() => {
-    const next = resolveInitialTheme();
-    setTheme(next);
-    applyTheme(next);
-  }, []);
+  const [theme, setTheme] = useState<AppTheme>(() =>
+    typeof window === "undefined" ? "dark" : resolveInitialTheme()
+  );
 
   function toggle() {
     const next: AppTheme = theme === "dark" ? "light" : "dark";

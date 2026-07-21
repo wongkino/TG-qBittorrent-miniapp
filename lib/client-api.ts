@@ -1,4 +1,4 @@
-import { authHeaders, type ClientAuth } from "@/lib/client-auth";
+import { authHeaders, AuthSessionError, type ClientAuth } from "@/lib/client-auth";
 import type { Locale } from "@/lib/i18n";
 import type { Torrent } from "@/lib/types";
 
@@ -21,7 +21,12 @@ async function api<T>(
     headers: { ...authHeaders(auth), ...init?.headers },
     cache: "no-store",
   });
-  if (!res.ok) throw new Error(await parseError(res));
+  if (!res.ok) {
+    if (res.status === 401) {
+      throw new AuthSessionError(await parseError(res));
+    }
+    throw new Error(await parseError(res));
+  }
   if (res.status === 204) return undefined as T;
   return res.json() as Promise<T>;
 }
