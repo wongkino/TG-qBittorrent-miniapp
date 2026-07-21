@@ -18,7 +18,7 @@ QBITTORRENT_USERNAME=
 QBITTORRENT_PASSWORD=
 CRON_SECRET=
 
-# iOS Web App — Google OAuth (Worker + browser sign-in; client id is public).
+# Web App — Google OAuth (Worker + browser sign-in; client id is public).
 GOOGLE_CLIENT_ID=
 ALLOWED_GOOGLE_EMAILS=you@gmail.com
 

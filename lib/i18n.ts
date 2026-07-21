@@ -16,14 +16,14 @@ const zhHant = {
   "app.previewUser": "本機預覽",
   "app.previewInitFailed": "本機預覽初始化失敗",
 
-  "webapp.title": "iOS Web App",
-  "webapp.hintStandalone":
+  "signIn.title": "qBittorrent Web App",
+  "signIn.hintStandalone":
     "使用 Google 帳號登入。僅白名單內的 email 可連線 qBittorrent。",
-  "webapp.hintBrowser":
+  "signIn.hintBrowser":
     "使用 Google 帳號登入以存取 qBittorrent（需白名單 email）。",
-  "webapp.signInFailed": "Google 登入失敗，請確認帳號是否在白名單內",
-  "webapp.missingClientId": "未設定 GOOGLE_CLIENT_ID，無法顯示登入按鈕",
-  "webapp.footer":
+  "signIn.failed": "Google 登入失敗，請確認帳號是否在白名單內",
+  "signIn.missingClientId": "未設定 GOOGLE_CLIENT_ID，無法顯示登入按鈕",
+  "signIn.footer":
     "在 Safari 分享 → 加入主畫面，即可像 App 一樣全螢幕使用。",
 
   "theme.toLight": "日間",
@@ -137,7 +137,7 @@ const zhHant = {
   "bot.btn.status": "狀態",
   "bot.btn.list": "列表",
   "bot.btn.help": "說明",
-  "bot.start": "👋 已連線到 qBittorrent Mini App Bot。",
+  "bot.start": "👋 已連線到 qBittorrent Bot。",
   "bot.unauthorized": "未授權使用此 Bot。",
   "bot.helpTitle": "可用操作",
   "bot.helpStatus": "目前下載狀態",
@@ -178,14 +178,14 @@ const zhHans: Record<MessageKey, string> = {
   "app.previewUser": "本地预览",
   "app.previewInitFailed": "本地预览初始化失败",
 
-  "webapp.title": "iOS Web App",
-  "webapp.hintStandalone":
+  "signIn.title": "qBittorrent Web App",
+  "signIn.hintStandalone":
     "使用 Google 账号登录。仅白名单内的 email 可连接 qBittorrent。",
-  "webapp.hintBrowser":
+  "signIn.hintBrowser":
     "使用 Google 账号登录以访问 qBittorrent（需白名单 email）。",
-  "webapp.signInFailed": "Google 登录失败，请确认账号是否在白名单内",
-  "webapp.missingClientId": "未设置 GOOGLE_CLIENT_ID，无法显示登录按钮",
-  "webapp.footer":
+  "signIn.failed": "Google 登录失败，请确认账号是否在白名单内",
+  "signIn.missingClientId": "未设置 GOOGLE_CLIENT_ID，无法显示登录按钮",
+  "signIn.footer":
     "在 Safari 分享 → 加入主画面，即可像 App 一样全屏使用。",
 
   "theme.toLight": "日间",
@@ -299,7 +299,7 @@ const zhHans: Record<MessageKey, string> = {
   "bot.btn.status": "状态",
   "bot.btn.list": "列表",
   "bot.btn.help": "说明",
-  "bot.start": "👋 已连接到 qBittorrent Mini App Bot。",
+  "bot.start": "👋 已连接到 qBittorrent Bot。",
   "bot.unauthorized": "未授权使用此 Bot。",
   "bot.helpTitle": "可用操作",
   "bot.helpStatus": "目前下载状态",
@@ -340,16 +340,16 @@ const en: Record<MessageKey, string> = {
   "app.previewUser": "Local preview",
   "app.previewInitFailed": "Local preview failed to start",
 
-  "webapp.title": "iOS Web App",
-  "webapp.hintStandalone":
+  "signIn.title": "qBittorrent Web App",
+  "signIn.hintStandalone":
     "Sign in with Google. Only whitelisted emails can connect to qBittorrent.",
-  "webapp.hintBrowser":
+  "signIn.hintBrowser":
     "Sign in with Google to access qBittorrent (whitelisted email required).",
-  "webapp.signInFailed":
+  "signIn.failed":
     "Google sign-in failed. Check that your email is on the allow list.",
-  "webapp.missingClientId":
+  "signIn.missingClientId":
     "GOOGLE_CLIENT_ID is not set; the sign-in button cannot be shown.",
-  "webapp.footer":
+  "signIn.footer":
     "In Safari: Share → Add to Home Screen for a full-screen app experience.",
 
   "theme.toLight": "Light",
@@ -467,7 +467,7 @@ const en: Record<MessageKey, string> = {
   "bot.btn.status": "Status",
   "bot.btn.list": "List",
   "bot.btn.help": "Help",
-  "bot.start": "👋 Connected to the qBittorrent Mini App Bot.",
+  "bot.start": "👋 Connected to the qBittorrent Bot.",
   "bot.unauthorized": "You are not authorized to use this bot.",
   "bot.helpTitle": "Available actions",
   "bot.helpStatus": "Current download status",
@@ -508,16 +508,16 @@ const ja: Record<MessageKey, string> = {
   "app.previewUser": "ローカルプレビュー",
   "app.previewInitFailed": "ローカルプレビューの初期化に失敗しました",
 
-  "webapp.title": "iOS Web App",
-  "webapp.hintStandalone":
+  "signIn.title": "qBittorrent Web App",
+  "signIn.hintStandalone":
     "Google アカウントでサインインします。許可リストのメールのみ qBittorrent に接続できます。",
-  "webapp.hintBrowser":
+  "signIn.hintBrowser":
     "Google アカウントでサインインして qBittorrent にアクセスします（許可リスト必須）。",
-  "webapp.signInFailed":
+  "signIn.failed":
     "Google サインインに失敗しました。メールが許可リストにあるか確認してください。",
-  "webapp.missingClientId":
+  "signIn.missingClientId":
     "GOOGLE_CLIENT_ID が未設定のため、サインインボタンを表示できません。",
-  "webapp.footer":
+  "signIn.footer":
     "Safari で共有 → ホーム画面に追加するとフルスクリーンで使えます。",
 
   "theme.toLight": "ライト",
@@ -635,7 +635,7 @@ const ja: Record<MessageKey, string> = {
   "bot.btn.status": "状態",
   "bot.btn.list": "一覧",
   "bot.btn.help": "ヘルプ",
-  "bot.start": "👋 qBittorrent Mini App Bot に接続しました。",
+  "bot.start": "👋 qBittorrent Bot に接続しました。",
   "bot.unauthorized": "この Bot を使う権限がありません。",
   "bot.helpTitle": "できること",
   "bot.helpStatus": "現在のダウンロード状態",

@@ -831,7 +831,7 @@ body {
   flex: 1;
 }
 
-.webapp-unlock {
+.sign-in {
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
@@ -845,50 +845,21 @@ body {
   animation: fadeUp 0.4s var(--ease) both;
 }
 
-.webapp-unlock__title {
+.sign-in__title {
   margin: 0;
   font: var(--text-title);
   letter-spacing: -0.02em;
 }
 
-.webapp-unlock__hint,
-.webapp-unlock__footer {
+.sign-in__hint,
+.sign-in__footer {
   margin: 0;
   color: var(--hint);
   font: var(--text-caption);
   line-height: 1.5;
 }
 
-.webapp-unlock__form {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-sm);
-}
-
-.webapp-unlock__label {
-  font-size: 15px;
-  font-weight: 600;
-  letter-spacing: -0.015em;
-}
-
-.webapp-unlock__input {
-  width: 100%;
-  min-height: var(--touch);
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border);
-  background: var(--bg-secondary);
-  color: var(--text);
-  padding: 12px var(--space-md);
-  font: var(--text-body);
-}
-
-.webapp-unlock__input:focus {
-  outline: none;
-  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
-}
-
-.webapp-unlock__google {
+.sign-in__google {
   display: flex;
   justify-content: center;
   min-height: var(--touch);

@@ -15,7 +15,7 @@ import {
   isStandaloneWebApp,
   readEmailFromIdToken,
   storeGoogleCredential,
-} from "@/lib/webapp";
+} from "@/lib/google-session";
 
 const DEV_PREVIEW =
   process.env.NODE_ENV === "development" &&
@@ -87,7 +87,7 @@ function WebAppInner() {
         setNeedsSignIn(true);
       } catch (err) {
         if (!cancelled) {
-          setAuthError(errMessage(err, t("webapp.signInFailed")));
+          setAuthError(errMessage(err, t("signIn.failed")));
         }
       } finally {
         if (!cancelled) setBooting(false);
@@ -135,7 +135,7 @@ function WebAppInner() {
           standalone={standalone}
           onCredential={(credential) => {
             void connectWithGoogleCredential(credential).catch((err) => {
-              setAuthError(errMessage(err, t("webapp.signInFailed")));
+              setAuthError(errMessage(err, t("signIn.failed")));
             });
           }}
         />

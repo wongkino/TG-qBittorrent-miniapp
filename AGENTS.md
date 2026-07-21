@@ -33,6 +33,7 @@
 | `worker.ts` | OpenNext `fetch` + `scheduled` cron |
 | `lib/qbittorrent.ts` | **唯一**直接打 qBittorrent 的模組 |
 | `lib/auth.ts` / `lib/google-auth.ts` | Google OAuth 驗證（含 `DEV_PREVIEW`） |
+| `lib/google-session.ts` | 瀏覽器 credential 存取 |
 | `lib/telegram-bot.ts` | Bot API |
 | `lib/bot-handler.ts` | Bot 指令與訊息 |
 | `lib/completions.ts` | 開始／完成通知 + tags |
