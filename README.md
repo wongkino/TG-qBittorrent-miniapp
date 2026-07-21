@@ -20,16 +20,18 @@
 | [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) | 開發者 | 本機環境、scripts、擴充方式 |
 | [AGENTS.md](AGENTS.md) | AI／Cursor | 開發約束與必讀注意事項 |
 
-範例環境變數：
+範例環境變數（dev／prod 分開）：
 
-- [`.env.example`](.env.example) — Next／文件（含 `APP_URL` 說明）
-- [`.dev.vars.example`](.dev.vars.example) — Wrangler preview
+- [`env/`](env/) — 說明與範本
+- [`env/development.example`](env/development.example) — 本機 `next dev`
+- [`env/production.example`](env/production.example) — 正式 secrets 對照
+- [`env/wrangler.development.example`](env/wrangler.development.example) — Wrangler preview
 
 ---
 
 ## 功能速覽
 
-- **Mini App**：列表、排序、批次、加 magnet／URL、分類、**內嵌瀏覽攔截 magnet**、**RSS 訂閱與加入下載**
+- **Mini App**：列表、排序、批次、加 magnet／URL、分類、**RSS 訂閱與加入下載**
 - **Bot**：狀態／列表／說明鍵盤、magnet、`.torrent` 檔、左側開啟 App
 - **通知**：下載開始（`tg-started`）、下載完成（`tg-notified`）；由 **Cloudflare Cron** 每 5 分鐘檢查
 
@@ -37,17 +39,17 @@
 
 ## 快速開始
 
-### 本機
+### 本機（dev）
 
 ```bash
-cp .env.example .env.local
+cp env/development.example .env.development.local
 npm install
 npm run dev
 ```
 
-### 上線（摘要）
+### 上線（prod 摘要）
 
-1. 設定 GitHub Secrets／Variables（見 [DEPLOY.md](docs/DEPLOY.md)）
+1. 設定 GitHub Secrets／Variables（見 [DEPLOY.md](docs/DEPLOY.md)、[`env/production.example`](env/production.example)）
 2. Deploy 一次 → 複製 Workers URL → 設 `APP_URL` → **再 Deploy 一次**
 3. 在 Telegram 開啟 Bot 測試
 
@@ -55,16 +57,16 @@ npm run dev
 
 ## 環境變數總表
 
-| 變數 | 本機 `.env.local` | Wrangler `.dev.vars` | Worker Secret | GitHub Secret | GitHub Variable |
-|------|:-----------------:|:--------------------:|:-------------:|:-------------:|:---------------:|
-| `TELEGRAM_BOT_TOKEN` | ✅ | ✅ | ✅ | ✅ | |
-| `ALLOWED_TELEGRAM_USER_IDS` | ✅ | ✅ | ✅ | | ✅ |
-| `QBITTORRENT_URL` | ✅ | ✅ | ✅ | | ✅ |
-| `QBITTORRENT_USERNAME` | ✅ | ✅ | ✅ | ✅ | |
-| `QBITTORRENT_PASSWORD` | ✅ | ✅ | ✅ | ✅ | |
-| `CRON_SECRET` | ✅ | ✅ | ✅ | ✅ | |
-| `BROWSE_ALLOWED_HOSTS` | ✅ 可選 | ✅ 可選 | ✅ 可選 | | ✅ 可選 |
-| `APP_URL` | 僅範例註解 | ❌ | ❌ | | ✅ |
+| 變數 | 本機 `.env.development.local` | Wrangler `.dev.vars` | Worker Secret | GitHub Secret | GitHub Variable |
+|------|:-----------------------------:|:--------------------:|:-------------:|:-------------:|:---------------:|
+| `TELEGRAM_BOT_TOKEN` | ✅ 可選 | ✅ | ✅ | ✅ | |
+| `ALLOWED_TELEGRAM_USER_IDS` | ✅ 可選 | ✅ | ✅ | | ✅ |
+| `QBITTORRENT_URL` | ✅ 可選 | ✅ | ✅ | | ✅ |
+| `QBITTORRENT_USERNAME` | ✅ 可選 | ✅ | ✅ | ✅ | |
+| `QBITTORRENT_PASSWORD` | ✅ 可選 | ✅ | ✅ | ✅ | |
+| `CRON_SECRET` | ✅ 可選 | ✅ | ✅ | ✅ | |
+| `DEV_PREVIEW` / `NEXT_PUBLIC_DEV_PREVIEW` | ✅ dev only | ❌ | ❌ | | |
+| `APP_URL` | ❌ | ❌ | ❌ | | ✅ |
 | `CLOUDFLARE_API_TOKEN` | | | | ✅ | |
 | `CLOUDFLARE_ACCOUNT_ID` | | | | ✅ | |
 | `NEXTJS_ENV` | | ✅ | | | |

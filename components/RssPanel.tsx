@@ -10,6 +10,7 @@ import {
   removeRssFeed,
   type ClientRssFeed,
 } from "@/lib/client-api";
+import { useI18n } from "@/components/I18nProvider";
 
 type Props = {
   initData: string;
@@ -22,6 +23,7 @@ function errMessage(err: unknown, fallback: string) {
 }
 
 export function RssPanel({ initData, categories, onAdded }: Props) {
+  const { t } = useI18n();
   const [feeds, setFeeds] = useState<ClientRssFeed[]>([]);
   const [selectedPath, setSelectedPath] = useState<string | null>(null);
   const [url, setUrl] = useState("");
@@ -48,11 +50,11 @@ export function RssPanel({ initData, categories, onAdded }: Props) {
         return next[0]?.path ?? null;
       });
     } catch (err) {
-      setError(errMessage(err, "無法載入 RSS"));
+      setError(errMessage(err, t("rss.loadFailed")));
     } finally {
       setLoading(false);
     }
-  }, [initData]);
+  }, [initData, t]);
 
   useEffect(() => {
     void reload();
@@ -67,7 +69,7 @@ export function RssPanel({ initData, categories, onAdded }: Props) {
       if (okMessage) setStatus(okMessage);
       await reload();
     } catch (err) {
-      setError(errMessage(err, "操作失敗"));
+      setError(errMessage(err, t("app.actionFailed")));
     } finally {
       setBusy(false);
     }
@@ -75,9 +77,7 @@ export function RssPanel({ initData, categories, onAdded }: Props) {
 
   return (
     <section className="rss">
-      <p className="hint rss__intro">
-        管理 qBittorrent RSS 訂閱；可重新整理來源，並從文章直接加入下載。
-      </p>
+      <p className="hint rss__intro">{t("rss.intro")}</p>
 
       <form
         className="rss__add"
@@ -89,14 +89,14 @@ export function RssPanel({ initData, categories, onAdded }: Props) {
             await addRssFeed(initData, feedUrl, name.trim() || undefined);
             setUrl("");
             setName("");
-          }, "已新增訂閱");
+          }, t("rss.added"));
         }}
       >
         <input
           className="input"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
-          placeholder="RSS 網址 https://"
+          placeholder={t("rss.urlPlaceholder")}
           inputMode="url"
           autoCapitalize="off"
           disabled={busy}
@@ -105,24 +105,28 @@ export function RssPanel({ initData, categories, onAdded }: Props) {
           className="input"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="名稱（可選）"
+          placeholder={t("rss.namePlaceholder")}
           disabled={busy}
         />
-        <button type="submit" className="btn btn--primary" disabled={busy || !url.trim()}>
-          新增
+        <button
+          type="submit"
+          className="btn btn--primary"
+          disabled={busy || !url.trim()}
+        >
+          {t("rss.add")}
         </button>
       </form>
 
       <div className="rss__toolbar">
         <label className="rss__cat">
-          <span className="hint">加入時分類</span>
+          <span className="hint">{t("rss.categoryOnAdd")}</span>
           <select
             className="select"
             value={category}
             onChange={(e) => setCategory(e.target.value)}
             disabled={busy}
           >
-            <option value="">無分類</option>
+            <option value="">{t("rss.noCategory")}</option>
             {categories.map((c) => (
               <option key={c} value={c}>
                 {c}
@@ -136,7 +140,7 @@ export function RssPanel({ initData, categories, onAdded }: Props) {
           disabled={busy || loading}
           onClick={() => void reload()}
         >
-          重整列表
+          {t("rss.reloadList")}
         </button>
       </div>
 
@@ -144,11 +148,11 @@ export function RssPanel({ initData, categories, onAdded }: Props) {
       {status ? <p className="rss__status">{status}</p> : null}
 
       {loading ? (
-        <p className="hint">載入 RSS…</p>
+        <p className="hint">{t("rss.loading")}</p>
       ) : feeds.length === 0 ? (
         <div className="empty">
-          <p>尚未訂閱任何 RSS</p>
-          <p className="hint">貼上 feed 網址後按新增</p>
+          <p>{t("rss.empty")}</p>
+          <p className="hint">{t("rss.emptyHint")}</p>
         </div>
       ) : (
         <div className="rss__layout">
@@ -161,11 +165,14 @@ export function RssPanel({ initData, categories, onAdded }: Props) {
                 onClick={() => setSelectedPath(feed.path)}
                 disabled={busy}
               >
-                <span className="rss__feed-title">{feed.title || feed.path}</span>
+                <span className="rss__feed-title">
+                  {feed.title || feed.path}
+                </span>
                 <span className="hint">
-                  {feed.articles.filter((a) => !a.isRead).length}/{feed.articles.length}
-                  {feed.hasError ? " · 錯誤" : ""}
-                  {feed.isLoading ? " · 載入中" : ""}
+                  {feed.articles.filter((a) => !a.isRead).length}/
+                  {feed.articles.length}
+                  {feed.hasError ? t("rss.errorTag") : ""}
+                  {feed.isLoading ? t("rss.loadingTag") : ""}
                 </span>
               </button>
             ))}
@@ -176,8 +183,12 @@ export function RssPanel({ initData, categories, onAdded }: Props) {
               <>
                 <div className="rss__detail-head">
                   <div>
-                    <h2 className="rss__detail-title">{selected.title || selected.path}</h2>
-                    <p className="hint rss__detail-url">{selected.url || selected.path}</p>
+                    <h2 className="rss__detail-title">
+                      {selected.title || selected.path}
+                    </h2>
+                    <p className="hint rss__detail-url">
+                      {selected.url || selected.path}
+                    </p>
                   </div>
                   <div className="rss__detail-actions">
                     <button
@@ -187,32 +198,38 @@ export function RssPanel({ initData, categories, onAdded }: Props) {
                       onClick={() =>
                         void withBusy(
                           () => refreshRssFeed(initData, selected.path),
-                          "已重新整理"
+                          t("rss.refreshed")
                         )
                       }
                     >
-                      重新整理
+                      {t("rss.refresh")}
                     </button>
                     <button
                       type="button"
                       className="btn btn--sm btn--danger"
                       disabled={busy}
                       onClick={() => {
-                        if (!window.confirm(`移除訂閱「${selected.title || selected.path}」？`)) {
+                        if (
+                          !window.confirm(
+                            t("rss.confirmRemove", {
+                              name: selected.title || selected.path,
+                            })
+                          )
+                        ) {
                           return;
                         }
                         void withBusy(async () => {
                           await removeRssFeed(initData, selected.path);
-                        }, "已移除");
+                        }, t("rss.removed"));
                       }}
                     >
-                      移除
+                      {t("rss.remove")}
                     </button>
                   </div>
                 </div>
 
                 {selected.articles.length === 0 ? (
-                  <p className="hint">尚無文章（可按重新整理）</p>
+                  <p className="hint">{t("rss.noArticles")}</p>
                 ) : (
                   <ul className="rss__articles">
                     {selected.articles.map((article) => (
@@ -246,10 +263,10 @@ export function RssPanel({ initData, categories, onAdded }: Props) {
                                   ).catch(() => undefined);
                                 }
                                 onAdded?.();
-                              }, "已加入下載")
+                              }, t("rss.addedDownload"))
                             }
                           >
-                            加入
+                            {t("rss.join")}
                           </button>
                         </div>
                       </li>
@@ -258,7 +275,7 @@ export function RssPanel({ initData, categories, onAdded }: Props) {
                 )}
               </>
             ) : (
-              <p className="hint">選擇左側訂閱</p>
+              <p className="hint">{t("rss.pickFeed")}</p>
             )}
           </div>
         </div>

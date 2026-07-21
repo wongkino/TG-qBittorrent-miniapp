@@ -8,7 +8,7 @@
 
 - Worker 名稱：`tg-dl`（`wrangler.jsonc`）
 - 預設公開 URL：`https://tg-dl.<subdomain>.workers.dev`
-- 語言／UI：繁體中文（`zh-Hant`）
+- 語言／UI：Mini App 依 Telegram 語系支援繁中／簡中／英文（`lib/i18n.ts`）；Bot 文案目前仍以繁中為主
 - **不要**做成多租戶 SaaS；白名單制個人工具即可
 
 ## 絕對不要搞混的兩個 URL
@@ -28,7 +28,6 @@
 | `app/api/qb/*` | Mini App API；`Authorization: tma <initData>` |
 | `app/api/qb/rss*` | RSS 列表／新增／移除／重整／已讀（代理 qB `/api/v2/rss/*`） |
 | `app/api/telegram/webhook` | Bot；`X-Telegram-Bot-Api-Secret-Token` = `CRON_SECRET` |
-| `app/api/browse` | 內嵌瀏覽代理（需 tma auth）；攔截 magnet 靠注入腳本 + postMessage |
 | `app/api/cron/completions` | 通知 HTTP 入口（Cloudflare Cron 內部也打這裡）；`Authorization: Bearer CRON_SECRET` |
 | `worker.ts` | Cloudflare 入口：OpenNext `fetch` + `scheduled` cron |
 | `lib/qbittorrent.ts` | 唯一直接打 qBittorrent 的模組 |
@@ -37,7 +36,9 @@
 | `lib/bot-handler.ts` | Bot 指令與訊息路由 |
 | `lib/completions.ts` | 開始／完成通知 + tags |
 | `lib/client-api.ts` | 瀏覽器端打 `/api/qb/*` |
+| `lib/dev/preview.ts` | 本機 `DEV_PREVIEW` 假資料（僅 development） |
 | `lib/env.ts` | 共用 env／白名單解析 |
+| `env/` | dev／prod 環境變數範本（見 `env/README.md`） |
 
 ## 認證規則（改 API 前必讀）
 
@@ -54,9 +55,8 @@
 
 ## 功能落點
 
-- Mini App：**不能**上傳本機 `.torrent` 檔；可用瀏覽代理攔截 magnet／torrent URL
+- Mini App：**不能**上傳本機 `.torrent` 檔；可用 magnet／torrent URL 或 RSS 加入
 - `.torrent` 檔：只走 Bot
-- 瀏覽代理有 SSRF 防護；勿關閉私網封鎖。可選 `BROWSE_ALLOWED_HOSTS` 限制網域
 - Reply Keyboard：每次 Bot 回覆都附上
 - Menu Button「開啟 App」：Deploy workflow 的 `setChatMenuButton`
 
@@ -72,7 +72,7 @@
 - 回覆使用者用**繁體中文**
 - 只改任務相關檔案；不順手大重構
 - 不擅自 commit／push，除非使用者要求
-- 不提交 `.env`、`.dev.vars`、真實 secrets
+- 不提交 `.env*`、`.dev.vars`、真實 secrets；範本只放 `env/*.example`
 - 新增功能先對齊現有分層（client-api ↔ route ↔ qbittorrent），勿在 component 直打 qB
 
 ## 建議閱讀順序
@@ -81,4 +81,4 @@
 2. [`docs/DEPLOY.md`](docs/DEPLOY.md)
 3. [`docs/USER.md`](docs/USER.md)
 4. [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md)
-5. `lib/qbittorrent.ts`、`lib/bot-handler.ts`、`lib/completions.ts`
+5. `lib/qbittorrent.ts`、`lib/bot-handler.ts`、`lib/completions.ts`、`lib/i18n.ts`

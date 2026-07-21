@@ -1,9 +1,13 @@
-import { handleApiError, jsonOk, requireAuth } from "@/lib/api";
+import { handleApiError, jsonOk, previewResponse, requireAuth } from "@/lib/api";
+import { mockRssFeeds } from "@/lib/dev/preview";
 import { listRssFeeds } from "@/lib/qbittorrent";
 
 export async function GET(request: Request) {
   try {
-    requireAuth(request);
+    const auth = requireAuth(request);
+    const preview = previewResponse(auth, { feeds: mockRssFeeds() });
+    if (preview) return preview;
+
     const feeds = await listRssFeeds();
     return jsonOk({ feeds });
   } catch (err) {

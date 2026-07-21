@@ -43,7 +43,6 @@ jobs:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
           ALLOWED_TELEGRAM_USER_IDS: ${{ vars.ALLOWED_TELEGRAM_USER_IDS }}
           QBITTORRENT_URL: ${{ vars.QBITTORRENT_URL }}
-          BROWSE_ALLOWED_HOSTS: ${{ vars.BROWSE_ALLOWED_HOSTS }}
         run: |
           python3 <<'PY'
           import json
@@ -68,9 +67,6 @@ jobs:
               sys.exit(1)
 
           payload = {k: os.environ[k] for k in keys}
-          browse = os.environ.get("BROWSE_ALLOWED_HOSTS", "").strip()
-          if browse:
-              payload["BROWSE_ALLOWED_HOSTS"] = browse
 
           with open("worker-secrets.json", "w", encoding="utf-8") as f:
               json.dump(payload, f)

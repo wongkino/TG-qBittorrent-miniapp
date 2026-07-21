@@ -1,11 +1,14 @@
 import { createHmac, timingSafeEqual } from "crypto";
+import { isDevPreviewInitData } from "@/lib/dev/preview";
 import { env, parseAllowedTelegramUserIds } from "@/lib/env";
 
 type TelegramWebAppUser = { id: number };
 
-type VerifiedTelegramAuth = {
+export type VerifiedTelegramAuth = {
   user: TelegramWebAppUser;
   authDate: number;
+  /** True only for local `DEV_PREVIEW` (never in production). */
+  preview?: boolean;
 };
 
 const MAX_AUTH_AGE_SECONDS = 60 * 60 * 24;
@@ -82,6 +85,13 @@ export function requireTelegramAuth(
   const initData = extractInitData(authorizationHeader);
   if (!initData) {
     throw new AuthError("Missing Authorization: tma <initData>", 401);
+  }
+  if (isDevPreviewInitData(initData)) {
+    return {
+      user: { id: 0 },
+      authDate: Math.floor(Date.now() / 1000),
+      preview: true,
+    };
   }
   return validateInitData(initData);
 }

@@ -30,15 +30,14 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files
-.env*
-!.env.example
-!.dev.vars.example
+# env files (local secrets; examples live under env/)
+.env
+.env.*
+.dev.vars
 
 # cloudflare / opennext
 .open-next
 .wrangler
-.dev.vars
 
 # typescript
 *.tsbuildinfo

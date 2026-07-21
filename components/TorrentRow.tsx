@@ -2,6 +2,7 @@
 
 import type { Torrent } from "@/lib/types";
 import { CategorySelect } from "@/components/CategorySelect";
+import { useI18n } from "@/components/I18nProvider";
 import {
   formatBytes,
   formatEta,
@@ -36,12 +37,13 @@ export function TorrentRow({
   onDelete,
   onCategoryChange,
 }: Props) {
+  const { t, locale } = useI18n();
   const paused = isPausedState(torrent.state);
   const pct = Math.min(100, Math.max(0, torrent.progress * 100));
   const categoryOptions =
     torrent.category && !categories.includes(torrent.category)
       ? [...categories, torrent.category].sort((a, b) =>
-          a.localeCompare(b, "zh-Hant")
+          a.localeCompare(b, locale)
         )
       : categories;
 
@@ -61,12 +63,16 @@ export function TorrentRow({
         <h2 className="torrent-row__name" title={torrent.name}>
           {torrent.name}
         </h2>
-        <span className="torrent-row__state">{stateLabel(torrent.state)}</span>
+        <span className="torrent-row__state">
+          {stateLabel(torrent.state, locale)}
+        </span>
       </div>
 
       <div
         className="progress"
-        aria-label={`進度 ${formatProgress(torrent.progress)}`}
+        aria-label={t("torrent.progress", {
+          progress: formatProgress(torrent.progress),
+        })}
       >
         <div className="progress__bar" style={{ width: `${pct}%` }} />
       </div>
@@ -84,13 +90,14 @@ export function TorrentRow({
           className="torrent-row__category-label"
           htmlFor={`cat-${torrent.hash}`}
         >
-          分類
+          {t("torrent.category")}
         </label>
         <CategorySelect
           id={`cat-${torrent.hash}`}
           value={torrent.category}
           categories={categoryOptions}
           disabled={busy || selectionMode}
+          emptyLabel={t("add.noCategory")}
           onChange={(category) => onCategoryChange(torrent.hash, category)}
         />
       </div>
@@ -104,7 +111,7 @@ export function TorrentRow({
               disabled={busy}
               onClick={() => onResume(torrent.hash)}
             >
-              繼續
+              {t("torrent.resume")}
             </button>
           ) : (
             <button
@@ -113,7 +120,7 @@ export function TorrentRow({
               disabled={busy}
               onClick={() => onPause(torrent.hash)}
             >
-              暫停
+              {t("torrent.pause")}
             </button>
           )}
           <button
@@ -121,24 +128,24 @@ export function TorrentRow({
             className="btn"
             disabled={busy}
             onClick={() => {
-              if (confirm("只從列表移除，保留已下載檔案？")) {
+              if (confirm(t("torrent.confirmRemove"))) {
                 onDelete(torrent.hash, false);
               }
             }}
           >
-            移除
+            {t("torrent.remove")}
           </button>
           <button
             type="button"
             className="btn btn--danger"
             disabled={busy}
             onClick={() => {
-              if (confirm("刪除種子並刪除檔案？此操作無法復原。")) {
+              if (confirm(t("torrent.confirmDelete"))) {
                 onDelete(torrent.hash, true);
               }
             }}
           >
-            刪檔
+            {t("torrent.deleteFiles")}
           </button>
         </div>
       ) : null}

@@ -1,10 +1,17 @@
-import { handleApiError, jsonOk, requireAuth } from "@/lib/api";
+import { handleApiError, jsonOk, previewResponse, requireAuth } from "@/lib/api";
+import { mockCategories, mockTorrents } from "@/lib/dev/preview";
 import { listCategories, listTorrents } from "@/lib/qbittorrent";
 
 /** Single round-trip for UI boot / manual refresh (torrents + categories). */
 export async function GET(request: Request) {
   try {
-    requireAuth(request);
+    const auth = requireAuth(request);
+    const preview = previewResponse(auth, {
+      torrents: mockTorrents(),
+      categories: mockCategories(),
+    });
+    if (preview) return preview;
+
     const [torrents, categories] = await Promise.all([
       listTorrents(),
       listCategories(),

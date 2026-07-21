@@ -1,0 +1,16 @@
+# ── Development only (`npm run dev`) ──
+# Next.js loads this as `.env.development.local` (not used by production builds).
+#
+#   cp env/development.example .env.development.local
+
+# UI preview without Telegram / qBittorrent (safe for localhost).
+DEV_PREVIEW=1
+NEXT_PUBLIC_DEV_PREVIEW=1
+
+# Optional — fill when linking real Bot + qB locally (and set both PREVIEW flags to 0):
+# TELEGRAM_BOT_TOKEN=
+# ALLOWED_TELEGRAM_USER_IDS=123456789
+# QBITTORRENT_URL=https://your-qb.example.com
+# QBITTORRENT_USERNAME=
+# QBITTORRENT_PASSWORD=
+# CRON_SECRET=

@@ -1,3 +1,10 @@
+import {
+  resolveLocale,
+  stateMessageKey,
+  translate,
+  type Locale,
+} from "@/lib/i18n";
+
 export function formatBytes(bytes: number): string {
   if (!Number.isFinite(bytes) || bytes < 0) return "—";
   if (bytes === 0) return "0 B";
@@ -42,28 +49,11 @@ export function isPausedState(state: string): boolean {
   return PAUSED_STATES.has(state);
 }
 
-export function stateLabel(state: string): string {
-  const map: Record<string, string> = {
-    downloading: "下載中",
-    uploading: "做種中",
-    pausedDL: "已暫停",
-    pausedUP: "已暫停",
-    stoppedDL: "已停止",
-    stoppedUP: "已停止",
-    queuedDL: "排隊中",
-    queuedUP: "排隊做種",
-    stalledDL: "停滯",
-    stalledUP: "停滯做種",
-    checkingDL: "檢查中",
-    checkingUP: "檢查中",
-    checkingResumeData: "檢查中",
-    forcedDL: "強制下載",
-    forcedUP: "強制做種",
-    metaDL: "取得中繼資料",
-    moving: "移動中",
-    missingFiles: "缺少檔案",
-    error: "錯誤",
-    unknown: "未知",
-  };
-  return map[state] ?? state;
+export function stateLabel(
+  state: string,
+  locale: Locale = resolveLocale(null)
+): string {
+  const key = stateMessageKey(state);
+  if (key) return translate(locale, key);
+  return state;
 }

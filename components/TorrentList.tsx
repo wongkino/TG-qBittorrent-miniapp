@@ -2,6 +2,7 @@
 
 import type { Torrent } from "@/lib/types";
 import { TorrentRow } from "@/components/TorrentRow";
+import { useI18n } from "@/components/I18nProvider";
 
 type Props = {
   torrents: Torrent[];
@@ -28,24 +29,26 @@ export function TorrentList({
   onDelete,
   onCategoryChange,
 }: Props) {
+  const { t } = useI18n();
+
   if (torrents.length === 0) {
     return (
       <div className="empty">
-        <p>目前沒有種子</p>
-        <p className="hint">用下方表單貼上 magnet，或傳 .torrent 給 Bot</p>
+        <p>{t("list.empty")}</p>
+        <p className="hint">{t("list.emptyHint")}</p>
       </div>
     );
   }
 
   return (
     <div className="torrent-list">
-      {torrents.map((t) => (
+      {torrents.map((torrent) => (
         <TorrentRow
-          key={t.hash}
-          torrent={t}
+          key={torrent.hash}
+          torrent={torrent}
           categories={categories}
-          busy={busyHash === t.hash || busyHash === "*"}
-          selected={selected.has(t.hash)}
+          busy={busyHash === torrent.hash || busyHash === "*"}
+          selected={selected.has(torrent.hash)}
           selectionMode={selectionMode}
           onToggleSelect={onToggleSelect}
           onPause={onPause}

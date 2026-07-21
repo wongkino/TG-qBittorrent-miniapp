@@ -2,9 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AddTorrentForm } from "@/components/AddTorrentForm";
-import { BrowserPanel } from "@/components/BrowserPanel";
+import { I18nProvider, useI18n } from "@/components/I18nProvider";
 import { ListToolbar } from "@/components/ListToolbar";
 import { RssPanel } from "@/components/RssPanel";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { TorrentList } from "@/components/TorrentList";
 import {
   addTorrentUrl,
@@ -15,6 +16,8 @@ import {
   resumeTorrent,
   setTorrentCategory,
 } from "@/lib/client-api";
+import { DEV_PREVIEW_INIT_DATA } from "@/lib/dev/preview";
+import { resolveLocale, translate } from "@/lib/i18n";
 import {
   sortTorrents,
   torrentsEqual,
@@ -24,12 +27,37 @@ import {
 } from "@/lib/types";
 
 const POLL_MS = 4000;
+const DEV_PREVIEW =
+  process.env.NODE_ENV === "development" &&
+  process.env.NEXT_PUBLIC_DEV_PREVIEW === "1";
 
 function errMessage(err: unknown, fallback: string) {
   return err instanceof Error ? err.message : fallback;
 }
 
+function browserLanguageCode(): string {
+  if (typeof navigator !== "undefined" && navigator.language) {
+    return navigator.language;
+  }
+  return "zh-Hant";
+}
+
 export function MiniApp() {
+  const [languageCode, setLanguageCode] = useState<string | null>(null);
+
+  return (
+    <I18nProvider languageCode={languageCode}>
+      <MiniAppInner onLanguageCode={setLanguageCode} />
+    </I18nProvider>
+  );
+}
+
+function MiniAppInner({
+  onLanguageCode,
+}: {
+  onLanguageCode: (code: string | null) => void;
+}) {
+  const { t, locale } = useI18n();
   const [initData, setInitData] = useState<string | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
   const [userName, setUserName] = useState<string | null>(null);
@@ -42,8 +70,12 @@ export function MiniApp() {
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [selectionMode, setSelectionMode] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [tab, setTab] = useState<"downloads" | "browse" | "rss">("downloads");
+  const [tab, setTab] = useState<"downloads" | "rss">("downloads");
   const refreshInflight = useRef(false);
+
+  useEffect(() => {
+    document.documentElement.lang = locale;
+  }, [locale]);
 
   const sortedTorrents = useMemo(
     () => sortTorrents(torrents, sortKey, sortDir),
@@ -116,22 +148,47 @@ export function MiniApp() {
 
         const data = WebApp.initData;
         if (!data) {
-          setAuthError(
-            "無法取得 Telegram initData。請從 Telegram Bot 內開啟此 Mini App。"
-          );
+          if (DEV_PREVIEW) {
+            const code = browserLanguageCode();
+            onLanguageCode(code);
+            setInitData(DEV_PREVIEW_INIT_DATA);
+            setUserName(
+              translate(resolveLocale(code), "app.previewUser")
+            );
+            await refreshAll(DEV_PREVIEW_INIT_DATA);
+            return;
+          }
+          setAuthError(t("app.noInitData"));
           return;
         }
 
         const user = WebApp.initDataUnsafe.user;
+        onLanguageCode(user?.language_code ?? null);
         setInitData(data);
         setUserName(
           user?.first_name || user?.username || (user ? String(user.id) : null)
         );
         await refreshAll(data);
       } catch (err) {
-        if (!cancelled) {
-          setAuthError(errMessage(err, "初始化失敗"));
+        if (cancelled) return;
+        if (DEV_PREVIEW) {
+          try {
+            const code = browserLanguageCode();
+            onLanguageCode(code);
+            setInitData(DEV_PREVIEW_INIT_DATA);
+            setUserName(
+              translate(resolveLocale(code), "app.previewUser")
+            );
+            await refreshAll(DEV_PREVIEW_INIT_DATA);
+            return;
+          } catch (previewErr) {
+            setAuthError(
+              errMessage(previewErr, t("app.previewInitFailed"))
+            );
+            return;
+          }
         }
+        setAuthError(errMessage(err, t("app.initFailed")));
       } finally {
         if (!cancelled) setBooting(false);
       }
@@ -141,7 +198,9 @@ export function MiniApp() {
     return () => {
       cancelled = true;
     };
-  }, [refreshAll]);
+    // Boot once; t/onLanguageCode are stable enough for first paint strings.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional single boot
+  }, [refreshAll, onLanguageCode]);
 
   useEffect(() => {
     if (!initData || authError || tab !== "downloads") return;
@@ -149,7 +208,7 @@ export function MiniApp() {
     const tick = () => {
       if (document.visibilityState === "hidden") return;
       void refreshTorrents(initData).catch((err) => {
-        setListError(errMessage(err, "重新整理失敗"));
+        setListError(errMessage(err, t("app.refreshFailed")));
       });
     };
 
@@ -159,19 +218,16 @@ export function MiniApp() {
       window.clearInterval(id);
       document.removeEventListener("visibilitychange", tick);
     };
-  }, [initData, authError, refreshTorrents, tab]);
+  }, [initData, authError, refreshTorrents, tab, t]);
 
-  async function withBusy(
-    hash: string,
-    action: () => Promise<void>
-  ) {
+  async function withBusy(hash: string, action: () => Promise<void>) {
     if (!initData) return;
     setBusyHash(hash);
     try {
       await action();
       await refreshTorrents(initData);
     } catch (err) {
-      setListError(errMessage(err, "操作失敗"));
+      setListError(errMessage(err, t("app.actionFailed")));
     } finally {
       setBusyHash(null);
     }
@@ -189,7 +245,11 @@ export function MiniApp() {
   if (booting) {
     return (
       <main className="shell">
-        <p className="status">載入中…</p>
+        <header className="header">
+          <h1 className="title">qBittorrent</h1>
+          <ThemeToggle />
+        </header>
+        <p className="status">{t("app.loading")}</p>
       </main>
     );
   }
@@ -197,8 +257,11 @@ export function MiniApp() {
   if (authError || !initData) {
     return (
       <main className="shell">
-        <h1 className="title">qBittorrent</h1>
-        <p className="error">{authError ?? "未授權"}</p>
+        <header className="header">
+          <h1 className="title">qBittorrent</h1>
+          <ThemeToggle />
+        </header>
+        <p className="error">{authError ?? t("app.unauthorized")}</p>
       </main>
     );
   }
@@ -206,64 +269,68 @@ export function MiniApp() {
   const selectedHashes = [...selected];
 
   return (
-    <main className={`shell${tab === "browse" ? " shell--browse" : ""}`}>
+    <main className="shell">
       <header className="header">
         <div>
           <h1 className="title">qBittorrent</h1>
-          {userName ? <p className="hint">你好，{userName}</p> : null}
+          {userName ? (
+            <p className="hint">{t("app.hello", { name: userName })}</p>
+          ) : null}
         </div>
-        {tab === "downloads" ? (
-          <button
-            type="button"
-            className="btn btn--sm"
-            onClick={() => {
-              void refreshAll(initData).catch((err) => {
-                setListError(errMessage(err, "重新整理失敗"));
-              });
-            }}
-          >
-            重新整理
-          </button>
-        ) : null}
+        <div className="header__actions">
+          <ThemeToggle />
+          {tab === "downloads" ? (
+            <button
+              type="button"
+              className="btn btn--icon"
+              aria-label={t("app.refresh")}
+              title={t("app.refresh")}
+              onClick={() => {
+                void refreshAll(initData).catch((err) => {
+                  setListError(errMessage(err, t("app.refreshFailed")));
+                });
+              }}
+            >
+              <svg
+                className="icon"
+                viewBox="0 0 24 24"
+                width="18"
+                height="18"
+                aria-hidden="true"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.75"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M21 12a9 9 0 1 1-2.64-6.36" />
+                <path d="M21 3v6h-6" />
+              </svg>
+            </button>
+          ) : null}
+        </div>
       </header>
 
-      <nav className="tabs" aria-label="主選單">
+      <nav className="tabs" aria-label={t("app.nav")}>
         <button
           type="button"
           className={`tabs__btn${tab === "downloads" ? " tabs__btn--active" : ""}`}
           onClick={() => setTab("downloads")}
         >
-          下載
-        </button>
-        <button
-          type="button"
-          className={`tabs__btn${tab === "browse" ? " tabs__btn--active" : ""}`}
-          onClick={() => setTab("browse")}
-        >
-          瀏覽
+          {t("app.tab.downloads")}
         </button>
         <button
           type="button"
           className={`tabs__btn${tab === "rss" ? " tabs__btn--active" : ""}`}
           onClick={() => setTab("rss")}
         >
-          RSS
+          {t("app.tab.rss")}
         </button>
       </nav>
 
       {listError ? <p className="error">{listError}</p> : null}
 
-      {tab === "browse" ? (
-        <BrowserPanel
-          initData={initData}
-          categories={categories}
-          onAdded={() => {
-            void refreshTorrents(initData).catch(() => {
-              /* ignore */
-            });
-          }}
-        />
-      ) : tab === "rss" ? (
+      {tab === "rss" ? (
         <RssPanel
           initData={initData}
           categories={categories}
@@ -291,7 +358,7 @@ export function MiniApp() {
               setSelected(new Set());
             }}
             onSelectAll={() =>
-              setSelected(new Set(sortedTorrents.map((t) => t.hash)))
+              setSelected(new Set(sortedTorrents.map((torrent) => torrent.hash)))
             }
             onClearSelection={() => setSelected(new Set())}
             onBatchPause={() =>

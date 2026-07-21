@@ -27,7 +27,7 @@ Worker 名稱固定為 **`tg-dl`**（`wrangler.jsonc`）。
 ### 不要放進 Worker
 `APP_URL`、`CLOUDFLARE_*`（只給 Actions 用）
 
-完整對照表見 [README](../README.md#環境變數總表)。
+完整對照表見 [README](../README.md#環境變數總表) 與 [`env/production.example`](../env/production.example)。
 
 ---
 
@@ -95,7 +95,7 @@ curl "http://localhost:8787/__scheduled?cron=*/2+*+*+*+*"
 ## 本機手動部署（可選）
 
 ```bash
-cp .dev.vars.example .dev.vars
+cp env/wrangler.development.example .dev.vars
 npm install
 npm run deploy
 ```

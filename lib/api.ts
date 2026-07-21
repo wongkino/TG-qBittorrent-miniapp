@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
-import { AuthError, requireTelegramAuth } from "@/lib/telegram";
+import {
+  AuthError,
+  requireTelegramAuth,
+  type VerifiedTelegramAuth,
+} from "@/lib/telegram";
 import { QBitError } from "@/lib/qbittorrent";
 
 export function jsonError(message: string, status: number) {
@@ -12,6 +16,15 @@ export function jsonOk(data: Record<string, unknown> = { ok: true }) {
 
 export function requireAuth(request: Request) {
   return requireTelegramAuth(request.headers.get("authorization"));
+}
+
+/** Local DEV_PREVIEW: skip qBittorrent and return mock / no-op. */
+export function previewResponse(
+  auth: VerifiedTelegramAuth,
+  data?: Record<string, unknown>
+) {
+  if (!auth.preview) return null;
+  return jsonOk(data ?? { ok: true });
 }
 
 /** Parse JSON body and require a non-empty `hashes` field. */
