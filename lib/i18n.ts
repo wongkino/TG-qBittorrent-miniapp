@@ -1,4 +1,4 @@
-export type Locale = "zh-Hant" | "zh-Hans" | "en";
+export type Locale = "zh-Hant" | "zh-Hans" | "en" | "ja";
 
 export type MessageKey = keyof typeof zhHant;
 
@@ -34,6 +34,12 @@ const zhHant = {
   "sort.desc": "降序",
   "sort.asc": "升序",
 
+  "filter.label": "狀態",
+  "filter.all": "全部",
+  "filter.downloading": "下載中",
+  "filter.paused": "暫停",
+  "filter.completed": "完成",
+
   "batch.open": "批次",
   "batch.done": "完成選取",
   "batch.selected": "已選 {selected}/{total}",
@@ -49,6 +55,7 @@ const zhHant = {
 
   "list.empty": "目前沒有種子",
   "list.emptyHint": "用下方表單貼上 magnet，或傳 .torrent 給 Bot",
+  "list.emptyFiltered": "沒有符合此狀態的種子",
 
   "torrent.progress": "進度 {progress}",
   "torrent.category": "分類",
@@ -152,6 +159,12 @@ const zhHans: Record<MessageKey, string> = {
   "sort.desc": "降序",
   "sort.asc": "升序",
 
+  "filter.label": "状态",
+  "filter.all": "全部",
+  "filter.downloading": "下载中",
+  "filter.paused": "暂停",
+  "filter.completed": "完成",
+
   "batch.open": "批量",
   "batch.done": "完成选取",
   "batch.selected": "已选 {selected}/{total}",
@@ -167,6 +180,7 @@ const zhHans: Record<MessageKey, string> = {
 
   "list.empty": "目前没有种子",
   "list.emptyHint": "用下方表单粘贴 magnet，或传 .torrent 给 Bot",
+  "list.emptyFiltered": "没有符合此状态的种子",
 
   "torrent.progress": "进度 {progress}",
   "torrent.category": "分类",
@@ -270,6 +284,12 @@ const en: Record<MessageKey, string> = {
   "sort.desc": "Descending",
   "sort.asc": "Ascending",
 
+  "filter.label": "Status",
+  "filter.all": "All",
+  "filter.downloading": "Downloading",
+  "filter.paused": "Paused",
+  "filter.completed": "Completed",
+
   "batch.open": "Batch",
   "batch.done": "Done",
   "batch.selected": "Selected {selected}/{total}",
@@ -287,6 +307,7 @@ const en: Record<MessageKey, string> = {
   "list.empty": "No torrents yet",
   "list.emptyHint":
     "Paste a magnet below, or send a .torrent file to the Bot",
+  "list.emptyFiltered": "No torrents match this status",
 
   "torrent.progress": "Progress {progress}",
   "torrent.category": "Category",
@@ -360,33 +381,197 @@ const en: Record<MessageKey, string> = {
   "rss.join": "Add",
 };
 
+const ja: Record<MessageKey, string> = {
+  "app.loading": "読み込み中…",
+  "app.hello": "こんにちは、{name}",
+  "app.unauthorized": "未承認",
+  "app.nav": "メインメニュー",
+  "app.tab.downloads": "ダウンロード",
+  "app.tab.rss": "RSS",
+  "app.refresh": "更新",
+  "app.refreshFailed": "更新に失敗しました",
+  "app.actionFailed": "操作に失敗しました",
+  "app.initFailed": "初期化に失敗しました",
+  "app.previewUser": "ローカルプレビュー",
+  "app.previewInitFailed": "ローカルプレビューの初期化に失敗しました",
+  "app.noInitData":
+    "Telegram initData を取得できません。Telegram Bot からこの Mini App を開いてください。",
+
+  "theme.toLight": "ライト",
+  "theme.toDark": "ダーク",
+  "theme.switchToLight": "ライトモードに切り替え",
+  "theme.switchToDark": "ダークモードに切り替え",
+
+  "sort.label": "並べ替え",
+  "sort.added_on": "追加日時",
+  "sort.name": "名前",
+  "sort.progress": "進捗",
+  "sort.dlspeed": "ダウンロード速度",
+  "sort.upspeed": "アップロード速度",
+  "sort.size": "サイズ",
+  "sort.eta": "ETA",
+  "sort.desc": "降順",
+  "sort.asc": "昇順",
+
+  "filter.label": "状態",
+  "filter.all": "すべて",
+  "filter.downloading": "ダウンロード中",
+  "filter.paused": "一時停止",
+  "filter.completed": "完了",
+
+  "batch.open": "一括",
+  "batch.done": "選択完了",
+  "batch.selected": "選択 {selected}/{total}",
+  "batch.selectAll": "すべて選択",
+  "batch.clear": "クリア",
+  "batch.pause": "一時停止",
+  "batch.resume": "再開",
+  "batch.remove": "削除",
+  "batch.deleteFiles": "ファイル削除",
+  "batch.confirmRemove":
+    "選択した {count} 件のトレントを削除しますか（ファイルは残す）？",
+  "batch.confirmDelete":
+    "選択した {count} 件のトレントとファイルを削除しますか？この操作は元に戻せません。",
+
+  "list.empty": "トレントはありません",
+  "list.emptyHint":
+    "下のフォームに magnet を貼るか、.torrent を Bot に送ってください",
+  "list.emptyFiltered": "この状態のトレントはありません",
+
+  "torrent.progress": "進捗 {progress}",
+  "torrent.category": "カテゴリ",
+  "torrent.resume": "再開",
+  "torrent.pause": "一時停止",
+  "torrent.remove": "削除",
+  "torrent.deleteFiles": "ファイル削除",
+  "torrent.confirmRemove":
+    "リストからのみ削除し、ダウンロード済みファイルは残しますか？",
+  "torrent.confirmDelete":
+    "トレントとファイルを削除しますか？この操作は元に戻せません。",
+
+  "state.downloading": "ダウンロード中",
+  "state.uploading": "シード中",
+  "state.pausedDL": "一時停止",
+  "state.pausedUP": "一時停止",
+  "state.stoppedDL": "停止",
+  "state.stoppedUP": "停止",
+  "state.queuedDL": "待機中",
+  "state.queuedUP": "シード待機",
+  "state.stalledDL": "停滞",
+  "state.stalledUP": "シード停滞",
+  "state.checkingDL": "確認中",
+  "state.checkingUP": "確認中",
+  "state.checkingResumeData": "確認中",
+  "state.forcedDL": "強制ダウンロード",
+  "state.forcedUP": "強制シード",
+  "state.metaDL": "メタデータ取得中",
+  "state.moving": "移動中",
+  "state.missingFiles": "ファイル不足",
+  "state.error": "エラー",
+  "state.unknown": "不明",
+
+  "add.title": "トレントを追加",
+  "add.paste": "貼り付け",
+  "add.pasting": "貼り付け中…",
+  "add.placeholder": "magnet:?xt=... または https://.../*.torrent",
+  "add.category": "ダウンロードカテゴリ",
+  "add.noCategory": "なし",
+  "add.noCategoriesYet": "カテゴリ未作成",
+  "add.submit": "追加",
+  "add.submitting": "追加中…",
+  "add.clipboardEmpty": "クリップボードが空です",
+  "add.clipboardFailed": "クリップボードを読めません",
+  "add.pasteFailed": "貼り付けに失敗しました",
+  "add.failed": "追加に失敗しました",
+
+  "rss.intro":
+    "qBittorrent の RSS 購読を管理。ソースを更新し、記事から直接ダウンロードに追加できます。",
+  "rss.urlPlaceholder": "RSS URL https://",
+  "rss.namePlaceholder": "名前（任意）",
+  "rss.add": "追加",
+  "rss.categoryOnAdd": "追加時のカテゴリ",
+  "rss.noCategory": "なし",
+  "rss.reloadList": "一覧を再読込",
+  "rss.loading": "RSS 読み込み中…",
+  "rss.empty": "RSS 購読はまだありません",
+  "rss.emptyHint": "フィード URL を貼って追加を押してください",
+  "rss.loadFailed": "RSS を読み込めませんでした",
+  "rss.added": "購読を追加しました",
+  "rss.refreshed": "更新しました",
+  "rss.removed": "削除しました",
+  "rss.addedDownload": "ダウンロードに追加しました",
+  "rss.errorTag": " · エラー",
+  "rss.loadingTag": " · 読み込み中",
+  "rss.refresh": "更新",
+  "rss.remove": "削除",
+  "rss.confirmRemove": "購読「{name}」を削除しますか？",
+  "rss.noArticles": "記事がありません（更新を試してください）",
+  "rss.pickFeed": "左側の購読を選択",
+  "rss.join": "追加",
+};
+
 export const messages: Record<Locale, Record<MessageKey, string>> = {
   "zh-Hant": zhHant,
   "zh-Hans": zhHans,
   en,
+  ja,
 };
 
-const TRADITIONAL_TAGS = new Set([
-  "zh-hant",
-  "zh-tw",
-  "zh-hk",
-  "zh-mo",
-]);
+export const DEFAULT_LOCALE: Locale = "zh-Hant";
 
-const SIMPLIFIED_TAGS = new Set([
-  "zh",
-  "zh-hans",
-  "zh-cn",
-  "zh-sg",
-]);
+export const LOCALES: Locale[] = ["en", "zh-Hant", "zh-Hans", "ja"];
 
-/** Map Telegram / browser language tag to app locale. */
+export const LOCALE_STORAGE_KEY = "tg-dl-locale";
+
+export const LOCALE_SHORT_LABEL: Record<Locale, string> = {
+  en: "EN",
+  "zh-Hant": "繁",
+  "zh-Hans": "简",
+  ja: "日",
+};
+
+export const LOCALE_NATIVE_LABEL: Record<Locale, string> = {
+  en: "English",
+  "zh-Hant": "繁體中文",
+  "zh-Hans": "简体中文",
+  ja: "日本語",
+};
+
+export function isLocale(value: string | null | undefined): value is Locale {
+  return typeof value === "string" && (LOCALES as readonly string[]).includes(value);
+}
+
+export function readStoredLocale(): Locale | null {
+  try {
+    const value = localStorage.getItem(LOCALE_STORAGE_KEY);
+    return isLocale(value) ? value : null;
+  } catch {
+    return null;
+  }
+}
+
+export function resolveInitialLocale(): Locale {
+  return readStoredLocale() ?? DEFAULT_LOCALE;
+}
+
+export function persistLocale(locale: Locale) {
+  try {
+    localStorage.setItem(LOCALE_STORAGE_KEY, locale);
+  } catch {
+    /* ignore */
+  }
+  if (typeof document !== "undefined") {
+    document.documentElement.lang = locale;
+  }
+}
+
+/** Normalize loose tags to a Locale (legacy / rare callers). */
 export function resolveLocale(languageCode?: string | null): Locale {
-  if (!languageCode?.trim()) return "zh-Hant";
+  if (isLocale(languageCode)) return languageCode;
+  if (!languageCode?.trim()) return DEFAULT_LOCALE;
   const code = languageCode.trim().toLowerCase().replace(/_/g, "-");
 
   if (
-    TRADITIONAL_TAGS.has(code) ||
     code.startsWith("zh-hant") ||
     code.startsWith("zh-tw") ||
     code.startsWith("zh-hk") ||
@@ -394,72 +579,10 @@ export function resolveLocale(languageCode?: string | null): Locale {
   ) {
     return "zh-Hant";
   }
-  if (
-    SIMPLIFIED_TAGS.has(code) ||
-    code.startsWith("zh-hans") ||
-    code.startsWith("zh-cn") ||
-    code.startsWith("zh")
-  ) {
-    return "zh-Hans";
-  }
+  if (code === "ja" || code.startsWith("ja-")) return "ja";
+  if (code === "en" || code.startsWith("en-")) return "en";
+  if (code === "zh" || code.startsWith("zh")) return "zh-Hans";
   return "en";
-}
-
-/** Optional override: `?lang=en` | `zh-Hans` | `zh-Hant` | `zh` | `zh-TW` … */
-export function languageCodeFromUrl(
-  search?: string | null
-): string | null {
-  if (typeof search !== "string" && typeof window !== "undefined") {
-    search = window.location.search;
-  }
-  if (!search) return null;
-  try {
-    const raw = new URLSearchParams(search).get("lang")?.trim();
-    if (!raw) return null;
-    // Accept locale ids or BCP-47 tags.
-    if (raw === "zh-Hant" || raw === "zh-Hans" || raw === "en") return raw;
-    return raw;
-  } catch {
-    return null;
-  }
-}
-
-export function languageCodeFromInitData(initData: string): string | null {
-  try {
-    const userRaw = new URLSearchParams(initData).get("user");
-    if (!userRaw) return null;
-    const user = JSON.parse(userRaw) as { language_code?: string };
-    return user.language_code?.trim() || null;
-  } catch {
-    return null;
-  }
-}
-
-export function browserLanguageCode(): string | null {
-  if (typeof navigator === "undefined") return null;
-  return navigator.languages?.[0] || navigator.language || null;
-}
-
-/**
- * Prefer: URL ?lang= → Telegram user.language_code → initData user → browser.
- */
-export function detectLanguageCode(input?: {
-  telegramLanguageCode?: string | null;
-  initData?: string | null;
-  search?: string | null;
-}): string {
-  const fromUrl = languageCodeFromUrl(input?.search);
-  if (fromUrl) return fromUrl;
-
-  const fromTg = input?.telegramLanguageCode?.trim();
-  if (fromTg) return fromTg;
-
-  if (input?.initData) {
-    const fromInit = languageCodeFromInitData(input.initData);
-    if (fromInit) return fromInit;
-  }
-
-  return browserLanguageCode() || "zh-Hant";
 }
 
 export function translate(
@@ -467,7 +590,7 @@ export function translate(
   key: MessageKey,
   vars?: Record<string, string | number>
 ): string {
-  let text = messages[locale][key] ?? messages["zh-Hant"][key] ?? key;
+  let text = messages[locale][key] ?? messages[DEFAULT_LOCALE][key] ?? key;
   if (vars) {
     for (const [name, value] of Object.entries(vars)) {
       text = text.replaceAll(`{${name}}`, String(value));

@@ -2,6 +2,22 @@
 
 import type { SortDir, SortKey } from "@/lib/types";
 import { useI18n } from "@/components/I18nProvider";
+import {
+  BatchDoneIcon,
+  BatchOpenIcon,
+  ClearIcon,
+  DeleteFilesIcon,
+  PauseIcon,
+  RemoveIcon,
+  ResumeIcon,
+  SelectAllIcon,
+  SortAscIcon,
+  SortDescIcon,
+} from "@/components/icons";
+import {
+  STATUS_FILTERS,
+  type StatusFilter,
+} from "@/lib/format";
 import type { MessageKey } from "@/lib/i18n";
 
 const SORT_KEYS: SortKey[] = [
@@ -18,15 +34,21 @@ function sortLabelKey(key: SortKey): MessageKey {
   return `sort.${key}` as MessageKey;
 }
 
+function filterLabelKey(filter: StatusFilter): MessageKey {
+  return `filter.${filter}` as MessageKey;
+}
+
 type Props = {
   sortKey: SortKey;
   sortDir: SortDir;
+  statusFilter: StatusFilter;
   selectionMode: boolean;
   selectedCount: number;
   totalCount: number;
   busy: boolean;
   onSortKeyChange: (key: SortKey) => void;
   onToggleSortDir: () => void;
+  onStatusFilterChange: (filter: StatusFilter) => void;
   onToggleSelectionMode: () => void;
   onSelectAll: () => void;
   onClearSelection: () => void;
@@ -38,12 +60,14 @@ type Props = {
 export function ListToolbar({
   sortKey,
   sortDir,
+  statusFilter,
   selectionMode,
   selectedCount,
   totalCount,
   busy,
   onSortKeyChange,
   onToggleSortDir,
+  onStatusFilterChange,
   onToggleSelectionMode,
   onSelectAll,
   onClearSelection,
@@ -56,6 +80,24 @@ export function ListToolbar({
   return (
     <div className="toolbar">
       <div className="toolbar__row">
+        <label className="toolbar__label" htmlFor="status-filter">
+          {t("filter.label")}
+        </label>
+        <select
+          id="status-filter"
+          className="select select--inline"
+          value={statusFilter}
+          disabled={busy}
+          onChange={(e) =>
+            onStatusFilterChange(e.target.value as StatusFilter)
+          }
+        >
+          {STATUS_FILTERS.map((filter) => (
+            <option key={filter} value={filter}>
+              {t(filterLabelKey(filter))}
+            </option>
+          ))}
+        </select>
         <label className="toolbar__label" htmlFor="sort-key">
           {t("sort.label")}
         </label>
@@ -80,39 +122,7 @@ export function ListToolbar({
           aria-label={sortDir === "desc" ? t("sort.desc") : t("sort.asc")}
           title={sortDir === "desc" ? t("sort.desc") : t("sort.asc")}
         >
-          {sortDir === "desc" ? (
-            <svg
-              className="icon"
-              viewBox="0 0 24 24"
-              width="18"
-              height="18"
-              aria-hidden="true"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.75"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M12 5v14" />
-              <path d="m19 12-7 7-7-7" />
-            </svg>
-          ) : (
-            <svg
-              className="icon"
-              viewBox="0 0 24 24"
-              width="18"
-              height="18"
-              aria-hidden="true"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.75"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M12 19V5" />
-              <path d="m5 12 7-7 7 7" />
-            </svg>
-          )}
+          {sortDir === "desc" ? <SortDescIcon /> : <SortAscIcon />}
         </button>
         <button
           type="button"
@@ -122,41 +132,7 @@ export function ListToolbar({
           aria-label={selectionMode ? t("batch.done") : t("batch.open")}
           title={selectionMode ? t("batch.done") : t("batch.open")}
         >
-          {selectionMode ? (
-            <svg
-              className="icon"
-              viewBox="0 0 24 24"
-              width="18"
-              height="18"
-              aria-hidden="true"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.75"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M20 6 9 17l-5-5" />
-            </svg>
-          ) : (
-            <svg
-              className="icon"
-              viewBox="0 0 24 24"
-              width="18"
-              height="18"
-              aria-hidden="true"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.75"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="m3 17 2 2 4-4" />
-              <path d="m3 7 2 2 4-4" />
-              <path d="M13 6h8" />
-              <path d="M13 12h8" />
-              <path d="M13 18h8" />
-            </svg>
-          )}
+          {selectionMode ? <BatchDoneIcon /> : <BatchOpenIcon />}
         </button>
       </div>
 
@@ -170,67 +146,75 @@ export function ListToolbar({
           </span>
           <button
             type="button"
-            className="btn btn--sm"
+            className="btn btn--icon btn--sm"
             disabled={busy || totalCount === 0}
+            aria-label={t("batch.selectAll")}
+            title={t("batch.selectAll")}
             onClick={onSelectAll}
           >
-            {t("batch.selectAll")}
+            <SelectAllIcon />
           </button>
           <button
             type="button"
-            className="btn btn--sm"
+            className="btn btn--icon btn--sm"
             disabled={busy || selectedCount === 0}
+            aria-label={t("batch.clear")}
+            title={t("batch.clear")}
             onClick={onClearSelection}
           >
-            {t("batch.clear")}
+            <ClearIcon />
           </button>
           <button
             type="button"
-            className="btn btn--sm"
+            className="btn btn--icon btn--sm"
             disabled={busy || selectedCount === 0}
+            aria-label={t("batch.pause")}
+            title={t("batch.pause")}
             onClick={onBatchPause}
           >
-            {t("batch.pause")}
+            <PauseIcon />
           </button>
           <button
             type="button"
-            className="btn btn--sm btn--primary"
+            className="btn btn--icon btn--sm btn--primary"
             disabled={busy || selectedCount === 0}
+            aria-label={t("batch.resume")}
+            title={t("batch.resume")}
             onClick={onBatchResume}
           >
-            {t("batch.resume")}
+            <ResumeIcon />
           </button>
           <button
             type="button"
-            className="btn btn--sm"
+            className="btn btn--icon btn--sm"
             disabled={busy || selectedCount === 0}
+            aria-label={t("batch.remove")}
+            title={t("batch.remove")}
             onClick={() => {
               if (
-                confirm(
-                  t("batch.confirmRemove", { count: selectedCount })
-                )
+                confirm(t("batch.confirmRemove", { count: selectedCount }))
               ) {
                 onBatchDelete(false);
               }
             }}
           >
-            {t("batch.remove")}
+            <RemoveIcon />
           </button>
           <button
             type="button"
-            className="btn btn--sm btn--danger"
+            className="btn btn--icon btn--sm btn--danger"
             disabled={busy || selectedCount === 0}
+            aria-label={t("batch.deleteFiles")}
+            title={t("batch.deleteFiles")}
             onClick={() => {
               if (
-                confirm(
-                  t("batch.confirmDelete", { count: selectedCount })
-                )
+                confirm(t("batch.confirmDelete", { count: selectedCount }))
               ) {
                 onBatchDelete(true);
               }
             }}
           >
-            {t("batch.deleteFiles")}
+            <DeleteFilesIcon />
           </button>
         </div>
       ) : null}

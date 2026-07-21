@@ -8,7 +8,7 @@
 
 - Worker 名稱：`tg-dl`（`wrangler.jsonc`）
 - 預設公開 URL：`https://tg-dl.<subdomain>.workers.dev`
-- Mini App UI：繁中／簡中／英文（跟 Telegram `language_code`，見 `lib/i18n.ts`）
+- Mini App UI：英／繁中／簡中／日文（App 內切換，見 `lib/i18n.ts`／`LanguageToggle`）
 - Bot 文案：目前繁中為主
 - **不要**做成多租戶 SaaS；白名單制個人工具即可
 
@@ -62,7 +62,7 @@
 
 - Mini App 分頁：**下載**／**RSS**；不能上傳本機 `.torrent`
 - `.torrent` 檔：只走 Bot
-- 語系：自動跟 Telegram；主題：App 內切換
+- 語系：App 內切換；主題：App 內切換
 - Reply Keyboard：每次 Bot 回覆都附上
 - Menu Button：Deploy workflow 的 `setChatMenuButton`
 

@@ -48,9 +48,11 @@ app/
   api/telegram/webhook/       # Bot webhook
   api/cron/completions/       # 開始／完成通知
 components/                   # Mini App UI（client）
-  MiniApp.tsx                 # 分頁：下載／RSS；語系／主題
-  I18nProvider.tsx            # 繁中／簡中／英文
+  MiniApp.tsx                 # 分頁：下載／RSS；語系／主題切換
+  I18nProvider.tsx            # 英／繁中／簡中／日文
+  LanguageToggle.tsx          # EN／繁／简／日
   ThemeToggle.tsx             # 日間／夜間
+  icons.tsx                   # 共用 SVG 圖示
 lib/
   qbittorrent.ts              # 唯一直接打 qB 的模組
   client-api.ts               # 瀏覽器 → /api/qb/*
@@ -89,7 +91,7 @@ docs/                         # 使用者／部署／架構／開發
 
 多 hash 以 `|` 串接。下載分頁約每 4 秒輪詢（頁面隱藏時跳過）；開機／手動重整／加種後用 `snapshot`。
 
-語系：讀 Telegram `user.language_code` → `lib/i18n.ts`（`zh-Hant`／`zh-Hans`／`en`）。
+語系：App 內手動切換（`LanguageToggle`，存 `localStorage`）；見 `lib/i18n.ts`。
 
 主題：`data-theme=light|dark`（`lib/theme.ts`），預設夜間，可切換並存 localStorage。
 
@@ -145,7 +147,7 @@ Authorization: Bearer <CRON_SECRET>
 | `lib/completions.ts` | 開始／完成通知邏輯 |
 | `lib/client-api.ts` | 前端 API client |
 | `lib/api.ts` | Route 共用 auth／preview／錯誤／hashes |
-| `lib/i18n.ts` | Mini App 三語字串與 `resolveLocale` |
+| `lib/i18n.ts` | Mini App 多語字串與 `resolveLocale` |
 | `lib/theme.ts` | 日間／夜間 |
 | `lib/dev/preview.ts` | 本機預覽假資料 |
 | `lib/types.ts` / `format.ts` | 型別、排序、顯示格式 |

@@ -11,6 +11,12 @@ import {
   type ClientRssFeed,
 } from "@/lib/client-api";
 import { useI18n } from "@/components/I18nProvider";
+import {
+  AddIcon,
+  JoinIcon,
+  RefreshIcon,
+  RemoveIcon,
+} from "@/components/icons";
 
 type Props = {
   initData: string;
@@ -110,10 +116,12 @@ export function RssPanel({ initData, categories, onAdded }: Props) {
         />
         <button
           type="submit"
-          className="btn btn--primary"
+          className="btn btn--icon btn--primary"
           disabled={busy || !url.trim()}
+          aria-label={t("rss.add")}
+          title={t("rss.add")}
         >
-          {t("rss.add")}
+          <AddIcon />
         </button>
       </form>
 
@@ -136,11 +144,13 @@ export function RssPanel({ initData, categories, onAdded }: Props) {
         </label>
         <button
           type="button"
-          className="btn btn--sm"
+          className="btn btn--icon btn--sm"
           disabled={busy || loading}
+          aria-label={t("rss.reloadList")}
+          title={t("rss.reloadList")}
           onClick={() => void reload()}
         >
-          {t("rss.reloadList")}
+          <RefreshIcon />
         </button>
       </div>
 
@@ -193,8 +203,10 @@ export function RssPanel({ initData, categories, onAdded }: Props) {
                   <div className="rss__detail-actions">
                     <button
                       type="button"
-                      className="btn btn--sm"
+                      className="btn btn--icon btn--sm"
                       disabled={busy}
+                      aria-label={t("rss.refresh")}
+                      title={t("rss.refresh")}
                       onClick={() =>
                         void withBusy(
                           () => refreshRssFeed(initData, selected.path),
@@ -202,12 +214,14 @@ export function RssPanel({ initData, categories, onAdded }: Props) {
                         )
                       }
                     >
-                      {t("rss.refresh")}
+                      <RefreshIcon />
                     </button>
                     <button
                       type="button"
-                      className="btn btn--sm btn--danger"
+                      className="btn btn--icon btn--sm btn--danger"
                       disabled={busy}
+                      aria-label={t("rss.remove")}
+                      title={t("rss.remove")}
                       onClick={() => {
                         if (
                           !window.confirm(
@@ -223,7 +237,7 @@ export function RssPanel({ initData, categories, onAdded }: Props) {
                         }, t("rss.removed"));
                       }}
                     >
-                      {t("rss.remove")}
+                      <RemoveIcon />
                     </button>
                   </div>
                 </div>
@@ -246,8 +260,10 @@ export function RssPanel({ initData, categories, onAdded }: Props) {
                         <div className="rss__article-actions">
                           <button
                             type="button"
-                            className="btn btn--sm btn--primary"
+                            className="btn btn--icon btn--sm btn--primary"
                             disabled={busy || !article.torrentUrl}
+                            aria-label={t("rss.join")}
+                            title={t("rss.join")}
                             onClick={() =>
                               void withBusy(async () => {
                                 await addTorrentUrl(
@@ -266,7 +282,7 @@ export function RssPanel({ initData, categories, onAdded }: Props) {
                               }, t("rss.addedDownload"))
                             }
                           >
-                            {t("rss.join")}
+                            <JoinIcon />
                           </button>
                         </div>
                       </li>

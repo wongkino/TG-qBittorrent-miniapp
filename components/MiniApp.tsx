@@ -1,9 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { AddTorrentForm } from "@/components/AddTorrentForm";
 import { I18nProvider, useI18n } from "@/components/I18nProvider";
+import { LanguageToggle } from "@/components/LanguageToggle";
 import { ListToolbar } from "@/components/ListToolbar";
+import { RefreshIcon } from "@/components/icons";
 import { RssPanel } from "@/components/RssPanel";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { TorrentList } from "@/components/TorrentList";
@@ -17,11 +19,7 @@ import {
   setTorrentCategory,
 } from "@/lib/client-api";
 import { DEV_PREVIEW_INIT_DATA } from "@/lib/dev/preview";
-import {
-  detectLanguageCode,
-  resolveLocale,
-  translate,
-} from "@/lib/i18n";
+import { filterTorrents, type StatusFilter } from "@/lib/format";
 import {
   sortTorrents,
   torrentsEqual,
@@ -39,24 +37,25 @@ function errMessage(err: unknown, fallback: string) {
   return err instanceof Error ? err.message : fallback;
 }
 
-export function MiniApp() {
-  const [languageCode, setLanguageCode] = useState<string | null>(() => {
-    if (typeof window === "undefined") return null;
-    return detectLanguageCode();
-  });
-
+function HeaderTools({ extra }: { extra?: ReactNode }) {
   return (
-    <I18nProvider languageCode={languageCode}>
-      <MiniAppInner onLanguageCode={setLanguageCode} />
+    <div className="header__actions">
+      <LanguageToggle />
+      <ThemeToggle />
+      {extra}
+    </div>
+  );
+}
+
+export function MiniApp() {
+  return (
+    <I18nProvider>
+      <MiniAppInner />
     </I18nProvider>
   );
 }
 
-function MiniAppInner({
-  onLanguageCode,
-}: {
-  onLanguageCode: (code: string | null) => void;
-}) {
+function MiniAppInner() {
   const { t, locale } = useI18n();
   const [initData, setInitData] = useState<string | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
@@ -68,6 +67,7 @@ function MiniAppInner({
   const [booting, setBooting] = useState(true);
   const [sortKey, setSortKey] = useState<SortKey>("added_on");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [selectionMode, setSelectionMode] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [tab, setTab] = useState<"downloads" | "rss">("downloads");
@@ -77,9 +77,14 @@ function MiniAppInner({
     document.documentElement.lang = locale;
   }, [locale]);
 
-  const sortedTorrents = useMemo(
-    () => sortTorrents(torrents, sortKey, sortDir),
-    [torrents, sortKey, sortDir]
+  const visibleTorrents = useMemo(
+    () =>
+      sortTorrents(
+        filterTorrents(torrents, statusFilter),
+        sortKey,
+        sortDir
+      ),
+    [torrents, statusFilter, sortKey, sortDir]
   );
 
   const refreshTorrents = useCallback(async (token: string) => {
@@ -149,12 +154,8 @@ function MiniAppInner({
         const data = WebApp.initData;
         if (!data) {
           if (DEV_PREVIEW) {
-            const code = detectLanguageCode();
-            onLanguageCode(code);
             setInitData(DEV_PREVIEW_INIT_DATA);
-            setUserName(
-              translate(resolveLocale(code), "app.previewUser")
-            );
+            setUserName(t("app.previewUser"));
             await refreshAll(DEV_PREVIEW_INIT_DATA);
             return;
           }
@@ -163,11 +164,6 @@ function MiniAppInner({
         }
 
         const user = WebApp.initDataUnsafe.user;
-        const code = detectLanguageCode({
-          telegramLanguageCode: user?.language_code,
-          initData: data,
-        });
-        onLanguageCode(code);
         setInitData(data);
         setUserName(
           user?.first_name || user?.username || (user ? String(user.id) : null)
@@ -177,12 +173,8 @@ function MiniAppInner({
         if (cancelled) return;
         if (DEV_PREVIEW) {
           try {
-            const code = detectLanguageCode();
-            onLanguageCode(code);
             setInitData(DEV_PREVIEW_INIT_DATA);
-            setUserName(
-              translate(resolveLocale(code), "app.previewUser")
-            );
+            setUserName(t("app.previewUser"));
             await refreshAll(DEV_PREVIEW_INIT_DATA);
             return;
           } catch (previewErr) {
@@ -202,9 +194,8 @@ function MiniAppInner({
     return () => {
       cancelled = true;
     };
-    // Boot once; t/onLanguageCode are stable enough for first paint strings.
     // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional single boot
-  }, [refreshAll, onLanguageCode]);
+  }, [refreshAll]);
 
   useEffect(() => {
     if (!initData || authError || tab !== "downloads") return;
@@ -251,7 +242,7 @@ function MiniAppInner({
       <main className="shell">
         <header className="header">
           <h1 className="title">qBittorrent</h1>
-          <ThemeToggle />
+          <HeaderTools />
         </header>
         <p className="status">{t("app.loading")}</p>
       </main>
@@ -263,7 +254,7 @@ function MiniAppInner({
       <main className="shell">
         <header className="header">
           <h1 className="title">qBittorrent</h1>
-          <ThemeToggle />
+          <HeaderTools />
         </header>
         <p className="error">{authError ?? t("app.unauthorized")}</p>
       </main>
@@ -281,38 +272,25 @@ function MiniAppInner({
             <p className="hint">{t("app.hello", { name: userName })}</p>
           ) : null}
         </div>
-        <div className="header__actions">
-          <ThemeToggle />
-          {tab === "downloads" ? (
-            <button
-              type="button"
-              className="btn btn--icon"
-              aria-label={t("app.refresh")}
-              title={t("app.refresh")}
-              onClick={() => {
-                void refreshAll(initData).catch((err) => {
-                  setListError(errMessage(err, t("app.refreshFailed")));
-                });
-              }}
-            >
-              <svg
-                className="icon"
-                viewBox="0 0 24 24"
-                width="18"
-                height="18"
-                aria-hidden="true"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.75"
-                strokeLinecap="round"
-                strokeLinejoin="round"
+        <HeaderTools
+          extra={
+            tab === "downloads" ? (
+              <button
+                type="button"
+                className="btn btn--icon"
+                aria-label={t("app.refresh")}
+                title={t("app.refresh")}
+                onClick={() => {
+                  void refreshAll(initData).catch((err) => {
+                    setListError(errMessage(err, t("app.refreshFailed")));
+                  });
+                }}
               >
-                <path d="M21 12a9 9 0 1 1-2.64-6.36" />
-                <path d="M21 3v6h-6" />
-              </svg>
-            </button>
-          ) : null}
-        </div>
+                <RefreshIcon />
+              </button>
+            ) : null
+          }
+        />
       </header>
 
       <nav className="tabs" aria-label={t("app.nav")}>
@@ -349,20 +327,24 @@ function MiniAppInner({
           <ListToolbar
             sortKey={sortKey}
             sortDir={sortDir}
+            statusFilter={statusFilter}
             selectionMode={selectionMode}
             selectedCount={selected.size}
-            totalCount={sortedTorrents.length}
+            totalCount={visibleTorrents.length}
             busy={busyHash !== null}
             onSortKeyChange={setSortKey}
             onToggleSortDir={() =>
               setSortDir((prev) => (prev === "asc" ? "desc" : "asc"))
             }
+            onStatusFilterChange={setStatusFilter}
             onToggleSelectionMode={() => {
               setSelectionMode((prev) => !prev);
               setSelected(new Set());
             }}
             onSelectAll={() =>
-              setSelected(new Set(sortedTorrents.map((torrent) => torrent.hash)))
+              setSelected(
+                new Set(visibleTorrents.map((torrent) => torrent.hash))
+              )
             }
             onClearSelection={() => setSelected(new Set())}
             onBatchPause={() =>
@@ -380,11 +362,12 @@ function MiniAppInner({
           />
 
           <TorrentList
-            torrents={sortedTorrents}
+            torrents={visibleTorrents}
             categories={categories}
             busyHash={busyHash}
             selected={selected}
             selectionMode={selectionMode}
+            filterActive={statusFilter !== "all"}
             onToggleSelect={toggleSelect}
             onPause={(hash) =>
               void withBusy(hash, () => pauseTorrent(initData, hash))

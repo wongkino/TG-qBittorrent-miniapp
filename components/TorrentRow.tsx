@@ -4,6 +4,12 @@ import type { Torrent } from "@/lib/types";
 import { CategorySelect } from "@/components/CategorySelect";
 import { useI18n } from "@/components/I18nProvider";
 import {
+  DeleteFilesIcon,
+  PauseIcon,
+  RemoveIcon,
+  ResumeIcon,
+} from "@/components/icons";
+import {
   formatBytes,
   formatEta,
   formatProgress,
@@ -107,45 +113,53 @@ export function TorrentRow({
           {paused ? (
             <button
               type="button"
-              className="btn btn--primary"
+              className="btn btn--icon btn--primary"
               disabled={busy}
+              aria-label={t("torrent.resume")}
+              title={t("torrent.resume")}
               onClick={() => onResume(torrent.hash)}
             >
-              {t("torrent.resume")}
+              <ResumeIcon />
             </button>
           ) : (
             <button
               type="button"
-              className="btn"
+              className="btn btn--icon"
               disabled={busy}
+              aria-label={t("torrent.pause")}
+              title={t("torrent.pause")}
               onClick={() => onPause(torrent.hash)}
             >
-              {t("torrent.pause")}
+              <PauseIcon />
             </button>
           )}
           <button
             type="button"
-            className="btn"
+            className="btn btn--icon"
             disabled={busy}
+            aria-label={t("torrent.remove")}
+            title={t("torrent.remove")}
             onClick={() => {
               if (confirm(t("torrent.confirmRemove"))) {
                 onDelete(torrent.hash, false);
               }
             }}
           >
-            {t("torrent.remove")}
+            <RemoveIcon />
           </button>
           <button
             type="button"
-            className="btn btn--danger"
+            className="btn btn--icon btn--danger"
             disabled={busy}
+            aria-label={t("torrent.deleteFiles")}
+            title={t("torrent.deleteFiles")}
             onClick={() => {
               if (confirm(t("torrent.confirmDelete"))) {
                 onDelete(torrent.hash, true);
               }
             }}
           >
-            {t("torrent.deleteFiles")}
+            <DeleteFilesIcon />
           </button>
         </div>
       ) : null}

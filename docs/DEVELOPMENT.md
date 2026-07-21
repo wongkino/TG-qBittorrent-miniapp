@@ -49,7 +49,7 @@ npm run dev
 | **本機預覽**（改 UI） | `DEV_PREVIEW=1` + `NEXT_PUBLIC_DEV_PREVIEW=1` |
 | Deploy 後測真資料 | Telegram「開啟 App」 |
 | 真 qB 本機聯調 | 關掉 PREVIEW，填 bot／qB；需合法 initData（tunnel + TG） |
-| 介面語系 | Telegram `language_code` → 繁中／簡中／英文；缺值時跟瀏覽器。預覽可用 `?lang=en` |
+| 介面語系 | App 內 **EN／繁／简／日** 手動切換（存 localStorage） |
 
 Bot／cron 可用 curl 打已部署端點（帶 secret）。
 
@@ -70,7 +70,7 @@ Bot／cron 可用 curl 打已部署端點（帶 secret）。
 改 `lib/completions.ts`；新 tag 去重；確認 `worker.ts` scheduled。更新 [USER.md](USER.md)／[ARCHITECTURE.md](ARCHITECTURE.md)。
 
 ### 新的 UI 文案
-只改 `lib/i18n.ts` 的 `zh-Hant`／`zh-Hans`／`en`，元件用 `useI18n().t(...)`。
+只改 `lib/i18n.ts` 的 `zh-Hant`／`zh-Hans`／`en`／`ja`，元件用 `useI18n().t(...)`。
 
 ---
 

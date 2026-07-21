@@ -10,6 +10,7 @@ type Props = {
   busyHash: string | null;
   selected: Set<string>;
   selectionMode: boolean;
+  filterActive: boolean;
   onToggleSelect: (hash: string) => void;
   onPause: (hash: string) => void;
   onResume: (hash: string) => void;
@@ -23,6 +24,7 @@ export function TorrentList({
   busyHash,
   selected,
   selectionMode,
+  filterActive,
   onToggleSelect,
   onPause,
   onResume,
@@ -34,8 +36,10 @@ export function TorrentList({
   if (torrents.length === 0) {
     return (
       <div className="empty">
-        <p>{t("list.empty")}</p>
-        <p className="hint">{t("list.emptyHint")}</p>
+        <p>{filterActive ? t("list.emptyFiltered") : t("list.empty")}</p>
+        {filterActive ? null : (
+          <p className="hint">{t("list.emptyHint")}</p>
+        )}
       </div>
     );
   }

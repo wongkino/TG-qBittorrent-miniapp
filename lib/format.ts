@@ -1,5 +1,5 @@
 import {
-  resolveLocale,
+  DEFAULT_LOCALE,
   stateMessageKey,
   translate,
   type Locale,
@@ -49,9 +49,36 @@ export function isPausedState(state: string): boolean {
   return PAUSED_STATES.has(state);
 }
 
+export type StatusFilter = "all" | "downloading" | "paused" | "completed";
+
+export const STATUS_FILTERS: StatusFilter[] = [
+  "all",
+  "downloading",
+  "paused",
+  "completed",
+];
+
+export function matchesStatusFilter(
+  torrent: { state: string; progress: number },
+  filter: StatusFilter
+): boolean {
+  if (filter === "all") return true;
+  if (filter === "paused") return isPausedState(torrent.state);
+  if (filter === "completed") return torrent.progress >= 1;
+  return !isPausedState(torrent.state) && torrent.progress < 1;
+}
+
+export function filterTorrents<T extends { state: string; progress: number }>(
+  torrents: T[],
+  filter: StatusFilter
+): T[] {
+  if (filter === "all") return torrents;
+  return torrents.filter((torrent) => matchesStatusFilter(torrent, filter));
+}
+
 export function stateLabel(
   state: string,
-  locale: Locale = resolveLocale(null)
+  locale: Locale = DEFAULT_LOCALE
 ): string {
   const key = stateMessageKey(state);
   if (key) return translate(locale, key);

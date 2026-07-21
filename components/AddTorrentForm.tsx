@@ -3,6 +3,7 @@
 import { FormEvent, useState } from "react";
 import { CategorySelect } from "@/components/CategorySelect";
 import { useI18n } from "@/components/I18nProvider";
+import { AddIcon, PasteIcon } from "@/components/icons";
 
 type Props = {
   categories: string[];
@@ -12,7 +13,10 @@ type Props = {
 async function readClipboardText(clipboardFailed: string): Promise<string> {
   try {
     const { default: WebApp } = await import("@twa-dev/sdk");
-    if (typeof WebApp.readTextFromClipboard === "function") {
+    if (
+      typeof WebApp.readTextFromClipboard === "function" &&
+      WebApp.isVersionAtLeast("6.4")
+    ) {
       const text = await new Promise<string | null>((resolve) => {
         WebApp.readTextFromClipboard((value) => resolve(value ?? null));
       });
@@ -72,6 +76,8 @@ export function AddTorrentForm({ categories, onSubmit }: Props) {
   }
 
   const busy = submitting || pasting;
+  const submitLabel = submitting ? t("add.submitting") : t("add.submit");
+  const pasteLabel = pasting ? t("add.pasting") : t("add.paste");
 
   return (
     <form className="add-form" onSubmit={handleSubmit}>
@@ -81,11 +87,13 @@ export function AddTorrentForm({ categories, onSubmit }: Props) {
         </label>
         <button
           type="button"
-          className="btn btn--sm"
+          className="btn btn--icon btn--sm"
           disabled={busy}
+          aria-label={pasteLabel}
+          title={pasteLabel}
           onClick={() => void handlePaste()}
         >
-          {pasting ? t("add.pasting") : t("add.paste")}
+          <PasteIcon />
         </button>
       </div>
       <textarea
@@ -113,10 +121,12 @@ export function AddTorrentForm({ categories, onSubmit }: Props) {
       {error ? <p className="error">{error}</p> : null}
       <button
         type="submit"
-        className="btn btn--primary btn--block"
+        className="btn btn--icon btn--primary"
         disabled={busy || !value.trim()}
+        aria-label={submitLabel}
+        title={submitLabel}
       >
-        {submitting ? t("add.submitting") : t("add.submit")}
+        <AddIcon />
       </button>
     </form>
   );
