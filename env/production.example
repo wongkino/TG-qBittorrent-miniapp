@@ -9,7 +9,7 @@
 #                        GOOGLE_CLIENT_ID, QBITTORRENT_URL
 #   Worker Secrets     → synced by Deploy (all except CLOUDFLARE_*)
 #
-# See docs/DEPLOY.md and README env table.
+# See docs/reference/environment.md and docs/guides/deployment.md.
 
 QBITTORRENT_URL=https://your-qb.example.com
 QBITTORRENT_USERNAME=
