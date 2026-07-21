@@ -65,7 +65,6 @@ Bot／cron 可用 curl 打已部署端點（帶 secret）。
 
 ```bash
 GOOGLE_CLIENT_ID=你的-client-id.apps.googleusercontent.com
-NEXT_PUBLIC_GOOGLE_CLIENT_ID=你的-client-id.apps.googleusercontent.com
 ALLOWED_GOOGLE_EMAILS=you@gmail.com
 ```
 
@@ -75,7 +74,7 @@ npm run dev
 
 瀏覽器開 http://localhost:3000/webapp/ → Google 登入。
 
-正式環境：Deploy 時 GitHub Variable `GOOGLE_CLIENT_ID` 會注入 `NEXT_PUBLIC_GOOGLE_CLIENT_ID` 建置前端。
+正式環境：Deploy 時 GitHub Variable `GOOGLE_CLIENT_ID` 會用於 Worker 驗證與前端登入按鈕（無需另設 `NEXT_PUBLIC_*`）。
 
 ---
 

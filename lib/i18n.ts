@@ -24,7 +24,7 @@ const zhHant = {
   "webapp.hintBrowser":
     "使用 Google 帳號登入以存取 qBittorrent（需白名單 email）。",
   "webapp.signInFailed": "Google 登入失敗，請確認帳號是否在白名單內",
-  "webapp.missingClientId": "未設定 NEXT_PUBLIC_GOOGLE_CLIENT_ID，無法顯示登入按鈕",
+  "webapp.missingClientId": "未設定 GOOGLE_CLIENT_ID，無法顯示登入按鈕",
   "webapp.footer":
     "在 Safari 開啟 /webapp/ → 分享 → 加入主畫面，即可像 App 一樣全螢幕使用。",
 
@@ -188,7 +188,7 @@ const zhHans: Record<MessageKey, string> = {
   "webapp.hintBrowser":
     "使用 Google 账号登录以访问 qBittorrent（需白名单 email）。",
   "webapp.signInFailed": "Google 登录失败，请确认账号是否在白名单内",
-  "webapp.missingClientId": "未设置 NEXT_PUBLIC_GOOGLE_CLIENT_ID，无法显示登录按钮",
+  "webapp.missingClientId": "未设置 GOOGLE_CLIENT_ID，无法显示登录按钮",
   "webapp.footer":
     "在 Safari 打开 /webapp/ → 分享 → 加入主画面，即可像 App 一样全屏使用。",
 
@@ -354,7 +354,7 @@ const en: Record<MessageKey, string> = {
   "webapp.signInFailed":
     "Google sign-in failed. Check that your email is on the allow list.",
   "webapp.missingClientId":
-    "NEXT_PUBLIC_GOOGLE_CLIENT_ID is not set; the sign-in button cannot be shown.",
+    "GOOGLE_CLIENT_ID is not set; the sign-in button cannot be shown.",
   "webapp.footer":
     "In Safari, open /webapp/ → Share → Add to Home Screen for a full-screen app experience.",
 
@@ -524,7 +524,7 @@ const ja: Record<MessageKey, string> = {
   "webapp.signInFailed":
     "Google サインインに失敗しました。メールが許可リストにあるか確認してください。",
   "webapp.missingClientId":
-    "NEXT_PUBLIC_GOOGLE_CLIENT_ID が未設定のため、サインインボタンを表示できません。",
+    "GOOGLE_CLIENT_ID が未設定のため、サインインボタンを表示できません。",
   "webapp.footer":
     "Safari で /webapp/ を開き、共有 → ホーム画面に追加するとフルスクリーンで使えます。",
 

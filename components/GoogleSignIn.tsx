@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useI18n } from "@/components/I18nProvider";
+import { getGoogleClientId } from "@/lib/google-client-id";
 
 type Props = {
   standalone: boolean;
@@ -11,7 +12,7 @@ type Props = {
 export function GoogleSignIn({ standalone, onCredential }: Props) {
   const { t } = useI18n();
   const buttonRef = useRef<HTMLDivElement>(null);
-  const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID?.trim() || "";
+  const clientId = getGoogleClientId();
 
   useEffect(() => {
     if (!clientId || !buttonRef.current) return;

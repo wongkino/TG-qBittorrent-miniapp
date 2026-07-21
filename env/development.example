@@ -17,5 +17,4 @@ NEXT_PUBLIC_DEV_PREVIEW=1
 #
 # iOS Web App（Next.js /webapp/，Google OAuth）：
 # GOOGLE_CLIENT_ID=
-# NEXT_PUBLIC_GOOGLE_CLIENT_ID=   # 與 GOOGLE_CLIENT_ID 相同（Next 前端用）
 # ALLOWED_GOOGLE_EMAILS=you@gmail.com
