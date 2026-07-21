@@ -10,17 +10,5 @@
   },
   "observability": {
     "enabled": true
-  },
-  "triggers": {
-    // Notify window is 15 minutes; 5-minute cadence still catches start/complete.
-    "crons": ["*/5 * * * *"]
-  },
-  // Deploy workflow replaces PLACEHOLDER_USER_PREFS_KV_ID before wrangler deploy.
-  "kv_namespaces": [
-    {
-      "binding": "USER_PREFS",
-      "id": "PLACEHOLDER_USER_PREFS_KV_ID",
-      "preview_id": "PLACEHOLDER_USER_PREFS_KV_ID"
-    }
-  ]
+  }
 }

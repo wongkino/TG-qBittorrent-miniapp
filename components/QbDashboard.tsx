@@ -17,7 +17,6 @@ import {
   pauseTorrent,
   resumeTorrent,
   setTorrentCategory,
-  syncUserLocale,
 } from "@/lib/client-api";
 import type { ClientAuth } from "@/lib/client-auth";
 import { AuthSessionError } from "@/lib/client-auth";
@@ -74,12 +73,6 @@ export function QbDashboard({ auth, userName, onAuthExpired }: Props) {
   useEffect(() => {
     document.documentElement.lang = locale;
   }, [locale]);
-
-  useEffect(() => {
-    void syncUserLocale(auth, locale).catch(() => {
-      /* Bot sync is best-effort */
-    });
-  }, [auth, locale]);
 
   const visibleTorrents = useMemo(
     () =>

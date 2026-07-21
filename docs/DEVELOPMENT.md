@@ -24,7 +24,6 @@ npm run dev
 | `env/wrangler.development.example` → `.dev.vars` | **dev** | Wrangler preview |
 | `env/production.example` | **prod** 對照 | GitHub／Worker secrets（勿提交真值） |
 
-`APP_URL` 不必寫進本機 env。  
 `DEV_PREVIEW` 只在 `NODE_ENV=development` 生效。
 
 ---
@@ -47,13 +46,11 @@ npm run dev
 | 方式 | 說明 |
 |------|------|
 | **本機預覽**（改 UI） | `DEV_PREVIEW=1` + `NEXT_PUBLIC_DEV_PREVIEW=1` |
-| Deploy 後測真資料 | 開啟 `APP_URL`，Google 登入 |
+| Deploy 後測真資料 | 開啟 Workers URL，Google 登入 |
 | 真 qB 本機聯調 | 關掉 PREVIEW，填 `GOOGLE_CLIENT_ID`／`ALLOWED_GOOGLE_EMAILS` 與 qB |
-| 介面語系 | App 內 **EN／繁／简／日** 手動切換（localStorage + 同步 KV，Bot 共用） |
+| 介面語系 | App 內 **EN／繁／简／日** 手動切換（localStorage） |
 
-Bot／cron 可用 curl 打已部署端點（帶 secret）。
-
-Google OAuth 本機設定見 [`env/development.example`](../env/development.example)（`GOOGLE_CLIENT_ID`、`ALLOWED_GOOGLE_EMAILS`）。Authorized JavaScript origins 需包含 `http://localhost:3000` 與正式 Workers URL。
+Google OAuth 本機設定見 [`env/development.example`](../env/development.example)。Authorized JavaScript origins 需包含 `http://localhost:3000` 與正式 Workers URL。
 
 ---
 
@@ -65,12 +62,6 @@ Google OAuth 本機設定見 [`env/development.example`](../env/development.exam
 3. `lib/client-api.ts` 加 client  
 4. 接到 `components/*`；UI 字串加進 `lib/i18n.ts`（四語）
 
-### 新的 Bot 指令／按鈕
-改 `lib/bot-handler.ts` 與 `lib/i18n.ts` 的 `bot.*`；回覆附語系對應的 Reply Keyboard。語系由 Web App 同步到 KV（`lib/user-locale.ts`）。
-
-### 新的通知類型
-改 `lib/completions.ts`；新 tag 去重；確認 `worker.ts` scheduled。更新 [USER.md](USER.md)／[ARCHITECTURE.md](ARCHITECTURE.md)。
-
 ### 新的 UI 文案
 只改 `lib/i18n.ts` 的 `zh-Hant`／`zh-Hans`／`en`／`ja`，元件用 `useI18n().t(...)`。
 
@@ -81,7 +72,7 @@ Google OAuth 本機設定見 [`env/development.example`](../env/development.exam
 - 路徑別名：`@/` → 專案根
 - API 錯誤：`AuthError`／`QBitError` → `handleApiError`
 - 多 hash：`a|b|c`
-- 不要在 client 放 bot token 或 qB 密碼
+- 不要在 client 放 qB 密碼
 - qB 只經 `lib/qbittorrent.ts`
 - 預覽假資料：`lib/dev/preview.ts`
 
