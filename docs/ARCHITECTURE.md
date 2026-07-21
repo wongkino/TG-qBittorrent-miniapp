@@ -72,8 +72,6 @@ docs/                         # 使用者／部署／架構／開發
 
 **已移除：** Telegram Mini App、`@twa-dev/sdk`、`lib/telegram.ts`、內嵌瀏覽代理。
 
-`/webapp` 舊路徑由 `next.config.ts` 301 轉到 `/`（書籤相容）。
-
 ---
 
 ## 三條請求流
