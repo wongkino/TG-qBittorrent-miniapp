@@ -1,6 +1,6 @@
 # 部署指南（Deploy）
 
-架構概覽見 [ARCHITECTURE.md](ARCHITECTURE.md)。環境變數細節見 [env/README.md](../env/README.md)。
+架構見 [architecture/overview.md](../architecture/overview.md)。環境變數見 [reference/environment.md](../reference/environment.md)。
 
 ## 前置
 
@@ -27,7 +27,7 @@ Worker 名稱固定為 **`tg-dl`**（`wrangler.jsonc`）。
 ### 不要放進 Worker
 `CLOUDFLARE_*`（只給 Actions 用）
 
-完整對照表見 [README](../README.md#環境變數總表)、[`env/production.example`](../env/production.example)。
+完整對照表見 [reference/environment.md](../reference/environment.md)、[`env/production.example`](../../env/production.example)。
 
 ---
 

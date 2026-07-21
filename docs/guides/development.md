@@ -1,11 +1,11 @@
 # 開發指南（Development）
 
-架構與目錄說明見 [ARCHITECTURE.md](ARCHITECTURE.md)。
+架構與目錄見 [architecture/codebase.md](../architecture/codebase.md)。
 
 ## 環境
 
 - Node.js 22、npm
-- 環境變數範本：[`env/`](../env/)（[env/README.md](../env/README.md)）
+- 環境變數範本：`env/*.example`（[reference/environment.md](../reference/environment.md)）
 
 ```bash
 cp env/development.example .env.development.local
@@ -71,8 +71,9 @@ components/*                  ← lib/i18n.ts 四語字串
 
 ## 相關文件
 
-- [docs/README.md](README.md) — 文件索引
-- [ARCHITECTURE.md](ARCHITECTURE.md) — 目錄與分層
-- [DEPLOY.md](DEPLOY.md)
-- [USER.md](USER.md)
-- [../AGENTS.md](../AGENTS.md)
+- [docs/README.md](../README.md) — 文件索引
+- [architecture/codebase.md](../architecture/codebase.md)
+- [guides/deployment.md](deployment.md)
+- [guides/user.md](user.md)
+- [ai/tasks.md](../ai/tasks.md)
+- [AGENTS.md](../../AGENTS.md)

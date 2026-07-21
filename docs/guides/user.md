@@ -1,6 +1,6 @@
 # 使用手冊（User）
 
-部署與環境變數見 [DEPLOY.md](DEPLOY.md)。技術架構見 [ARCHITECTURE.md](ARCHITECTURE.md)。
+部署與環境變數見 [deployment.md](deployment.md)。技術架構見 [architecture/overview.md](../architecture/overview.md)。
 
 ## 第一次使用
 

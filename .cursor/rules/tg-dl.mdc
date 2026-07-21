@@ -1,13 +1,13 @@
 ---
-description: qBittorrent Web App 專案約束
+description: qBittorrent Web App — AI 約束與文件入口
 alwaysApply: true
 ---
 
-# tg-dl 專案規則
+# tg-dl
 
-- 回覆使用者使用繁體中文。
-- qBittorrent 只透過 `lib/qbittorrent.ts` 存取；注意 CSRF Origin/Referer 與 login/SID。
-- `/api/qb/*` 用 Google ID token（`Authorization: Bearer`）。
-- UI 字串走 `lib/i18n.ts`（四語）；語系／主題存 localStorage。
-- 環境變數範本在 `env/`；勿提交 `.env*`、`.dev.vars`。
-- 改動前先讀 `AGENTS.md` 與 `docs/ARCHITECTURE.md`。
+- 回覆使用者：**繁體中文**
+- **文件地圖**：`docs/README.md` · **AI 任務**：`docs/ai/tasks.md` · **約束**：`AGENTS.md`
+- qBittorrent **只**經 `lib/qbittorrent.ts`；`/api/qb/*` 用 `requireAuth`
+- UI 字串 → `lib/i18n.ts`（四語）；語系／主題 → `localStorage`
+- 勿提交 `.env*`、`.dev.vars`
+- 改動前讀 `docs/architecture/overview.md`
