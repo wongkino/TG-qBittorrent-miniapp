@@ -9,7 +9,9 @@ alwaysApply: true
 - `APP_URL`（Workers Mini App）≠ `QBITTORRENT_URL`（qBittorrent）。Worker runtime 不讀 `APP_URL`。
 - qBittorrent 只透過 `lib/qbittorrent.ts` 存取；注意 CSRF Origin/Referer 與 login／SID 行為。
 - `/api/qb/*` 用 Telegram initData；webhook 與 cron 共用 `CRON_SECRET`。
-- Mini App 不加 `.torrent` 檔；檔案上傳只走 Bot。
+- Mini App 不加 `.torrent` 檔；檔案上傳只走 Bot。無內嵌瀏覽代理。
+- Mini App UI 字串走 `lib/i18n.ts`（繁／簡／英）；主題走 `lib/theme.ts`。
+- 環境變數範本在 `env/`；勿提交 `.env*`／`.dev.vars`。
 - 通知去重 tags：`tg-started`、`tg-notified`（見 `lib/completions.ts`）；排程在 Cloudflare Cron（`worker.ts` / `wrangler.jsonc`）。
 - 不要用 `GITHUB_TOKEN` 自動寫 GitHub Actions Variables（`APP_URL` 需手動）。
 - 改動前先讀 `AGENTS.md` 與 `docs/ARCHITECTURE.md`。

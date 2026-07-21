@@ -380,7 +380,7 @@ const SIMPLIFIED_TAGS = new Set([
   "zh-sg",
 ]);
 
-/** Map Telegram `language_code` (e.g. zh-hans, zh-hant, en) to app locale. */
+/** Map Telegram / browser language tag to app locale. */
 export function resolveLocale(languageCode?: string | null): Locale {
   if (!languageCode?.trim()) return "zh-Hant";
   const code = languageCode.trim().toLowerCase().replace(/_/g, "-");
@@ -403,6 +403,63 @@ export function resolveLocale(languageCode?: string | null): Locale {
     return "zh-Hans";
   }
   return "en";
+}
+
+/** Optional override: `?lang=en` | `zh-Hans` | `zh-Hant` | `zh` | `zh-TW` … */
+export function languageCodeFromUrl(
+  search?: string | null
+): string | null {
+  if (typeof search !== "string" && typeof window !== "undefined") {
+    search = window.location.search;
+  }
+  if (!search) return null;
+  try {
+    const raw = new URLSearchParams(search).get("lang")?.trim();
+    if (!raw) return null;
+    // Accept locale ids or BCP-47 tags.
+    if (raw === "zh-Hant" || raw === "zh-Hans" || raw === "en") return raw;
+    return raw;
+  } catch {
+    return null;
+  }
+}
+
+export function languageCodeFromInitData(initData: string): string | null {
+  try {
+    const userRaw = new URLSearchParams(initData).get("user");
+    if (!userRaw) return null;
+    const user = JSON.parse(userRaw) as { language_code?: string };
+    return user.language_code?.trim() || null;
+  } catch {
+    return null;
+  }
+}
+
+export function browserLanguageCode(): string | null {
+  if (typeof navigator === "undefined") return null;
+  return navigator.languages?.[0] || navigator.language || null;
+}
+
+/**
+ * Prefer: URL ?lang= → Telegram user.language_code → initData user → browser.
+ */
+export function detectLanguageCode(input?: {
+  telegramLanguageCode?: string | null;
+  initData?: string | null;
+  search?: string | null;
+}): string {
+  const fromUrl = languageCodeFromUrl(input?.search);
+  if (fromUrl) return fromUrl;
+
+  const fromTg = input?.telegramLanguageCode?.trim();
+  if (fromTg) return fromTg;
+
+  if (input?.initData) {
+    const fromInit = languageCodeFromInitData(input.initData);
+    if (fromInit) return fromInit;
+  }
+
+  return browserLanguageCode() || "zh-Hant";
 }
 
 export function translate(

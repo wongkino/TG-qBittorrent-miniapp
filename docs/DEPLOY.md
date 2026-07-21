@@ -27,7 +27,7 @@ Worker 名稱固定為 **`tg-dl`**（`wrangler.jsonc`）。
 ### 不要放進 Worker
 `APP_URL`、`CLOUDFLARE_*`（只給 Actions 用）
 
-完整對照表見 [README](../README.md#環境變數總表) 與 [`env/production.example`](../env/production.example)。
+完整對照表見 [README](../README.md#環境變數總表)、[`env/production.example`](../env/production.example)。文件索引：[docs/README.md](README.md)。
 
 ---
 

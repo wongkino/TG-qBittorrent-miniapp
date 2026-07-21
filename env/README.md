@@ -1,5 +1,7 @@
 # 環境變數範本（dev / prod 分開）
 
+文件總索引：[docs/README.md](../docs/README.md)
+
 | 檔案 | 複製到 | 用途 |
 |------|--------|------|
 | [`development.example`](development.example) | `.env.development.local` | `npm run dev`（Next 本機） |

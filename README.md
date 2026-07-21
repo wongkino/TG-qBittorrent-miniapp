@@ -1,39 +1,38 @@
 # Telegram Mini App → qBittorrent
 
-個人專用 Telegram Bot + Mini App，經 **Cloudflare Workers**（OpenNext）代理連接 **qBittorrent Web API**。
+個人專用 Telegram Bot + Mini App，經 **Cloudflare Workers**（OpenNext）代理 **qBittorrent Web API**。
 
 | | |
 |--|--|
 | Worker | `tg-dl` |
 | 預設 URL | `https://tg-dl.<subdomain>.workers.dev` |
 | 認證 | Mini App `initData` + User ID 白名單 |
+| Mini App 語系 | 繁中／簡中／英文（跟 Telegram） |
 
 ---
 
-## 文件索引
+## 文件
 
-| 文件 | 對象 | 內容 |
-|------|------|------|
-| [docs/USER.md](docs/USER.md) | 使用者 | Mini App／Bot 操作、通知、常見問題 |
-| [docs/DEPLOY.md](docs/DEPLOY.md) | 管理員 | Secrets、Deploy 步驟、Workflow、驗證清單 |
-| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | 開發者 | 架構圖、請求流、模組、認證 |
-| [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) | 開發者 | 本機環境、scripts、擴充方式 |
-| [AGENTS.md](AGENTS.md) | AI／Cursor | 開發約束與必讀注意事項 |
+完整索引：[docs/README.md](docs/README.md)
 
-範例環境變數（dev／prod 分開）：
-
-- [`env/`](env/) — 說明與範本
-- [`env/development.example`](env/development.example) — 本機 `next dev`
-- [`env/production.example`](env/production.example) — 正式 secrets 對照
-- [`env/wrangler.development.example`](env/wrangler.development.example) — Wrangler preview
+| 文件 | 對象 |
+|------|------|
+| [docs/USER.md](docs/USER.md) | 使用者操作 |
+| [docs/DEPLOY.md](docs/DEPLOY.md) | 部署與 Secrets |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | 架構與模組 |
+| [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) | 本機開發 |
+| [env/README.md](env/README.md) | 環境變數範本 |
+| [AGENTS.md](AGENTS.md) | AI／Cursor 約束 |
 
 ---
 
 ## 功能速覽
 
-- **Mini App**：列表、排序、批次、加 magnet／URL、分類、**RSS 訂閱與加入下載**
-- **Bot**：狀態／列表／說明鍵盤、magnet、`.torrent` 檔、左側開啟 App
-- **通知**：下載開始（`tg-started`）、下載完成（`tg-notified`）；由 **Cloudflare Cron** 每 5 分鐘檢查
+- **Mini App**：下載列表、排序、批次、magnet／URL、分類、RSS、日間／夜間、三語
+- **Bot**：狀態／列表／說明、magnet、`.torrent`、開啟 App
+- **通知**：開始（`tg-started`）、完成（`tg-notified`）；Cloudflare Cron 每 5 分鐘
+
+**不含**內嵌網頁瀏覽代理。
 
 ---
 
@@ -47,11 +46,13 @@ npm install
 npm run dev
 ```
 
-### 上線（prod 摘要）
+→ http://localhost:3000（預設 UI 預覽模式）
 
-1. 設定 GitHub Secrets／Variables（見 [DEPLOY.md](docs/DEPLOY.md)、[`env/production.example`](env/production.example)）
-2. Deploy 一次 → 複製 Workers URL → 設 `APP_URL` → **再 Deploy 一次**
-3. 在 Telegram 開啟 Bot 測試
+### 上線（prod）
+
+1. 填 GitHub Secrets／Variables（[DEPLOY.md](docs/DEPLOY.md)、[`env/production.example`](env/production.example)）
+2. Deploy → 複製 Workers URL → 設 `APP_URL` → **再 Deploy 一次**
+3. Telegram 開啟 Bot 測試
 
 ---
 
@@ -71,12 +72,12 @@ npm run dev
 | `CLOUDFLARE_ACCOUNT_ID` | | | | ✅ | |
 | `NEXTJS_ENV` | | ✅ | | | |
 
-**`APP_URL`** = Mini App Workers URL（例如 `https://tg-dl.xxx.workers.dev`）  
-**`QBITTORRENT_URL`** = qBittorrent Web UI（例如 `https://dl.example.com`）  
+**`APP_URL`** = Mini App Workers URL  
+**`QBITTORRENT_URL`** = qBittorrent Web UI  
 兩者不同，勿填反。
 
 ---
 
 ## 授權與範圍
 
-僅供白名單內的 Telegram 使用者使用；請自行保管 Bot token、qB 帳密與 `CRON_SECRET`。
+僅供白名單內的 Telegram 使用者；請自行保管 Bot token、qB 帳密與 `CRON_SECRET`。

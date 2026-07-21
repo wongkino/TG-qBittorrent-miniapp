@@ -17,7 +17,11 @@ import {
   setTorrentCategory,
 } from "@/lib/client-api";
 import { DEV_PREVIEW_INIT_DATA } from "@/lib/dev/preview";
-import { resolveLocale, translate } from "@/lib/i18n";
+import {
+  detectLanguageCode,
+  resolveLocale,
+  translate,
+} from "@/lib/i18n";
 import {
   sortTorrents,
   torrentsEqual,
@@ -35,15 +39,11 @@ function errMessage(err: unknown, fallback: string) {
   return err instanceof Error ? err.message : fallback;
 }
 
-function browserLanguageCode(): string {
-  if (typeof navigator !== "undefined" && navigator.language) {
-    return navigator.language;
-  }
-  return "zh-Hant";
-}
-
 export function MiniApp() {
-  const [languageCode, setLanguageCode] = useState<string | null>(null);
+  const [languageCode, setLanguageCode] = useState<string | null>(() => {
+    if (typeof window === "undefined") return null;
+    return detectLanguageCode();
+  });
 
   return (
     <I18nProvider languageCode={languageCode}>
@@ -149,7 +149,7 @@ function MiniAppInner({
         const data = WebApp.initData;
         if (!data) {
           if (DEV_PREVIEW) {
-            const code = browserLanguageCode();
+            const code = detectLanguageCode();
             onLanguageCode(code);
             setInitData(DEV_PREVIEW_INIT_DATA);
             setUserName(
@@ -163,7 +163,11 @@ function MiniAppInner({
         }
 
         const user = WebApp.initDataUnsafe.user;
-        onLanguageCode(user?.language_code ?? null);
+        const code = detectLanguageCode({
+          telegramLanguageCode: user?.language_code,
+          initData: data,
+        });
+        onLanguageCode(code);
         setInitData(data);
         setUserName(
           user?.first_name || user?.username || (user ? String(user.id) : null)
@@ -173,7 +177,7 @@ function MiniAppInner({
         if (cancelled) return;
         if (DEV_PREVIEW) {
           try {
-            const code = browserLanguageCode();
+            const code = detectLanguageCode();
             onLanguageCode(code);
             setInitData(DEV_PREVIEW_INIT_DATA);
             setUserName(
