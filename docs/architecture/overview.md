@@ -88,8 +88,7 @@ Token 約 1 小時過期 → `AuthSessionError`（401）→ `WebApp` 清除 cred
 |----|-----|
 | 下載列表、排序、批次、magnet/URL | 本機 `.torrent` 上傳 |
 | RSS 訂閱管理 | 內嵌網頁瀏覽 |
-| 四語、日間／夜間 | Telegram Bot、推播通知 |
-| PWA／主畫面 | 多租戶 SaaS |
+| 四語、日間／夜間、PWA／主畫面 | 多租戶 SaaS |
 
 ---
 

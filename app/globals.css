@@ -6,15 +6,15 @@ html[data-theme="light"] {
   --bg-elevated: rgba(255, 255, 255, 0.82);
   --text-primary: #1d1d1f;
   --text-secondary: #86868b;
-  --accent: var(--tg-theme-button-color, #0071e3);
-  --accent-text: var(--tg-theme-button-text-color, #ffffff);
+  --accent: #0071e3;
+  --accent-text: #ffffff;
   --danger: #ff3b30;
   --border: rgba(0, 0, 0, 0.06);
   --shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
   --fill-tertiary: rgba(120, 120, 128, 0.12);
   --separator: rgba(60, 60, 67, 0.12);
 
-  /* App chrome — controlled by data-theme (not Telegram light bg) */
+  /* App chrome — controlled by data-theme */
   --bg: var(--bg-primary);
   --text: var(--text-primary);
   --hint: var(--text-secondary);
