@@ -1,6 +1,6 @@
 # 使用手冊（User）
 
-給實際使用 Web App 的人。部署與變數請看 [DEPLOY.md](DEPLOY.md)。
+部署與環境變數見 [DEPLOY.md](DEPLOY.md)。技術架構見 [ARCHITECTURE.md](ARCHITECTURE.md)。
 
 ## 第一次使用
 

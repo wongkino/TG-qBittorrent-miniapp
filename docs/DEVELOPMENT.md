@@ -1,30 +1,23 @@
 # 開發指南（Development）
 
+架構與目錄說明見 [ARCHITECTURE.md](ARCHITECTURE.md)。
+
 ## 環境
 
-- Node.js 22（CI 使用 22；本機建議相近）
-- npm
-
-環境變數 **dev／prod 分開**，範本在 [`env/`](../env/)（說明見 [`env/README.md`](../env/README.md)）。
+- Node.js 22、npm
+- 環境變數範本：[`env/`](../env/)（[env/README.md](../env/README.md)）
 
 ```bash
 cp env/development.example .env.development.local
-# 可選：Wrangler preview
-cp env/wrangler.development.example .dev.vars
-
 npm install
 npm run dev
 ```
 
-瀏覽器開 http://localhost:3000。預設 `DEV_PREVIEW` → 假種子／假 RSS，熱重載。
-
-| 檔案 | 環境 | 用途 |
+| 模式 | 設定 | 用途 |
 |------|------|------|
-| `env/development.example` → `.env.development.local` | **dev** | `next dev` |
-| `env/wrangler.development.example` → `.dev.vars` | **dev** | Wrangler preview |
-| `env/production.example` | **prod** 對照 | GitHub／Worker secrets（勿提交真值） |
-
-`DEV_PREVIEW` 只在 `NODE_ENV=development` 生效。
+| **UI 預覽**（預設） | `DEV_PREVIEW=1` | 假種子／假 RSS，不需 qB／Google |
+| **真機聯調** | 關閉 PREVIEW，填 qB + Google OAuth | 本機打真實 API |
+| **Wrangler preview** | `cp env/wrangler.development.example .dev.vars` | `npm run preview` |
 
 ---
 
@@ -32,57 +25,54 @@ npm run dev
 
 | 指令 | 說明 |
 |------|------|
-| `npm run dev:env` | 複製 development 範本到 `.env.development.local` |
-| `npm run dev` | Next 開發伺服器（Web App 於 `/`） |
-| `npm run build` / `start` | Next production build |
+| `npm run dev:env` | 複製 `env/development.example` → `.env.development.local` |
+| `npm run dev` | Next 開發伺服器（`/`） |
+| `npm run build` / `start` | Production build |
 | `npm run lint` | ESLint |
-| `npm run preview` | OpenNext build + Wrangler preview |
-| `npm run deploy` | OpenNext build + 部署 Workers（`--keep-vars`） |
+| `npm run preview` | OpenNext + Wrangler 本機 preview |
+| `npm run deploy` | 建置並部署 Cloudflare Workers |
 
 ---
 
-## 本機測 Web App
+## 新增 qBittorrent 功能
 
-| 方式 | 說明 |
-|------|------|
-| **本機預覽**（改 UI） | `DEV_PREVIEW=1` + `NEXT_PUBLIC_DEV_PREVIEW=1` |
-| Deploy 後測真資料 | 開啟 Workers URL，Google 登入 |
-| 真 qB 本機聯調 | 關掉 PREVIEW，填 `GOOGLE_CLIENT_ID`／`ALLOWED_GOOGLE_EMAILS` 與 qB |
-| 介面語系 | App 內 **EN／繁／简／日** 手動切換（localStorage） |
+```
+lib/qbittorrent.ts
+    ↓
+app/api/qb/<name>/route.ts    ← requireAuth, previewResponse
+    ↓
+lib/client-api.ts
+    ↓
+components/*                  ← lib/i18n.ts 四語字串
+```
 
-Google OAuth 本機設定見 [`env/development.example`](../env/development.example)。Authorized JavaScript origins 需包含 `http://localhost:3000` 與正式 Workers URL。
+### 範例檢查清單
 
----
-
-## 新增功能時怎麼接
-
-### 新的 qBittorrent 操作
-1. `lib/qbittorrent.ts` 加函式  
-2. `app/api/qb/<name>/route.ts`（`requireAuth`；preview 用 `previewResponse`）  
-3. `lib/client-api.ts` 加 client  
-4. 接到 `components/*`；UI 字串加進 `lib/i18n.ts`（四語）
-
-### 新的 UI 文案
-只改 `lib/i18n.ts` 的 `zh-Hant`／`zh-Hans`／`en`／`ja`，元件用 `useI18n().t(...)`。
+- [ ] `lib/qbittorrent.ts` 新函式
+- [ ] `app/api/qb/.../route.ts` 使用 `requireAuth` + `handleApiError`
+- [ ] `lib/dev/preview.ts` 假資料（若適用）
+- [ ] `lib/client-api.ts` client 函式
+- [ ] UI 元件 + `lib/i18n.ts`（zh-Hant／zh-Hans／en／ja）
 
 ---
 
 ## 程式慣例
 
-- 路徑別名：`@/` → 專案根
-- API 錯誤：`AuthError`／`QBitError` → `handleApiError`
-- 多 hash：`a|b|c`
-- 不要在 client 放 qB 密碼
-- qB 只經 `lib/qbittorrent.ts`
-- 預覽假資料：`lib/dev/preview.ts`
+| 項目 | 約定 |
+|------|------|
+| 路徑別名 | `@/` → 專案根 |
+| API 錯誤 | `AuthError`／`QBitError` → `handleApiError` |
+| 多 hash | `hash1\|hash2\|hash3` |
+| qB 存取 | 只經 `lib/qbittorrent.ts` |
+| 語系 | `useI18n().t("key")` |
+| 認證過期 | `AuthSessionError`（401）→ `WebApp` 重登 |
 
 ---
 
 ## 相關文件
 
-- [README.md](README.md) — 文件索引  
-- [ARCHITECTURE.md](ARCHITECTURE.md)  
-- [DEPLOY.md](DEPLOY.md)  
-- [USER.md](USER.md)  
-- [../env/README.md](../env/README.md)  
-- [../AGENTS.md](../AGENTS.md)  
+- [docs/README.md](README.md) — 文件索引
+- [ARCHITECTURE.md](ARCHITECTURE.md) — 目錄與分層
+- [DEPLOY.md](DEPLOY.md)
+- [USER.md](USER.md)
+- [../AGENTS.md](../AGENTS.md)

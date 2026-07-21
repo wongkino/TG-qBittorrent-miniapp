@@ -1,13 +1,13 @@
 ---
-description: TG-qBittorrent Web App 專案約束與常見陷阱
+description: qBittorrent Web App 專案約束
 alwaysApply: true
 ---
 
 # tg-dl 專案規則
 
 - 回覆使用者使用繁體中文。
-- qBittorrent 只透過 `lib/qbittorrent.ts` 存取；注意 CSRF Origin/Referer 與 login／SID 行為。
+- qBittorrent 只透過 `lib/qbittorrent.ts` 存取；注意 CSRF Origin/Referer 與 login/SID。
 - `/api/qb/*` 用 Google ID token（`Authorization: Bearer`）。
-- Web App 字串走 `lib/i18n.ts`（EN／繁／简／日）；主題走 `lib/theme.ts`。
-- 環境變數範本在 `env/`；勿提交 `.env*`／`.dev.vars`。
+- UI 字串走 `lib/i18n.ts`（四語）；語系／主題存 localStorage。
+- 環境變數範本在 `env/`；勿提交 `.env*`、`.dev.vars`。
 - 改動前先讀 `AGENTS.md` 與 `docs/ARCHITECTURE.md`。

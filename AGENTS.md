@@ -4,66 +4,65 @@
 
 ## 專案本質
 
-個人用 **Web App**，經 **Cloudflare Workers（OpenNext / Next.js App Router）** 代理 **qBittorrent Web API**。
+個人用 **qBittorrent Web App**（Google 登入、PWA），經 **Cloudflare Workers（OpenNext / Next.js App Router）** 代理 **qBittorrent Web API**。
 
-- Worker 名稱：`tg-dl`（`wrangler.jsonc`）
-- 預設公開 URL：`https://tg-dl.<subdomain>.workers.dev`
-- Web App UI：英／繁中／簡中／日文（App 內切換，見 `lib/i18n.ts`／`LanguageToggle`）
-- 語系：App 內切換（`lib/i18n.ts`／`LanguageToggle`，存 `localStorage`）
-- **不要**做成多租戶 SaaS；白名單制個人工具即可
+- Worker 名稱：`tg-dl`（`wrangler.jsonc`；歷史命名，與 Telegram 無關）
+- 預設 URL：`https://tg-dl.<subdomain>.workers.dev`
+- 語系：英／繁中／簡中／日；存 `localStorage`（`lib/i18n.ts`）
+- 白名單制個人工具；**不要**做成多租戶 SaaS
 
-## 程式碼邊界
+## 分層與邊界
 
-| 目錄／檔案 | 職責 |
-|------------|------|
-| `components/` | Web App UI（client） |
-| `app/api/qb/*` | Web App API；`Authorization: Bearer <Google ID token>` |
-| `app/api/qb/rss*` | RSS（代理 qB `/api/v2/rss/*`） |
-| `worker.ts` | OpenNext `fetch` 包裝 + Durable Object exports |
-| `lib/qbittorrent.ts` | **唯一**直接打 qBittorrent 的模組 |
-| `lib/auth.ts` / `lib/google-auth.ts` | Google OAuth 驗證（含 `DEV_PREVIEW`） |
-| `lib/google-session.ts` | 瀏覽器 credential 存取 |
-| `lib/client-api.ts` | 瀏覽器端打 `/api/qb/*` |
-| `lib/i18n.ts` | Web App 多語 |
-| `lib/theme.ts` | 日間／夜間 |
-| `lib/dev/preview.ts` | 本機預覽假資料（僅 development） |
-| `env/` | 環境變數範本（見 `env/README.md`） |
+```
+components/*  →  lib/client-api.ts  →  app/api/qb/*  →  lib/qbittorrent.ts  →  qB
+     ↑                    ↑                  ↑
+  lib/i18n.ts      lib/client-auth.ts   lib/auth.ts
+  lib/theme.ts     lib/google-session   lib/google-auth.ts
+```
 
-**不要**再加內嵌瀏覽代理；已移除。
+| 層 | 目錄／檔案 | 規則 |
+|----|------------|------|
+| UI | `components/` | Client only；字串走 `lib/i18n.ts` |
+| 前端 API | `lib/client-api.ts`、`lib/client-auth.ts` | 只打 `/api/qb/*` |
+| API Route | `app/api/qb/*/route.ts` | `requireAuth`；preview 用 `previewResponse` |
+| qB 代理 | `lib/qbittorrent.ts` | **唯一**直接打 qBittorrent |
+| 認證 | `lib/auth.ts`、`lib/google-auth.ts` | Server JWT 驗證 |
+| 開發 | `lib/dev/preview.ts` | 僅 `NODE_ENV=development` |
 
-## 認證規則（改 API 前必讀）
+完整目錄見 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)。
 
-1. `/api/qb/*` → `requireAuth` → 驗證 Google ID token + `ALLOWED_GOOGLE_EMAILS`
-2. `DEV_PREVIEW` 僅 development，且需 `DEV_PREVIEW=1` + `NEXT_PUBLIC_DEV_PREVIEW=1`
+## 認證
 
-## qBittorrent 實作注意
+1. `/api/qb/*` → `Authorization: Bearer <Google ID token>` + `ALLOWED_GOOGLE_EMAILS`
+2. 本機預覽 → `Bearer dev-preview`（`DEV_PREVIEW=1` + `NEXT_PUBLIC_DEV_PREVIEW=1`）
 
-- 請求需正確 `Origin`／`Referer`（見 `lib/qbittorrent.ts` CSRF）
-- Login 勿亂加 Basic Auth（會影響 SID）
-- Pause/Resume：先 v5 `stop`/`start`，再 fallback v4 `pause`/`resume`
+## qBittorrent 注意
 
-## 功能落點
+- 正確 `Origin`／`Referer`（CSRF）
+- Login 勿亂加 Basic Auth
+- Pause/Resume：先 `stop`/`start`，再 fallback `pause`/`resume`
 
-- Web App 分頁：**下載**／**RSS**
-- 語系：App 內切換並同步 KV；主題：App 內切換
+## 功能範圍
 
-## Deploy / CI 約束
+- 分頁：**下載**、**RSS**
+- 語系／主題：App 內切換，localStorage
+- 不加 `.torrent` 上傳、無內嵌瀏覽代理
+
+## Deploy
 
 - Secrets／Variables：[`docs/DEPLOY.md`](docs/DEPLOY.md)、`env/production.example`
-- Deploy 會 `wrangler secret bulk`
+- `npm run deploy` → `wrangler secret bulk`
 
 ## 變更風格
 
 - 回覆使用者用**繁體中文**
 - 只改任務相關檔案；不順手大重構
-- 不擅自 commit／push，除非使用者要求
-- 不提交 `.env*`、`.dev.vars`、真實 secrets；範本只放 `env/*.example`
-- 新增功能對齊分層（client-api ↔ route ↔ qbittorrent）；UI 字串走 `lib/i18n.ts`
+- 不提交 `.env*`、`.dev.vars`、真實 secrets
+- 新功能：`qbittorrent` → route → `client-api` → component + `i18n`（四語）
 
-## 建議閱讀順序
+## 建議閱讀
 
 1. [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
 2. [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md)
 3. [`env/README.md`](env/README.md)
-4. [`docs/DEPLOY.md`](docs/DEPLOY.md)
-5. `lib/qbittorrent.ts`、`lib/i18n.ts`
+4. `lib/qbittorrent.ts`、`components/QbDashboard.tsx`

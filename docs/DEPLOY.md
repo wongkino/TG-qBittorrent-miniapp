@@ -1,5 +1,7 @@
 # 部署指南（Deploy）
 
+架構概覽見 [ARCHITECTURE.md](ARCHITECTURE.md)。環境變數細節見 [env/README.md](../env/README.md)。
+
 ## 前置
 
 - 可從公網連線的 qBittorrent Web UI（建議 HTTPS）
