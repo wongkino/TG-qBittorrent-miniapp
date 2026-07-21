@@ -34,8 +34,10 @@ npm run dev
 | 指令 | 說明 |
 |------|------|
 | `npm run dev:env` | 複製 development 範本到 `.env.development.local` |
-| `npm run dev` | Next 開發伺服器（熱重載） |
-| `npm run build` / `start` | 本機 production build |
+| `npm run dev` | Next 開發伺服器（Telegram Mini App） |
+| `npm run dev:webapp` | Vite React 開發伺服器（iOS Web App，`/webapp/`） |
+| `npm run build:webapp` | 建置 React Web App 至 `public/webapp/` |
+| `npm run build` / `start` | 先建 webapp，再 Next production build |
 | `npm run lint` | ESLint |
 | `npm run preview` | OpenNext build + Wrangler preview |
 | `npm run deploy` | OpenNext build + 部署 Workers（`--keep-vars`） |
@@ -52,6 +54,24 @@ npm run dev
 | 介面語系 | App 內 **EN／繁／简／日** 手動切換（localStorage + 同步 KV，Bot 共用） |
 
 Bot／cron 可用 curl 打已部署端點（帶 secret）。
+
+---
+
+## 本機測 iOS Web App（React / Vite）
+
+`webapp/` 為獨立 **React + Vite** SPA，部署後路徑為 `{APP_URL}/webapp/`。
+
+```bash
+# 終端 1：Next API（需 WEB_APP_TOKEN 於 .dev.vars 或 .env）
+npm run dev
+
+# 終端 2：Vite 前端（API 代理至 :3000）
+npm run dev:webapp
+```
+
+瀏覽器開 http://localhost:5173/webapp/。可選在 `webapp/.env.local` 設 `VITE_WEB_APP_TOKEN=` 略過手動輸入權杖。
+
+正式環境：Safari 開 `{APP_URL}/webapp/` → 輸入 `WEB_APP_TOKEN` → 加入主畫面。
 
 ---
 

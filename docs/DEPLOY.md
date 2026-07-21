@@ -42,6 +42,7 @@ Worker 名稱固定為 **`tg-dl`**（`wrangler.jsonc`）。
 6. 確認 Workers → Triggers 有 cron `*/5 * * * *`
 7. （可選）BotFather → Configure Mini App → 同一 HTTPS URL
 8. 打開 Bot 測試；加一筆種子後等約 5 分鐘內看「下載開始」通知
+9. （可選）iOS Web App：Safari 開 `{APP_URL}/webapp/` → 輸入 `WEB_APP_TOKEN` → 加入主畫面
 
 ---
 

@@ -16,7 +16,7 @@ const zhHant = {
   "app.previewUser": "本機預覽",
   "app.previewInitFailed": "本機預覽初始化失敗",
   "app.noInitData":
-    "無法取得 Telegram initData。請從 Telegram Bot 內開啟，或使用 iOS 主畫面 Web App 存取權杖。",
+    "無法取得 Telegram initData。請從 Telegram Bot 內開啟此 Mini App，或使用 /webapp/ 的 iOS Web App。",
 
   "webapp.title": "iOS Web App",
   "webapp.hintStandalone":
@@ -30,7 +30,7 @@ const zhHant = {
   "webapp.unlockFailed": "連線失敗，請確認權杖是否正確",
   "webapp.user": "Web App",
   "webapp.footer":
-    "在 Safari 分享 → 加入主畫面後，即可像 App 一樣全螢幕使用。",
+    "在 Safari 開啟 /webapp/ → 分享 → 加入主畫面，即可像 App 一樣全螢幕使用。",
 
   "theme.toLight": "日間",
   "theme.toDark": "夜間",
@@ -184,7 +184,7 @@ const zhHans: Record<MessageKey, string> = {
   "app.previewUser": "本地预览",
   "app.previewInitFailed": "本地预览初始化失败",
   "app.noInitData":
-    "无法取得 Telegram initData。请从 Telegram Bot 内打开，或使用 iOS 主画面 Web App 访问令牌。",
+    "无法取得 Telegram initData。请从 Telegram Bot 内打开此 Mini App，或使用 /webapp/ 的 iOS Web App。",
 
   "webapp.title": "iOS Web App",
   "webapp.hintStandalone":
@@ -198,7 +198,7 @@ const zhHans: Record<MessageKey, string> = {
   "webapp.unlockFailed": "连接失败，请确认令牌是否正确",
   "webapp.user": "Web App",
   "webapp.footer":
-    "在 Safari 分享 → 加入主画面后，即可像 App 一样全屏使用。",
+    "在 Safari 打开 /webapp/ → 分享 → 加入主画面，即可像 App 一样全屏使用。",
 
   "theme.toLight": "日间",
   "theme.toDark": "夜间",
@@ -352,7 +352,7 @@ const en: Record<MessageKey, string> = {
   "app.previewUser": "Local preview",
   "app.previewInitFailed": "Local preview failed to start",
   "app.noInitData":
-    "Missing Telegram initData. Open from the Telegram Bot, or use the iOS home screen Web App access token.",
+    "Missing Telegram initData. Open this Mini App from the Telegram Bot, or use the iOS Web App at /webapp/.",
 
   "webapp.title": "iOS Web App",
   "webapp.hintStandalone":
@@ -366,7 +366,7 @@ const en: Record<MessageKey, string> = {
   "webapp.unlockFailed": "Connection failed. Check your token.",
   "webapp.user": "Web App",
   "webapp.footer":
-    "In Safari: Share → Add to Home Screen for a full-screen app experience.",
+    "In Safari, open /webapp/ → Share → Add to Home Screen for a full-screen app experience.",
 
   "theme.toLight": "Light",
   "theme.toDark": "Dark",
@@ -524,7 +524,7 @@ const ja: Record<MessageKey, string> = {
   "app.previewUser": "ローカルプレビュー",
   "app.previewInitFailed": "ローカルプレビューの初期化に失敗しました",
   "app.noInitData":
-    "Telegram initData を取得できません。Telegram Bot から開くか、iOS ホーム画面 Web App のアクセストークンを使用してください。",
+    "Telegram initData を取得できません。Telegram Bot から Mini App を開くか、/webapp/ の iOS Web App を使用してください。",
 
   "webapp.title": "iOS Web App",
   "webapp.hintStandalone":
@@ -538,7 +538,7 @@ const ja: Record<MessageKey, string> = {
   "webapp.unlockFailed": "接続に失敗しました。トークンを確認してください。",
   "webapp.user": "Web App",
   "webapp.footer":
-    "Safari で共有 → ホーム画面に追加すると、フルスクリーンで使えます。",
+    "Safari で /webapp/ を開き、共有 → ホーム画面に追加するとフルスクリーンで使えます。",
 
   "theme.toLight": "ライト",
   "theme.toDark": "ダーク",

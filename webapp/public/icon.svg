@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="qBittorrent">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0a84ff" />
+      <stop offset="100%" stop-color="#0056d6" />
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)" />
+  <rect
+    x="146"
+    y="146"
+    width="220"
+    height="220"
+    rx="56"
+    fill="rgba(255,255,255,0.16)"
+    stroke="rgba(255,255,255,0.35)"
+    stroke-width="8"
+  />
+  <path d="M256 198 L324 302 H188 Z" fill="#ffffff" />
+</svg>
