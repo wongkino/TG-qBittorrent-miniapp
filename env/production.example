@@ -2,28 +2,22 @@
 # Do NOT commit real values. Do NOT enable DEV_PREVIEW here.
 #
 # Placement:
-#   GitHub Secrets     → TELEGRAM_BOT_TOKEN, QBITTORRENT_USERNAME,
-#                        QBITTORRENT_PASSWORD, CRON_SECRET,
+#   GitHub Secrets     → QBITTORRENT_USERNAME,
+#                        QBITTORRENT_PASSWORD,
 #                        CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID
-#   GitHub Variables   → ALLOWED_TELEGRAM_USER_IDS, ALLOWED_GOOGLE_EMAILS,
-#                        GOOGLE_CLIENT_ID, QBITTORRENT_URL, APP_URL
-#   Worker Secrets     → synced by Deploy (all except APP_URL / CLOUDFLARE_*)
+#   GitHub Variables   → ALLOWED_GOOGLE_EMAILS,
+#                        GOOGLE_CLIENT_ID, QBITTORRENT_URL
+#   Worker Secrets     → synced by Deploy (all except CLOUDFLARE_*)
 #
 # See docs/DEPLOY.md and README env table.
 
-TELEGRAM_BOT_TOKEN=
-ALLOWED_TELEGRAM_USER_IDS=
 QBITTORRENT_URL=https://your-qb.example.com
 QBITTORRENT_USERNAME=
 QBITTORRENT_PASSWORD=
-CRON_SECRET=
 
 # Web App — Google OAuth (Worker + browser sign-in; client id is public).
 GOOGLE_CLIENT_ID=
 ALLOWED_GOOGLE_EMAILS=you@gmail.com
-
-# GitHub Actions Variable only (webhook / Menu Button). Not a Worker secret.
-APP_URL=https://tg-dl.your-subdomain.workers.dev
 
 # GitHub Secrets only (Actions deploy), not Worker runtime:
 # CLOUDFLARE_API_TOKEN=

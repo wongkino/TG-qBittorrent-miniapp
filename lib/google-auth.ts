@@ -11,7 +11,7 @@ export type GoogleIdentity = {
   sub: string;
 };
 
-/** Stable numeric id for locale KV (Telegram user ids are also numeric). */
+/** Stable numeric id for locale KV. */
 export function googleSubToUserId(sub: string): number {
   let hash = 2166136261;
   for (let i = 0; i < sub.length; i++) {

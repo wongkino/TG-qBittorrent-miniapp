@@ -3,50 +3,45 @@
 ## 前置
 
 - 可從公網連線的 qBittorrent Web UI（建議 HTTPS）
-- Telegram Bot token（[@BotFather](https://t.me/BotFather)）
 - Cloudflare 帳號（Workers）
 - 本 repo 的 GitHub Actions 權限
-- 你的 Telegram User ID（白名單）
+- Google OAuth Client ID 與白名單 email
 
-Worker 名稱固定為 **`tg-dl`**（`wrangler.jsonc`）。  
-通知排程由 **Cloudflare Cron**（`*/5 * * * *`）執行，**不是** GitHub Actions。
+Worker 名稱固定為 **`tg-dl`**（`wrangler.jsonc`）。
 
 ---
 
 ## 變數放哪裡
 
 ### GitHub Secrets
-`CLOUDFLARE_API_TOKEN`、`CLOUDFLARE_ACCOUNT_ID`、`TELEGRAM_BOT_TOKEN`、`QBITTORRENT_USERNAME`、`QBITTORRENT_PASSWORD`、`CRON_SECRET`
+`CLOUDFLARE_API_TOKEN`、`CLOUDFLARE_ACCOUNT_ID`、`QBITTORRENT_USERNAME`、`QBITTORRENT_PASSWORD`
 
 ### GitHub Variables
-`ALLOWED_TELEGRAM_USER_IDS`、`ALLOWED_GOOGLE_EMAILS`、`GOOGLE_CLIENT_ID`、`QBITTORRENT_URL`、`APP_URL`
+`ALLOWED_GOOGLE_EMAILS`、`GOOGLE_CLIENT_ID`、`QBITTORRENT_URL`
 
 ### 同步進 Cloudflare Worker Secrets（Deploy 自動）
-`TELEGRAM_BOT_TOKEN`、`ALLOWED_TELEGRAM_USER_IDS`、`QBITTORRENT_URL`、`QBITTORRENT_USERNAME`、`QBITTORRENT_PASSWORD`、`CRON_SECRET`、（若已設定）`GOOGLE_CLIENT_ID`、`ALLOWED_GOOGLE_EMAILS`
+`QBITTORRENT_URL`、`QBITTORRENT_USERNAME`、`QBITTORRENT_PASSWORD`、（若已設定）`GOOGLE_CLIENT_ID`、`ALLOWED_GOOGLE_EMAILS`
 
 ### 不要放進 Worker
-`APP_URL`、`CLOUDFLARE_*`（只給 Actions 用）
+`CLOUDFLARE_*`（只給 Actions 用）
 
-完整對照表見 [README](../README.md#環境變數總表)、[`env/production.example`](../env/production.example)。文件索引：[docs/README.md](README.md)。
+完整對照表見 [README](../README.md#環境變數總表)、[`env/production.example`](../env/production.example)。
 
 ---
 
 ## 建議上線步驟
 
-1. 在 GitHub 填好 **Secrets** 與 Variables（可先不填 `APP_URL`）
+1. 在 GitHub 填好 **Secrets** 與 **Variables**
 2. Push `main` 或手動跑 **Deploy to Cloudflare Workers**
-3. Cloudflare Dashboard → Workers → `tg-dl` → 複製網址  
-   例如 `https://tg-dl.xxxx.workers.dev`
-4. 設 GitHub Variable **`APP_URL`**（不要尾隨 `/`）
-5. **再跑一次 Deploy**（寫入 webhook + Menu Button）
-6. 確認 Workers → Triggers 有 cron `*/5 * * * *`
-7. 打開 Bot 測試；加一筆種子後等約 5 分鐘內看「下載開始」通知
-8. Web App：設定 `GOOGLE_CLIENT_ID` 與 `ALLOWED_GOOGLE_EMAILS` → 開 `{APP_URL}` → Google 登入
-9. （可選）Safari：**分享 → 加入主畫面**，可全螢幕使用
+3. Cloudflare Dashboard → Workers → `tg-dl` → 複製網址
+4. 開啟 Workers URL → Google 登入測試
+5. （可選）Safari：**分享 → 加入主畫面**
+
+Google Cloud Console 的 Authorized JavaScript origins 需包含 Workers URL 與本機 `http://localhost:3000`。
 
 ---
 
-## Workflows
+## Workflow
 
 ### Deploy — `.github/workflows/deploy-cloudflare.yml`
 
@@ -56,42 +51,14 @@ Worker 名稱固定為 **`tg-dl`**（`wrangler.jsonc`）。
 
 1. `npm ci`
 2. 確保／建立 KV `tg-dl-user-prefs`，寫入 `wrangler.jsonc` 的 `USER_PREFS`
-3. `npm run deploy`（OpenNext build + wrangler deploy；含 Cron Trigger）
+3. `npm run deploy`（OpenNext build + wrangler deploy）
 4. `wrangler secret bulk` 同步 runtime secrets
-5. `setWebhook` → `{APP_URL}/api/telegram/webhook`（`secret_token` = `CRON_SECRET`）
-6. `setChatMenuButton` → web_app「開啟 App」→ `APP_URL`
-
-### 通知 — Cloudflare Cron（非 GitHub Actions）
-
-設定在 `wrangler.jsonc`：
-
-```jsonc
-"triggers": { "crons": ["*/5 * * * *"] }
-```
-
-執行：`worker.ts` → `scheduled()` → 內部 `POST /api/cron/completions`。
-
-手動測試（已部署後）：
-
-```bash
-curl -X POST "$APP_URL/api/cron/completions" \
-  -H "Authorization: Bearer $CRON_SECRET" \
-  -H "Content-Type: application/json" \
-  -d '{}'
-```
-
-本機（需先 build／preview）：
-
-```bash
-npx wrangler dev --test-scheduled
-curl "http://localhost:8787/__scheduled?cron=*/2+*+*+*+*"
-```
 
 ---
 
 ## Cloudflare API Token 權限（參考）
 
-需能部署 Workers、管理 secrets、設定 Cron Triggers。
+需能部署 Workers、管理 secrets、KV。
 
 ---
 
@@ -103,20 +70,14 @@ npm install
 npm run deploy
 ```
 
-仍需自行呼叫 Telegram `setWebhook`／`setChatMenuButton`，或依賴 GitHub Deploy job。
-
 ---
 
 ## 驗證清單
 
 - [ ] Workers 網址可開
-- [ ] `APP_URL` Variable = 該網址
-- [ ] Bot 左側有「開啟 App」
-- [ ] Reply Keyboard 有三鍵
-- [ ] Web App 能 Google 登入並列出種子
-- [ ] Bot 能加 magnet
-- [ ] Cloudflare Worker 有 Cron `*/5 * * * *`
-- [ ] 手動 `POST /api/cron/completions` 回 200（或等自動通知）
+- [ ] Google 登入成功
+- [ ] Web App 能列出種子
+- [ ] 能加 magnet／URL
 
 ---
 
@@ -124,10 +85,6 @@ npm run deploy
 
 | 現象 | 檢查 |
 |------|------|
-| Webhook 無效 | `APP_URL`、是否二次 Deploy、`CRON_SECRET` 一致 |
-| `gh variable set` 403 | 預期；改手動設 Variable |
 | qB 502／登入失敗 | `QBITTORRENT_URL`、帳密、公網、CSRF |
-| 通知全無 | Worker Cron 是否啟用、`CRON_SECRET`、白名單、15 分鐘視窗、Workers 日誌 |
-| Menu Button 沒出現 | 二次 Deploy；確認 `APP_URL` 正確 |
-
-**切記：** `APP_URL` ≠ `QBITTORRENT_URL`。
+| Google 登入失敗 | `GOOGLE_CLIENT_ID`、`ALLOWED_GOOGLE_EMAILS`、Authorized origins |
+| 登入按鈕沒出現 | 建置時是否注入 `GOOGLE_CLIENT_ID`（Deploy env） |

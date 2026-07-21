@@ -77,7 +77,7 @@ export function QbDashboard({ auth, userName, onAuthExpired }: Props) {
 
   useEffect(() => {
     void syncUserLocale(auth, locale).catch(() => {
-      /* Bot sync is best-effort */
+      /* KV sync is best-effort */
     });
   }, [auth, locale]);
 

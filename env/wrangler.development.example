@@ -1,12 +1,8 @@
 # Wrangler / OpenNext local preview (`cp env/wrangler.development.example .dev.vars`)
-# Development-oriented; APP_URL is NOT needed here (GitHub Variable only).
 NEXTJS_ENV=development
-TELEGRAM_BOT_TOKEN=
-ALLOWED_TELEGRAM_USER_IDS=123456789
 QBITTORRENT_URL=https://your-qb.example.com
 QBITTORRENT_USERNAME=
 QBITTORRENT_PASSWORD=
-CRON_SECRET=
 # Optional — Google OAuth for Web App API:
 # GOOGLE_CLIENT_ID=
 # ALLOWED_GOOGLE_EMAILS=you@gmail.com
