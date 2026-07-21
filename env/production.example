@@ -19,8 +19,9 @@ QBITTORRENT_PASSWORD=
 CRON_SECRET=
 
 # iOS Web App — Google OAuth (Worker verifies ID token; email must be whitelisted).
-# GOOGLE_CLIENT_ID is also a GitHub Variable for Vite build → VITE_GOOGLE_CLIENT_ID.
+# GOOGLE_CLIENT_ID is also injected at build as NEXT_PUBLIC_GOOGLE_CLIENT_ID.
 GOOGLE_CLIENT_ID=
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=
 ALLOWED_GOOGLE_EMAILS=you@gmail.com
 
 # GitHub Actions Variable only (webhook / Menu Button). Not a Worker secret.

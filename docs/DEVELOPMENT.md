@@ -34,10 +34,8 @@ npm run dev
 | 指令 | 說明 |
 |------|------|
 | `npm run dev:env` | 複製 development 範本到 `.env.development.local` |
-| `npm run dev` | Next 開發伺服器（Telegram Mini App） |
-| `npm run dev:webapp` | Vite React 開發伺服器（iOS Web App，`/webapp/`） |
-| `npm run build:webapp` | 建置 React Web App 至 `public/webapp/` |
-| `npm run build` / `start` | 先建 webapp，再 Next production build |
+| `npm run dev` | Next 開發伺服器（`/` Mini App、`/webapp/` iOS Web App） |
+| `npm run build` / `start` | Next production build |
 | `npm run lint` | ESLint |
 | `npm run preview` | OpenNext build + Wrangler preview |
 | `npm run deploy` | OpenNext build + 部署 Workers（`--keep-vars`） |
@@ -57,36 +55,27 @@ Bot／cron 可用 curl 打已部署端點（帶 secret）。
 
 ---
 
-## 本機測 iOS Web App（React / Vite + Google OAuth）
+## 本機測 iOS Web App（Next.js React + Google OAuth）
 
-`webapp/` 為獨立 **React + Vite** SPA，部署後路徑為 `{APP_URL}/webapp/`。登入使用 **Google OAuth**（email 須在 `ALLOWED_GOOGLE_EMAILS` 白名單）。
+路徑 `{APP_URL}/webapp/`（與 Mini App 同一個 Next.js app）。登入使用 **Google OAuth**（email 須在 `ALLOWED_GOOGLE_EMAILS` 白名單）。
 
 1. [Google Cloud Console](https://console.cloud.google.com/) 建立 OAuth Web client  
-   - Authorized JavaScript origins：`http://localhost:5173`、`https://你的-workers-url`
+   - Authorized JavaScript origins：`http://localhost:3000`、`https://你的-workers-url`
 2. 本機 `.env.development.local` / `.dev.vars`：
 
 ```bash
 GOOGLE_CLIENT_ID=你的-client-id.apps.googleusercontent.com
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=你的-client-id.apps.googleusercontent.com
 ALLOWED_GOOGLE_EMAILS=you@gmail.com
 ```
 
-3. `webapp/.env.local`（Vite 用，與上面同一個 Client ID）：
-
 ```bash
-VITE_GOOGLE_CLIENT_ID=你的-client-id.apps.googleusercontent.com
-```
-
-```bash
-# 終端 1：Next API
 npm run dev
-
-# 終端 2：Vite 前端（API 代理至 :3000）
-npm run dev:webapp
 ```
 
-瀏覽器開 http://localhost:5173/webapp/ → Google 登入。
+瀏覽器開 http://localhost:3000/webapp/ → Google 登入。
 
-正式環境：Deploy 時 GitHub Variable `GOOGLE_CLIENT_ID` 會注入 `VITE_GOOGLE_CLIENT_ID` 建置 webapp。
+正式環境：Deploy 時 GitHub Variable `GOOGLE_CLIENT_ID` 會注入 `NEXT_PUBLIC_GOOGLE_CLIENT_ID` 建置前端。
 
 ---
 

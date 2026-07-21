@@ -15,6 +15,7 @@ NEXT_PUBLIC_DEV_PREVIEW=1
 # QBITTORRENT_PASSWORD=
 # CRON_SECRET=
 #
-# iOS Web App (webapp/ — Vite + React, deploy path {APP_URL}/webapp/):
-# GOOGLE_CLIENT_ID=          # same value in webapp/.env.local as VITE_GOOGLE_CLIENT_ID
+# iOS Web App（Next.js /webapp/，Google OAuth）：
+# GOOGLE_CLIENT_ID=
+# NEXT_PUBLIC_GOOGLE_CLIENT_ID=   # 與 GOOGLE_CLIENT_ID 相同（Next 前端用）
 # ALLOWED_GOOGLE_EMAILS=you@gmail.com

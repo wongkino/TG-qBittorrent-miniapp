@@ -1,4 +1,7 @@
+"use client";
+
 import { useCallback, useEffect, useState } from "react";
+import { GoogleSignIn } from "@/components/GoogleSignIn";
 import { I18nProvider, useI18n } from "@/components/I18nProvider";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { QbDashboard } from "@/components/QbDashboard";
@@ -12,7 +15,6 @@ import {
   readEmailFromIdToken,
   storeGoogleCredential,
 } from "@/lib/webapp";
-import { GoogleSignIn } from "./GoogleSignIn";
 
 function errMessage(err: unknown, fallback: string) {
   return err instanceof Error ? err.message : fallback;
@@ -27,15 +29,15 @@ function HeaderTools() {
   );
 }
 
-export function App() {
+export function WebApp() {
   return (
     <I18nProvider>
-      <WebAppRoot />
+      <WebAppInner />
     </I18nProvider>
   );
 }
 
-function WebAppRoot() {
+function WebAppInner() {
   const { t } = useI18n();
   const [auth, setAuth] = useState<ClientAuth | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);

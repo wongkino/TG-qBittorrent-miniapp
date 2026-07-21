@@ -4,10 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "dev:webapp": "vite --config webapp/vite.config.ts",
     "dev:env": "cp env/development.example .env.development.local",
-    "build:webapp": "vite build --config webapp/vite.config.ts",
-    "build": "npm run build:webapp && next build",
+    "build": "next build",
     "start": "next start",
     "lint": "eslint",
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
@@ -25,11 +23,9 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@vitejs/plugin-react": "^4.7.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.10",
     "typescript": "^5",
-    "vite": "^6.4.1",
     "wrangler": "^4.112.0"
   }
 }
