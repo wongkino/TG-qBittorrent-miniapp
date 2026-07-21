@@ -9,7 +9,7 @@
 - Worker 名稱：`tg-dl`（`wrangler.jsonc`）
 - 預設公開 URL：`https://tg-dl.<subdomain>.workers.dev`
 - Web App UI：英／繁中／簡中／日文（App 內切換，見 `lib/i18n.ts`／`LanguageToggle`）
-- 語系偏好同步 KV（`USER_PREFS`，見 `lib/user-locale.ts`）
+- 語系：App 內切換（`lib/i18n.ts`／`LanguageToggle`，存 `localStorage`）
 - **不要**做成多租戶 SaaS；白名單制個人工具即可
 
 ## 程式碼邊界
@@ -17,7 +17,7 @@
 | 目錄／檔案 | 職責 |
 |------------|------|
 | `components/` | Web App UI（client） |
-| `app/api/qb/*` | Web App API；`Authorization: Bearer <Google ID token>`（含 `/api/qb/locale`） |
+| `app/api/qb/*` | Web App API；`Authorization: Bearer <Google ID token>` |
 | `app/api/qb/rss*` | RSS（代理 qB `/api/v2/rss/*`） |
 | `worker.ts` | OpenNext `fetch` 包裝 + Durable Object exports |
 | `lib/qbittorrent.ts` | **唯一**直接打 qBittorrent 的模組 |
@@ -25,7 +25,6 @@
 | `lib/google-session.ts` | 瀏覽器 credential 存取 |
 | `lib/client-api.ts` | 瀏覽器端打 `/api/qb/*` |
 | `lib/i18n.ts` | Web App 多語 |
-| `lib/user-locale.ts` | 使用者語系（KV） |
 | `lib/theme.ts` | 日間／夜間 |
 | `lib/dev/preview.ts` | 本機預覽假資料（僅 development） |
 | `env/` | 環境變數範本（見 `env/README.md`） |

@@ -10,13 +10,5 @@
   },
   "observability": {
     "enabled": true
-  },
-  // Deploy workflow replaces PLACEHOLDER_USER_PREFS_KV_ID before wrangler deploy.
-  "kv_namespaces": [
-    {
-      "binding": "USER_PREFS",
-      "id": "PLACEHOLDER_USER_PREFS_KV_ID",
-      "preview_id": "PLACEHOLDER_USER_PREFS_KV_ID"
-    }
-  ]
+  }
 }

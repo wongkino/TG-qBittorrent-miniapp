@@ -50,15 +50,14 @@ Google Cloud Console 的 Authorized JavaScript origins 需包含 Workers URL 與
 步驟：
 
 1. `npm ci`
-2. 確保／建立 KV `tg-dl-user-prefs`，寫入 `wrangler.jsonc` 的 `USER_PREFS`
-3. `npm run deploy`（OpenNext build + wrangler deploy）
-4. `wrangler secret bulk` 同步 runtime secrets
+2. `npm run deploy`（OpenNext build + wrangler deploy）
+3. `wrangler secret bulk` 同步 runtime secrets
 
 ---
 
 ## Cloudflare API Token 權限（參考）
 
-需能部署 Workers、管理 secrets、KV。
+需能部署 Workers、管理 secrets。
 
 ---
 

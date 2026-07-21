@@ -51,7 +51,7 @@ lib/
   auth.ts / google-auth.ts
   google-session.ts
   client-api.ts
-  api.ts / env.ts / i18n.ts / theme.ts / user-locale.ts
+  api.ts / env.ts / i18n.ts / theme.ts
   dev/preview.ts
 public/
   manifest.webmanifest
@@ -72,7 +72,6 @@ docs/
 |--------|-------|------------|
 | `fetchSnapshot` | `GET /api/qb/snapshot` | torrents + categories |
 | `fetchTorrents` | `GET /api/qb/torrents` | `GET /api/v2/torrents/info` |
-| `fetchCategories` | `GET /api/qb/categories` | `GET /api/v2/torrents/categories` |
 | `addTorrentUrl` | `POST /api/qb/add` | `POST /api/v2/torrents/add` |
 | `pauseTorrent` | `POST /api/qb/pause` | `stop` → `pause` |
 | `resumeTorrent` | `POST /api/qb/resume` | `start` → `resume` |
@@ -86,7 +85,7 @@ docs/
 
 多 hash 以 `|` 串接。下載分頁約每 4 秒輪詢（頁面隱藏時跳過）；開機／手動重整／加種後用 `snapshot`。
 
-語系：App 內手動切換（`LanguageToggle`，存 `localStorage`）；切換後同步到 Worker KV（`USER_PREFS`）。見 `lib/i18n.ts`、`lib/user-locale.ts`。
+語系：App 內手動切換（`LanguageToggle`，存 `localStorage`）。見 `lib/i18n.ts`。
 
 主題：`data-theme=light|dark`（`lib/theme.ts`），預設夜間，可切換並存 localStorage。
 

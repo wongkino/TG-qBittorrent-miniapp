@@ -8,6 +8,6 @@ alwaysApply: true
 - 回覆使用者使用繁體中文。
 - qBittorrent 只透過 `lib/qbittorrent.ts` 存取；注意 CSRF Origin/Referer 與 login／SID 行為。
 - `/api/qb/*` 用 Google ID token（`Authorization: Bearer`）。
-- Web App 字串走 `lib/i18n.ts`（EN／繁／简／日）；App 切換後同步 KV（`USER_PREFS`／`lib/user-locale.ts`）；主題走 `lib/theme.ts`。
+- Web App 字串走 `lib/i18n.ts`（EN／繁／简／日）；主題走 `lib/theme.ts`。
 - 環境變數範本在 `env/`；勿提交 `.env*`／`.dev.vars`。
 - 改動前先讀 `AGENTS.md` 與 `docs/ARCHITECTURE.md`。

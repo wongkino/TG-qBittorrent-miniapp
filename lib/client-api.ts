@@ -1,5 +1,4 @@
 import { authHeaders, AuthSessionError, type ClientAuth } from "@/lib/client-auth";
-import type { Locale } from "@/lib/i18n";
 import type { Torrent } from "@/lib/types";
 
 async function parseError(res: Response): Promise<string> {
@@ -37,10 +36,6 @@ function joinHashes(hashes: string | string[]): string {
 
 export function fetchTorrents(auth: ClientAuth) {
   return api<{ torrents: Torrent[] }>("/api/qb/torrents", auth);
-}
-
-export function fetchCategories(auth: ClientAuth) {
-  return api<{ categories: string[] }>("/api/qb/categories", auth);
 }
 
 /** Torrents + categories in one HTTP request (boot / full refresh). */
@@ -149,12 +144,5 @@ export function markRssRead(
   return api<void>("/api/qb/rss/read", auth, {
     method: "POST",
     body: JSON.stringify({ path, articleId }),
-  });
-}
-
-export function syncUserLocale(auth: ClientAuth, locale: Locale) {
-  return api<{ locale: string }>("/api/qb/locale", auth, {
-    method: "PUT",
-    body: JSON.stringify({ locale }),
   });
 }

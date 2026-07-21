@@ -48,7 +48,7 @@ npm run dev
 | **本機預覽**（改 UI） | `DEV_PREVIEW=1` + `NEXT_PUBLIC_DEV_PREVIEW=1` |
 | Deploy 後測真資料 | 開啟 Workers URL，Google 登入 |
 | 真 qB 本機聯調 | 關掉 PREVIEW，填 `GOOGLE_CLIENT_ID`／`ALLOWED_GOOGLE_EMAILS` 與 qB |
-| 介面語系 | App 內 **EN／繁／简／日** 手動切換（localStorage + 同步 KV） |
+| 介面語系 | App 內 **EN／繁／简／日** 手動切換（localStorage） |
 
 Google OAuth 本機設定見 [`env/development.example`](../env/development.example)。Authorized JavaScript origins 需包含 `http://localhost:3000` 與正式 Workers URL。
 

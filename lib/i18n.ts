@@ -600,26 +600,6 @@ export function persistLocale(locale: Locale) {
   }
 }
 
-/** Normalize loose tags to a Locale (legacy / rare callers). */
-export function resolveLocale(languageCode?: string | null): Locale {
-  if (isLocale(languageCode)) return languageCode;
-  if (!languageCode?.trim()) return DEFAULT_LOCALE;
-  const code = languageCode.trim().toLowerCase().replace(/_/g, "-");
-
-  if (
-    code.startsWith("zh-hant") ||
-    code.startsWith("zh-tw") ||
-    code.startsWith("zh-hk") ||
-    code.startsWith("zh-mo")
-  ) {
-    return "zh-Hant";
-  }
-  if (code === "ja" || code.startsWith("ja-")) return "ja";
-  if (code === "en" || code.startsWith("en-")) return "en";
-  if (code === "zh" || code.startsWith("zh")) return "zh-Hans";
-  return "en";
-}
-
 export function translate(
   locale: Locale,
   key: MessageKey,

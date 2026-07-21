@@ -1,5 +1,4 @@
 import {
-  googleSubToUserId,
   verifyGoogleIdToken,
 } from "@/lib/google-auth";
 import { isDevPreviewBearer } from "@/lib/dev/preview";
@@ -14,7 +13,6 @@ export class AuthError extends Error {
 }
 
 export type VerifiedAuth = {
-  user: { id: number };
   authDate: number;
   preview?: boolean;
   google?: boolean;
@@ -35,15 +33,13 @@ export async function requireAuth(request: Request): Promise<VerifiedAuth> {
 
   if (isDevPreviewBearer(bearer)) {
     return {
-      user: { id: 0 },
       authDate: Math.floor(Date.now() / 1000),
       preview: true,
     };
   }
 
-  const { email, sub } = await verifyGoogleIdToken(bearer);
+  const { email } = await verifyGoogleIdToken(bearer);
   return {
-    user: { id: googleSubToUserId(sub) },
     authDate: Math.floor(Date.now() / 1000),
     google: true,
     email,

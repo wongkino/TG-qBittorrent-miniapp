@@ -8,18 +8,7 @@ const JWKS = createRemoteJWKSet(
 
 export type GoogleIdentity = {
   email: string;
-  sub: string;
 };
-
-/** Stable numeric id for locale KV. */
-export function googleSubToUserId(sub: string): number {
-  let hash = 2166136261;
-  for (let i = 0; i < sub.length; i++) {
-    hash ^= sub.charCodeAt(i);
-    hash = Math.imul(hash, 16777619);
-  }
-  return hash >>> 0 || 1;
-}
 
 export async function verifyGoogleIdToken(token: string): Promise<GoogleIdentity> {
   const clientId = env("GOOGLE_CLIENT_ID");
@@ -57,5 +46,5 @@ export async function verifyGoogleIdToken(token: string): Promise<GoogleIdentity
     throw new AuthError("User not allowed", 403);
   }
 
-  return { email: email.trim(), sub };
+  return { email: email.trim() };
 }
