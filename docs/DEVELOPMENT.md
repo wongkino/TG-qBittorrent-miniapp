@@ -49,7 +49,7 @@ npm run dev
 | **本機預覽**（改 UI） | `DEV_PREVIEW=1` + `NEXT_PUBLIC_DEV_PREVIEW=1` |
 | Deploy 後測真資料 | Telegram「開啟 App」 |
 | 真 qB 本機聯調 | 關掉 PREVIEW，填 bot／qB；需合法 initData（tunnel + TG） |
-| 介面語系 | App 內 **EN／繁／简／日** 手動切換（存 localStorage） |
+| 介面語系 | App 內 **EN／繁／简／日** 手動切換（localStorage + 同步 KV，Bot 共用） |
 
 Bot／cron 可用 curl 打已部署端點（帶 secret）。
 
@@ -61,10 +61,10 @@ Bot／cron 可用 curl 打已部署端點（帶 secret）。
 1. `lib/qbittorrent.ts` 加函式  
 2. `app/api/qb/<name>/route.ts`（`requireAuth`；preview 用 `previewResponse`）  
 3. `lib/client-api.ts` 加 client  
-4. 接到 `components/*`；UI 字串加進 `lib/i18n.ts`（三語）
+4. 接到 `components/*`；UI 字串加進 `lib/i18n.ts`（四語）
 
 ### 新的 Bot 指令／按鈕
-改 `lib/bot-handler.ts`；每次 `reply` 附 `MAIN_KEYBOARD`。
+改 `lib/bot-handler.ts` 與 `lib/i18n.ts` 的 `bot.*`；回覆附語系對應的 Reply Keyboard。語系由 Mini App 同步到 KV（`lib/user-locale.ts`）。
 
 ### 新的通知類型
 改 `lib/completions.ts`；新 tag 去重；確認 `worker.ts` scheduled。更新 [USER.md](USER.md)／[ARCHITECTURE.md](ARCHITECTURE.md)。

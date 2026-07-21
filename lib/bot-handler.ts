@@ -1,4 +1,10 @@
 import { formatProgress, formatSpeed, isPausedState } from "@/lib/format";
+import {
+  DEFAULT_LOCALE,
+  LOCALES,
+  translate,
+  type Locale,
+} from "@/lib/i18n";
 import { addTorrent, addTorrentFile, listTorrents } from "@/lib/qbittorrent";
 import {
   downloadTelegramFile,
@@ -7,6 +13,7 @@ import {
   sendTelegramMessage,
   type ReplyKeyboard,
 } from "@/lib/telegram-bot";
+import { getUserLocale } from "@/lib/user-locale";
 
 type TelegramUser = { id: number; first_name?: string; username?: string };
 type TelegramChat = { id: number; type: string };
@@ -28,91 +35,140 @@ type TelegramUpdate = {
   message?: TelegramMessage;
 };
 
-const BTN_STATUS = "狀態";
-const BTN_LIST = "列表";
-const BTN_HELP = "說明";
+type BotAction = "status" | "list" | "help";
 
-const MAIN_KEYBOARD: ReplyKeyboard = {
-  keyboard: [[{ text: BTN_STATUS }, { text: BTN_LIST }, { text: BTN_HELP }]],
-  resize_keyboard: true,
-  is_persistent: true,
-};
+function t(
+  locale: Locale,
+  key: Parameters<typeof translate>[1],
+  vars?: Record<string, string | number>
+) {
+  return translate(locale, key, vars);
+}
 
-const HELP_TEXT = [
-  "<b>可用操作</b>",
-  `• ${BTN_STATUS} — 目前下載狀態`,
-  `• ${BTN_LIST} — 列出進行中的種子`,
-  `• ${BTN_HELP} — 顯示說明`,
-  "",
-  "也可直接傳：",
-  "• magnet / .torrent 連結文字",
-  "• .torrent 檔案",
-].join("\n");
+function mainKeyboard(locale: Locale): ReplyKeyboard {
+  return {
+    keyboard: [
+      [
+        { text: t(locale, "bot.btn.status") },
+        { text: t(locale, "bot.btn.list") },
+        { text: t(locale, "bot.btn.help") },
+      ],
+    ],
+    resize_keyboard: true,
+    is_persistent: true,
+  };
+}
+
+function helpText(locale: Locale): string {
+  return [
+    `<b>${t(locale, "bot.helpTitle")}</b>`,
+    `• ${t(locale, "bot.btn.status")} — ${t(locale, "bot.helpStatus")}`,
+    `• ${t(locale, "bot.btn.list")} — ${t(locale, "bot.helpList")}`,
+    `• ${t(locale, "bot.btn.help")} — ${t(locale, "bot.helpHelp")}`,
+    "",
+    t(locale, "bot.helpAlso"),
+    t(locale, "bot.helpMagnet"),
+    t(locale, "bot.helpFile"),
+  ].join("\n");
+}
+
+function matchAction(text: string): BotAction | null {
+  for (const locale of LOCALES) {
+    if (text === t(locale, "bot.btn.status")) return "status";
+    if (text === t(locale, "bot.btn.list")) return "list";
+    if (text === t(locale, "bot.btn.help")) return "help";
+  }
+  return null;
+}
 
 function magnetOrTorrentUrl(text: string): string | null {
   const trimmed = text.trim();
   if (!trimmed) return null;
   if (/^magnet:\?/i.test(trimmed)) return trimmed;
   if (/^https?:\/\/\S+\.torrent(\?\S*)?$/i.test(trimmed)) return trimmed;
-  if (/^https?:\/\/\S+/i.test(trimmed) && trimmed.toLowerCase().includes("torrent")) {
+  if (
+    /^https?:\/\/\S+/i.test(trimmed) &&
+    trimmed.toLowerCase().includes("torrent")
+  ) {
     return trimmed;
   }
   return null;
 }
 
-async function reply(chatId: number, text: string) {
-  await sendTelegramMessage(chatId, text, { replyMarkup: MAIN_KEYBOARD });
+async function reply(chatId: number, locale: Locale, text: string) {
+  await sendTelegramMessage(chatId, text, {
+    replyMarkup: mainKeyboard(locale),
+  });
 }
 
-async function handleStatus(chatId: number) {
+async function handleStatus(chatId: number, locale: Locale) {
   const torrents = await listTorrents();
-  const active = torrents.filter((t) => !isPausedState(t.state));
-  const downloading = torrents.filter((t) => t.progress < 1 && !isPausedState(t.state));
-  const seeding = torrents.filter((t) => t.progress >= 1 && !isPausedState(t.state));
-  const paused = torrents.filter((t) => isPausedState(t.state));
-  const dl = torrents.reduce((sum, t) => sum + t.dlspeed, 0);
-  const up = torrents.reduce((sum, t) => sum + t.upspeed, 0);
+  const active = torrents.filter((torrent) => !isPausedState(torrent.state));
+  const downloading = torrents.filter(
+    (torrent) => torrent.progress < 1 && !isPausedState(torrent.state)
+  );
+  const seeding = torrents.filter(
+    (torrent) => torrent.progress >= 1 && !isPausedState(torrent.state)
+  );
+  const paused = torrents.filter((torrent) => isPausedState(torrent.state));
+  const dl = torrents.reduce((sum, torrent) => sum + torrent.dlspeed, 0);
+  const up = torrents.reduce((sum, torrent) => sum + torrent.upspeed, 0);
 
   await reply(
     chatId,
+    locale,
     [
-      "<b>qBittorrent 狀態</b>",
-      `總數：${torrents.length}`,
-      `下載中：${downloading.length}`,
-      `做種中：${seeding.length}`,
-      `已暫停：${paused.length}`,
-      `活躍：${active.length}`,
+      `<b>${t(locale, "bot.statusTitle")}</b>`,
+      t(locale, "bot.statusTotal", { count: torrents.length }),
+      t(locale, "bot.statusDownloading", { count: downloading.length }),
+      t(locale, "bot.statusSeeding", { count: seeding.length }),
+      t(locale, "bot.statusPaused", { count: paused.length }),
+      t(locale, "bot.statusActive", { count: active.length }),
       `↓ ${escapeHtml(formatSpeed(dl))}  ↑ ${escapeHtml(formatSpeed(up))}`,
     ].join("\n")
   );
 }
 
-async function handleList(chatId: number) {
+async function handleList(chatId: number, locale: Locale) {
   const torrents = await listTorrents();
   const active = torrents
-    .filter((t) => t.progress < 1 || t.dlspeed > 0 || t.upspeed > 0)
+    .filter(
+      (torrent) =>
+        torrent.progress < 1 || torrent.dlspeed > 0 || torrent.upspeed > 0
+    )
     .slice(0, 15);
 
   if (active.length === 0) {
-    await reply(chatId, "目前沒有進行中的種子。");
+    await reply(chatId, locale, t(locale, "bot.listEmpty"));
     return;
   }
 
-  const lines = active.map((t, i) => {
+  const lines = active.map((torrent, i) => {
     const name =
-      t.name.length > 40 ? `${escapeHtml(t.name.slice(0, 40))}…` : escapeHtml(t.name);
-    return `${i + 1}. ${name}\n${formatProgress(t.progress)} · ↓${formatSpeed(t.dlspeed)}`;
+      torrent.name.length > 40
+        ? `${escapeHtml(torrent.name.slice(0, 40))}…`
+        : escapeHtml(torrent.name);
+    return `${i + 1}. ${name}\n${formatProgress(torrent.progress)} · ↓${formatSpeed(torrent.dlspeed)}`;
   });
-  await reply(chatId, ["<b>進行中</b>", ...lines].join("\n\n"));
+  await reply(
+    chatId,
+    locale,
+    [`<b>${t(locale, "bot.listTitle")}</b>`, ...lines].join("\n\n")
+  );
 }
 
-async function handleAddUrl(chatId: number, url: string) {
+async function handleAddUrl(chatId: number, locale: Locale, url: string) {
   await addTorrent(url);
-  await reply(chatId, `已加入：\n<code>${escapeHtml(url.slice(0, 200))}</code>`);
+  await reply(
+    chatId,
+    locale,
+    t(locale, "bot.addedUrl", { url: escapeHtml(url.slice(0, 200)) })
+  );
 }
 
 async function handleTorrentDocument(
   chatId: number,
+  locale: Locale,
   doc: TelegramDocument
 ): Promise<void> {
   const fileName = doc.file_name || "file.torrent";
@@ -121,7 +177,7 @@ async function handleTorrentDocument(
     doc.mime_type === "application/x-bittorrent";
 
   if (!isTorrent) {
-    await reply(chatId, "請傳送 .torrent 檔案。");
+    await reply(chatId, locale, t(locale, "bot.needTorrent"));
     return;
   }
 
@@ -131,7 +187,11 @@ async function handleTorrentDocument(
     : path.split("/").pop() || "file.torrent";
 
   await addTorrentFile(new Blob([new Uint8Array(bytes)]), name);
-  await reply(chatId, `已加入種子檔：\n<code>${escapeHtml(name)}</code>`);
+  await reply(
+    chatId,
+    locale,
+    t(locale, "bot.addedFile", { name: escapeHtml(name) })
+  );
 }
 
 export async function handleTelegramUpdate(update: TelegramUpdate): Promise<void> {
@@ -141,15 +201,20 @@ export async function handleTelegramUpdate(update: TelegramUpdate): Promise<void
   const userId = message.from?.id;
   if (!userId || !isAllowedChatUser(userId)) {
     if (message.chat.type === "private" && message.chat.id) {
-      await reply(message.chat.id, "未授權使用此 Bot。");
+      await reply(
+        message.chat.id,
+        DEFAULT_LOCALE,
+        t(DEFAULT_LOCALE, "bot.unauthorized")
+      );
     }
     return;
   }
 
   const chatId = message.chat.id;
+  const locale = await getUserLocale(userId);
 
   if (message.document) {
-    await handleTorrentDocument(chatId, message.document);
+    await handleTorrentDocument(chatId, locale, message.document);
     return;
   }
 
@@ -157,34 +222,40 @@ export async function handleTelegramUpdate(update: TelegramUpdate): Promise<void
   if (!text) return;
 
   const command = text.split(/\s+/)[0]?.toLowerCase().replace(/@\w+$/, "");
+  const action = matchAction(text);
 
   if (command === "/start") {
     await reply(
       chatId,
-      ["👋 已連線到 qBittorrent Mini App Bot。", "", HELP_TEXT].join("\n")
+      locale,
+      [t(locale, "bot.start"), "", helpText(locale)].join("\n")
     );
     return;
   }
-  if (command === "/help" || text === BTN_HELP) {
-    await reply(chatId, HELP_TEXT);
+  if (command === "/help" || action === "help") {
+    await reply(chatId, locale, helpText(locale));
     return;
   }
-  if (command === "/status" || text === BTN_STATUS) {
-    await handleStatus(chatId);
+  if (command === "/status" || action === "status") {
+    await handleStatus(chatId, locale);
     return;
   }
-  if (command === "/list" || text === BTN_LIST) {
-    await handleList(chatId);
+  if (command === "/list" || action === "list") {
+    await handleList(chatId, locale);
     return;
   }
 
   const url = magnetOrTorrentUrl(text);
   if (url) {
-    await handleAddUrl(chatId, url);
+    await handleAddUrl(chatId, locale, url);
     return;
   }
 
   if (text.startsWith("/")) {
-    await reply(chatId, `未知指令。\n\n${HELP_TEXT}`);
+    await reply(
+      chatId,
+      locale,
+      `${t(locale, "bot.unknown")}\n\n${helpText(locale)}`
+    );
   }
 }

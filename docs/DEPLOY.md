@@ -53,10 +53,12 @@ Worker 名稱固定為 **`tg-dl`**（`wrangler.jsonc`）。
 
 步驟：
 
-1. `npm ci` + `npm run deploy`（OpenNext build + wrangler deploy；含 Cron Trigger）
-2. `wrangler secret bulk` 同步 runtime secrets
-3. `setWebhook` → `{APP_URL}/api/telegram/webhook`（`secret_token` = `CRON_SECRET`）
-4. `setChatMenuButton` → web_app「開啟 App」→ `APP_URL`
+1. `npm ci`
+2. 確保／建立 KV `tg-dl-user-prefs`，寫入 `wrangler.jsonc` 的 `USER_PREFS`
+3. `npm run deploy`（OpenNext build + wrangler deploy；含 Cron Trigger）
+4. `wrangler secret bulk` 同步 runtime secrets
+5. `setWebhook` → `{APP_URL}/api/telegram/webhook`（`secret_token` = `CRON_SECRET`）
+6. `setChatMenuButton` → web_app「開啟 App」→ `APP_URL`
 
 ### 通知 — Cloudflare Cron（非 GitHub Actions）
 

@@ -17,6 +17,7 @@ import {
   pauseTorrent,
   resumeTorrent,
   setTorrentCategory,
+  syncUserLocale,
 } from "@/lib/client-api";
 import { DEV_PREVIEW_INIT_DATA } from "@/lib/dev/preview";
 import { filterTorrents, type StatusFilter } from "@/lib/format";
@@ -76,6 +77,13 @@ function MiniAppInner() {
   useEffect(() => {
     document.documentElement.lang = locale;
   }, [locale]);
+
+  useEffect(() => {
+    if (!initData) return;
+    void syncUserLocale(initData, locale).catch(() => {
+      /* Bot sync is best-effort */
+    });
+  }, [initData, locale]);
 
   const visibleTorrents = useMemo(
     () =>

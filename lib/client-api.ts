@@ -1,3 +1,4 @@
+import type { Locale } from "@/lib/i18n";
 import type { Torrent } from "@/lib/types";
 
 function headers(initData: string): HeadersInit {
@@ -149,5 +150,12 @@ export function markRssRead(
   return api<void>("/api/qb/rss/read", initData, {
     method: "POST",
     body: JSON.stringify({ path, articleId }),
+  });
+}
+
+export function syncUserLocale(initData: string, locale: Locale) {
+  return api<{ locale: string }>("/api/qb/locale", initData, {
+    method: "PUT",
+    body: JSON.stringify({ locale }),
   });
 }

@@ -1,4 +1,5 @@
 import { env, parseAllowedTelegramUserIds } from "@/lib/env";
+import { translate, type Locale } from "@/lib/i18n";
 
 function escapeHtml(text: string): string {
   return text
@@ -74,35 +75,40 @@ export async function downloadTelegramFile(
 }
 
 function formatTorrentEventMessage(
-  title: string,
+  locale: Locale,
+  titleKey: "bot.notifyStart" | "bot.notifyDone",
   input: { name: string; sizeLabel: string; category?: string }
 ): string {
   const lines = [
-    title,
+    translate(locale, titleKey),
     "",
     escapeHtml(input.name),
-    `大小：${escapeHtml(input.sizeLabel)}`,
+    translate(locale, "bot.notifySize", {
+      size: escapeHtml(input.sizeLabel),
+    }),
   ];
   if (input.category) {
-    lines.push(`分類：${escapeHtml(input.category)}`);
+    lines.push(
+      translate(locale, "bot.notifyCategory", {
+        category: escapeHtml(input.category),
+      })
+    );
   }
   return lines.join("\n");
 }
 
-export function formatStartMessage(input: {
-  name: string;
-  sizeLabel: string;
-  category?: string;
-}): string {
-  return formatTorrentEventMessage("⬇️ <b>下載開始</b>", input);
+export function formatStartMessage(
+  input: { name: string; sizeLabel: string; category?: string },
+  locale: Locale
+): string {
+  return formatTorrentEventMessage(locale, "bot.notifyStart", input);
 }
 
-export function formatCompletionMessage(input: {
-  name: string;
-  sizeLabel: string;
-  category?: string;
-}): string {
-  return formatTorrentEventMessage("✅ <b>下載完成</b>", input);
+export function formatCompletionMessage(
+  input: { name: string; sizeLabel: string; category?: string },
+  locale: Locale
+): string {
+  return formatTorrentEventMessage(locale, "bot.notifyDone", input);
 }
 
 export function getNotifyChatIds(): number[] {

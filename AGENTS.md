@@ -9,7 +9,7 @@
 - Worker 名稱：`tg-dl`（`wrangler.jsonc`）
 - 預設公開 URL：`https://tg-dl.<subdomain>.workers.dev`
 - Mini App UI：英／繁中／簡中／日文（App 內切換，見 `lib/i18n.ts`／`LanguageToggle`）
-- Bot 文案：目前繁中為主
+- Bot／通知文案：跟 Mini App 語系（KV `USER_PREFS`，見 `lib/user-locale.ts`）
 - **不要**做成多租戶 SaaS；白名單制個人工具即可
 
 ## 絕對不要搞混的兩個 URL
@@ -26,7 +26,7 @@
 | 目錄／檔案 | 職責 |
 |------------|------|
 | `components/` | 僅 Mini App UI（client） |
-| `app/api/qb/*` | Mini App API；`Authorization: tma <initData>` |
+| `app/api/qb/*` | Mini App API；`Authorization: tma <initData>`（含 `/api/qb/locale`） |
 | `app/api/qb/rss*` | RSS（代理 qB `/api/v2/rss/*`） |
 | `app/api/telegram/webhook` | Bot；`X-Telegram-Bot-Api-Secret-Token` = `CRON_SECRET` |
 | `app/api/cron/completions` | 通知；`Authorization: Bearer CRON_SECRET` |
@@ -37,7 +37,8 @@
 | `lib/bot-handler.ts` | Bot 指令與訊息 |
 | `lib/completions.ts` | 開始／完成通知 + tags |
 | `lib/client-api.ts` | 瀏覽器端打 `/api/qb/*` |
-| `lib/i18n.ts` | Mini App 三語 |
+| `lib/i18n.ts` | Mini App／Bot 多語 |
+| `lib/user-locale.ts` | 使用者語系（KV） |
 | `lib/theme.ts` | 日間／夜間 |
 | `lib/dev/preview.ts` | 本機預覽假資料（僅 development） |
 | `env/` | 環境變數範本（見 `env/README.md`） |
@@ -62,7 +63,7 @@
 
 - Mini App 分頁：**下載**／**RSS**；不能上傳本機 `.torrent`
 - `.torrent` 檔：只走 Bot
-- 語系：App 內切換；主題：App 內切換
+- 語系：App 內切換並同步到 Bot；主題：App 內切換
 - Reply Keyboard：每次 Bot 回覆都附上
 - Menu Button：Deploy workflow 的 `setChatMenuButton`
 

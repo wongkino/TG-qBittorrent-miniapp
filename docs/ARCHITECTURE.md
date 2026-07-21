@@ -6,7 +6,7 @@
 ┌─────────────────────┐     ┌─────────────────────┐
 │  Telegram Mini App  │     │    Telegram Bot     │
 │  下載 / RSS         │     │  指令 / magnet / 檔  │
-│  (語系跟 TG App)    │     │  (文案目前繁中)      │
+│  (語系 App 內切換)  │     │  (跟 Mini App 語系)  │
 └─────────┬───────────┘     └──────────┬──────────┘
           │ tma initData                │ webhook + secret_token
           ▼                             ▼
@@ -55,9 +55,9 @@ components/                   # Mini App UI（client）
   icons.tsx                   # 共用 SVG 圖示
 lib/
   qbittorrent.ts              # 唯一直接打 qB 的模組
-  client-api.ts               # 瀏覽器 → /api/qb/*
+  client-api.ts               # 瀏覽器 → /api/qb/*（含 locale 同步）
   telegram.ts / telegram-bot.ts / bot-handler.ts
-  completions.ts / api.ts / env.ts / i18n.ts / theme.ts
+  completions.ts / api.ts / env.ts / i18n.ts / theme.ts / user-locale.ts
   dev/preview.ts              # DEV_PREVIEW 假資料（僅 development）
 docs/                         # 使用者／部署／架構／開發
 .github/workflows/            # Deploy only
@@ -91,7 +91,7 @@ docs/                         # 使用者／部署／架構／開發
 
 多 hash 以 `|` 串接。下載分頁約每 4 秒輪詢（頁面隱藏時跳過）；開機／手動重整／加種後用 `snapshot`。
 
-語系：App 內手動切換（`LanguageToggle`，存 `localStorage`）；見 `lib/i18n.ts`。
+語系：App 內手動切換（`LanguageToggle`，存 `localStorage`）；切換後同步到 Worker KV（`USER_PREFS`），Bot 回覆與完成通知跟同一語系。見 `lib/i18n.ts`、`lib/user-locale.ts`。
 
 主題：`data-theme=light|dark`（`lib/theme.ts`），預設夜間，可切換並存 localStorage。
 

@@ -10,6 +10,7 @@ import {
   getNotifyChatIds,
   sendTelegramMessage,
 } from "@/lib/telegram-bot";
+import { getUserLocale } from "@/lib/user-locale";
 
 const COMPLETION_NOTIFY_TAG = "tg-notified";
 const START_NOTIFY_TAG = "tg-started";
@@ -39,9 +40,13 @@ function isRecentlyCompleted(torrent: NotifyTorrent, nowSec: number): boolean {
   return age >= 0 && age <= NOTIFY_WINDOW_SEC;
 }
 
-async function notifyChats(text: string, chatIds: number[]): Promise<void> {
+async function notifyChats(
+  buildText: (locale: Awaited<ReturnType<typeof getUserLocale>>) => string,
+  chatIds: number[]
+): Promise<void> {
   for (const chatId of chatIds) {
-    await sendTelegramMessage(chatId, text);
+    const locale = await getUserLocale(chatId);
+    await sendTelegramMessage(chatId, buildText(locale));
   }
 }
 
@@ -66,11 +71,15 @@ export async function notifyTorrentEvents() {
 
   for (const torrent of pendingStarts) {
     await notifyChats(
-      formatStartMessage({
-        name: torrent.name,
-        sizeLabel: formatBytes(torrent.size),
-        category: torrent.category || undefined,
-      }),
+      (locale) =>
+        formatStartMessage(
+          {
+            name: torrent.name,
+            sizeLabel: formatBytes(torrent.size),
+            category: torrent.category || undefined,
+          },
+          locale
+        ),
       chatIds
     );
     await addTorrentTags(torrent.hash, START_NOTIFY_TAG);
@@ -84,11 +93,15 @@ export async function notifyTorrentEvents() {
 
   for (const torrent of pendingCompletions) {
     await notifyChats(
-      formatCompletionMessage({
-        name: torrent.name,
-        sizeLabel: formatBytes(torrent.size),
-        category: torrent.category || undefined,
-      }),
+      (locale) =>
+        formatCompletionMessage(
+          {
+            name: torrent.name,
+            sizeLabel: formatBytes(torrent.size),
+            category: torrent.category || undefined,
+          },
+          locale
+        ),
       chatIds
     );
     await addTorrentTags(torrent.hash, COMPLETION_NOTIFY_TAG);
