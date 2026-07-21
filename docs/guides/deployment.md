@@ -9,7 +9,7 @@
 - 本 repo 的 GitHub Actions 權限
 - Google OAuth Client ID 與白名單 email
 
-Worker 名稱固定為 **`tg-dl`**（`wrangler.jsonc`）。
+Worker 名稱固定為 **`qb`**（`wrangler.jsonc`）。
 
 ---
 
@@ -35,7 +35,7 @@ Worker 名稱固定為 **`tg-dl`**（`wrangler.jsonc`）。
 
 1. 在 GitHub 填好 **Secrets** 與 **Variables**
 2. Push `main` 或手動跑 **Deploy to Cloudflare Workers**
-3. Cloudflare Dashboard → Workers → `tg-dl` → 複製網址
+3. Cloudflare Dashboard → Workers → `qb` → 複製網址
 4. 開啟 Workers URL → Google 登入測試
 5. （可選）Safari：**分享 → 加入主畫面**
 

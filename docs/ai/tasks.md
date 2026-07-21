@@ -47,7 +47,7 @@
 
 - Secrets 不提交 repo
 - `GOOGLE_CLIENT_ID` 需在 build 時注入（見 workflow `env:`）
-- 不擅自改 Worker 名稱 `tg-dl`
+- 不擅自改 Worker 名稱 `qb`
 
 ---
 

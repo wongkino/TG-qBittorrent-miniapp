@@ -6,7 +6,7 @@
 
 個人 **qBittorrent Web App**（Google 登入、PWA），經 Cloudflare Workers（OpenNext）代理 qBittorrent。
 
-- Worker：`tg-dl`（`wrangler.jsonc`）
+- Worker：`qb`（`wrangler.jsonc`）
 - 語系：四語，`localStorage`（`lib/i18n.ts`）
 - 白名單個人工具；勿做成 SaaS
 
