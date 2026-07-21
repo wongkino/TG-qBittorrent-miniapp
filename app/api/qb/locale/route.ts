@@ -10,7 +10,7 @@ import { getUserLocale, setUserLocale } from "@/lib/user-locale";
 
 export async function GET(request: Request) {
   try {
-    const auth = requireAuth(request);
+    const auth = await requireAuth(request);
     const locale = await getUserLocale(auth.user.id);
     const preview = previewResponse(auth, { locale });
     if (preview) return preview;
@@ -22,7 +22,7 @@ export async function GET(request: Request) {
 
 export async function PUT(request: Request) {
   try {
-    const auth = requireAuth(request);
+    const auth = await requireAuth(request);
     const body = (await request.json()) as { locale?: string };
     if (!isLocale(body.locale)) {
       return jsonError("locale is required", 400);

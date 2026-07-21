@@ -1,4 +1,4 @@
-/** Client credential for `/api/qb/*` (Telegram initData or iOS Web App bearer). */
+/** Client credential for `/api/qb/*` (Telegram initData or Google ID token). */
 export type ClientAuth =
   | { mode: "tma"; initData: string }
   | { mode: "bearer"; token: string };

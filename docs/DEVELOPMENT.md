@@ -57,21 +57,36 @@ Bot／cron 可用 curl 打已部署端點（帶 secret）。
 
 ---
 
-## 本機測 iOS Web App（React / Vite）
+## 本機測 iOS Web App（React / Vite + Google OAuth）
 
-`webapp/` 為獨立 **React + Vite** SPA，部署後路徑為 `{APP_URL}/webapp/`。
+`webapp/` 為獨立 **React + Vite** SPA，部署後路徑為 `{APP_URL}/webapp/`。登入使用 **Google OAuth**（email 須在 `ALLOWED_GOOGLE_EMAILS` 白名單）。
+
+1. [Google Cloud Console](https://console.cloud.google.com/) 建立 OAuth Web client  
+   - Authorized JavaScript origins：`http://localhost:5173`、`https://你的-workers-url`
+2. 本機 `.env.development.local` / `.dev.vars`：
 
 ```bash
-# 終端 1：Next API（需 WEB_APP_TOKEN 於 .dev.vars 或 .env）
+GOOGLE_CLIENT_ID=你的-client-id.apps.googleusercontent.com
+ALLOWED_GOOGLE_EMAILS=you@gmail.com
+```
+
+3. `webapp/.env.local`（Vite 用，與上面同一個 Client ID）：
+
+```bash
+VITE_GOOGLE_CLIENT_ID=你的-client-id.apps.googleusercontent.com
+```
+
+```bash
+# 終端 1：Next API
 npm run dev
 
 # 終端 2：Vite 前端（API 代理至 :3000）
 npm run dev:webapp
 ```
 
-瀏覽器開 http://localhost:5173/webapp/。可選在 `webapp/.env.local` 設 `VITE_WEB_APP_TOKEN=` 略過手動輸入權杖。
+瀏覽器開 http://localhost:5173/webapp/ → Google 登入。
 
-正式環境：Safari 開 `{APP_URL}/webapp/` → 輸入 `WEB_APP_TOKEN` → 加入主畫面。
+正式環境：Deploy 時 GitHub Variable `GOOGLE_CLIENT_ID` 會注入 `VITE_GOOGLE_CLIENT_ID` 建置 webapp。
 
 ---
 

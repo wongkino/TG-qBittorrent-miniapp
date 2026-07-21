@@ -4,7 +4,7 @@ import { listCategories } from "@/lib/qbittorrent";
 
 export async function GET(request: Request) {
   try {
-    const auth = requireAuth(request);
+    const auth = await requireAuth(request);
     const preview = previewResponse(auth, { categories: mockCategories() });
     if (preview) return preview;
 

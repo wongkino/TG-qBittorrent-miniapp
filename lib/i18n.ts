@@ -20,15 +20,11 @@ const zhHant = {
 
   "webapp.title": "iOS Web App",
   "webapp.hintStandalone":
-    "此為主畫面獨立 App。請輸入 Worker 設定的 WEB_APP_TOKEN 以連線 qBittorrent。",
+    "使用 Google 帳號登入。僅白名單內的 email 可連線 qBittorrent。",
   "webapp.hintBrowser":
-    "未在 Telegram 內開啟。可輸入存取權杖，或從 Bot 開啟 Mini App。",
-  "webapp.tokenLabel": "存取權杖",
-  "webapp.tokenPlaceholder": "WEB_APP_TOKEN",
-  "webapp.unlock": "連線",
-  "webapp.unlocking": "連線中…",
-  "webapp.unlockFailed": "連線失敗，請確認權杖是否正確",
-  "webapp.user": "Web App",
+    "使用 Google 帳號登入以存取 qBittorrent（需白名單 email）。",
+  "webapp.signInFailed": "Google 登入失敗，請確認帳號是否在白名單內",
+  "webapp.missingClientId": "未設定 VITE_GOOGLE_CLIENT_ID，無法顯示登入按鈕",
   "webapp.footer":
     "在 Safari 開啟 /webapp/ → 分享 → 加入主畫面，即可像 App 一樣全螢幕使用。",
 
@@ -188,15 +184,11 @@ const zhHans: Record<MessageKey, string> = {
 
   "webapp.title": "iOS Web App",
   "webapp.hintStandalone":
-    "这是主画面独立 App。请输入 Worker 设置的 WEB_APP_TOKEN 以连接 qBittorrent。",
+    "使用 Google 账号登录。仅白名单内的 email 可连接 qBittorrent。",
   "webapp.hintBrowser":
-    "未在 Telegram 内打开。可输入访问令牌，或从 Bot 打开 Mini App。",
-  "webapp.tokenLabel": "访问令牌",
-  "webapp.tokenPlaceholder": "WEB_APP_TOKEN",
-  "webapp.unlock": "连接",
-  "webapp.unlocking": "连接中…",
-  "webapp.unlockFailed": "连接失败，请确认令牌是否正确",
-  "webapp.user": "Web App",
+    "使用 Google 账号登录以访问 qBittorrent（需白名单 email）。",
+  "webapp.signInFailed": "Google 登录失败，请确认账号是否在白名单内",
+  "webapp.missingClientId": "未设置 VITE_GOOGLE_CLIENT_ID，无法显示登录按钮",
   "webapp.footer":
     "在 Safari 打开 /webapp/ → 分享 → 加入主画面，即可像 App 一样全屏使用。",
 
@@ -356,15 +348,13 @@ const en: Record<MessageKey, string> = {
 
   "webapp.title": "iOS Web App",
   "webapp.hintStandalone":
-    "Home screen mode. Enter the WEB_APP_TOKEN configured on your Worker to connect to qBittorrent.",
+    "Sign in with Google. Only whitelisted emails can connect to qBittorrent.",
   "webapp.hintBrowser":
-    "Not opened inside Telegram. Enter an access token, or open the Mini App from the Bot.",
-  "webapp.tokenLabel": "Access token",
-  "webapp.tokenPlaceholder": "WEB_APP_TOKEN",
-  "webapp.unlock": "Connect",
-  "webapp.unlocking": "Connecting…",
-  "webapp.unlockFailed": "Connection failed. Check your token.",
-  "webapp.user": "Web App",
+    "Sign in with Google to access qBittorrent (whitelisted email required).",
+  "webapp.signInFailed":
+    "Google sign-in failed. Check that your email is on the allow list.",
+  "webapp.missingClientId":
+    "VITE_GOOGLE_CLIENT_ID is not set; the sign-in button cannot be shown.",
   "webapp.footer":
     "In Safari, open /webapp/ → Share → Add to Home Screen for a full-screen app experience.",
 
@@ -528,15 +518,13 @@ const ja: Record<MessageKey, string> = {
 
   "webapp.title": "iOS Web App",
   "webapp.hintStandalone":
-    "ホーム画面モードです。Worker に設定した WEB_APP_TOKEN を入力して qBittorrent に接続します。",
+    "Google アカウントでサインインします。許可リストのメールのみ qBittorrent に接続できます。",
   "webapp.hintBrowser":
-    "Telegram 内で開かれていません。アクセストークンを入力するか、Bot から Mini App を開いてください。",
-  "webapp.tokenLabel": "アクセストークン",
-  "webapp.tokenPlaceholder": "WEB_APP_TOKEN",
-  "webapp.unlock": "接続",
-  "webapp.unlocking": "接続中…",
-  "webapp.unlockFailed": "接続に失敗しました。トークンを確認してください。",
-  "webapp.user": "Web App",
+    "Google アカウントでサインインして qBittorrent にアクセスします（許可リスト必須）。",
+  "webapp.signInFailed":
+    "Google サインインに失敗しました。メールが許可リストにあるか確認してください。",
+  "webapp.missingClientId":
+    "VITE_GOOGLE_CLIENT_ID が未設定のため、サインインボタンを表示できません。",
   "webapp.footer":
     "Safari で /webapp/ を開き、共有 → ホーム画面に追加するとフルスクリーンで使えます。",
 
