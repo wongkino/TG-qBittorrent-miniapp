@@ -1,9 +1,6 @@
 import { NextResponse } from "next/server";
-import {
-  AuthError,
-  requireTelegramAuth,
-  type VerifiedTelegramAuth,
-} from "@/lib/telegram";
+import { type VerifiedAuth } from "@/lib/auth";
+import { AuthError } from "@/lib/telegram";
 import { QBitError } from "@/lib/qbittorrent";
 
 export function jsonError(message: string, status: number) {
@@ -14,13 +11,11 @@ export function jsonOk(data: Record<string, unknown> = { ok: true }) {
   return NextResponse.json(data);
 }
 
-export function requireAuth(request: Request) {
-  return requireTelegramAuth(request.headers.get("authorization"));
-}
+export { requireAuth } from "@/lib/auth";
 
 /** Local DEV_PREVIEW: skip qBittorrent and return mock / no-op. */
 export function previewResponse(
-  auth: VerifiedTelegramAuth,
+  auth: VerifiedAuth,
   data?: Record<string, unknown>
 ) {
   if (!auth.preview) return null;

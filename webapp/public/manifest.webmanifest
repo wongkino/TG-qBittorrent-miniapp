@@ -1,0 +1,19 @@
+{
+  "name": "qBittorrent",
+  "short_name": "qBittorrent",
+  "description": "Personal qBittorrent remote for iOS home screen",
+  "start_url": "/webapp/",
+  "scope": "/webapp/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "icons": [
+    {
+      "src": "/webapp/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

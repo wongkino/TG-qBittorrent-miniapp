@@ -16,7 +16,21 @@ const zhHant = {
   "app.previewUser": "本機預覽",
   "app.previewInitFailed": "本機預覽初始化失敗",
   "app.noInitData":
-    "無法取得 Telegram initData。請從 Telegram Bot 內開啟此 Mini App。",
+    "無法取得 Telegram initData。請從 Telegram Bot 內開啟此 Mini App，或使用 /webapp/ 的 iOS Web App。",
+
+  "webapp.title": "iOS Web App",
+  "webapp.hintStandalone":
+    "此為主畫面獨立 App。請輸入 Worker 設定的 WEB_APP_TOKEN 以連線 qBittorrent。",
+  "webapp.hintBrowser":
+    "未在 Telegram 內開啟。可輸入存取權杖，或從 Bot 開啟 Mini App。",
+  "webapp.tokenLabel": "存取權杖",
+  "webapp.tokenPlaceholder": "WEB_APP_TOKEN",
+  "webapp.unlock": "連線",
+  "webapp.unlocking": "連線中…",
+  "webapp.unlockFailed": "連線失敗，請確認權杖是否正確",
+  "webapp.user": "Web App",
+  "webapp.footer":
+    "在 Safari 開啟 /webapp/ → 分享 → 加入主畫面，即可像 App 一樣全螢幕使用。",
 
   "theme.toLight": "日間",
   "theme.toDark": "夜間",
@@ -170,7 +184,21 @@ const zhHans: Record<MessageKey, string> = {
   "app.previewUser": "本地预览",
   "app.previewInitFailed": "本地预览初始化失败",
   "app.noInitData":
-    "无法取得 Telegram initData。请从 Telegram Bot 内打开此 Mini App。",
+    "无法取得 Telegram initData。请从 Telegram Bot 内打开此 Mini App，或使用 /webapp/ 的 iOS Web App。",
+
+  "webapp.title": "iOS Web App",
+  "webapp.hintStandalone":
+    "这是主画面独立 App。请输入 Worker 设置的 WEB_APP_TOKEN 以连接 qBittorrent。",
+  "webapp.hintBrowser":
+    "未在 Telegram 内打开。可输入访问令牌，或从 Bot 打开 Mini App。",
+  "webapp.tokenLabel": "访问令牌",
+  "webapp.tokenPlaceholder": "WEB_APP_TOKEN",
+  "webapp.unlock": "连接",
+  "webapp.unlocking": "连接中…",
+  "webapp.unlockFailed": "连接失败，请确认令牌是否正确",
+  "webapp.user": "Web App",
+  "webapp.footer":
+    "在 Safari 打开 /webapp/ → 分享 → 加入主画面，即可像 App 一样全屏使用。",
 
   "theme.toLight": "日间",
   "theme.toDark": "夜间",
@@ -324,7 +352,21 @@ const en: Record<MessageKey, string> = {
   "app.previewUser": "Local preview",
   "app.previewInitFailed": "Local preview failed to start",
   "app.noInitData":
-    "Missing Telegram initData. Open this Mini App from the Telegram Bot.",
+    "Missing Telegram initData. Open this Mini App from the Telegram Bot, or use the iOS Web App at /webapp/.",
+
+  "webapp.title": "iOS Web App",
+  "webapp.hintStandalone":
+    "Home screen mode. Enter the WEB_APP_TOKEN configured on your Worker to connect to qBittorrent.",
+  "webapp.hintBrowser":
+    "Not opened inside Telegram. Enter an access token, or open the Mini App from the Bot.",
+  "webapp.tokenLabel": "Access token",
+  "webapp.tokenPlaceholder": "WEB_APP_TOKEN",
+  "webapp.unlock": "Connect",
+  "webapp.unlocking": "Connecting…",
+  "webapp.unlockFailed": "Connection failed. Check your token.",
+  "webapp.user": "Web App",
+  "webapp.footer":
+    "In Safari, open /webapp/ → Share → Add to Home Screen for a full-screen app experience.",
 
   "theme.toLight": "Light",
   "theme.toDark": "Dark",
@@ -482,7 +524,21 @@ const ja: Record<MessageKey, string> = {
   "app.previewUser": "ローカルプレビュー",
   "app.previewInitFailed": "ローカルプレビューの初期化に失敗しました",
   "app.noInitData":
-    "Telegram initData を取得できません。Telegram Bot からこの Mini App を開いてください。",
+    "Telegram initData を取得できません。Telegram Bot から Mini App を開くか、/webapp/ の iOS Web App を使用してください。",
+
+  "webapp.title": "iOS Web App",
+  "webapp.hintStandalone":
+    "ホーム画面モードです。Worker に設定した WEB_APP_TOKEN を入力して qBittorrent に接続します。",
+  "webapp.hintBrowser":
+    "Telegram 内で開かれていません。アクセストークンを入力するか、Bot から Mini App を開いてください。",
+  "webapp.tokenLabel": "アクセストークン",
+  "webapp.tokenPlaceholder": "WEB_APP_TOKEN",
+  "webapp.unlock": "接続",
+  "webapp.unlocking": "接続中…",
+  "webapp.unlockFailed": "接続に失敗しました。トークンを確認してください。",
+  "webapp.user": "Web App",
+  "webapp.footer":
+    "Safari で /webapp/ を開き、共有 → ホーム画面に追加するとフルスクリーンで使えます。",
 
   "theme.toLight": "ライト",
   "theme.toDark": "ダーク",

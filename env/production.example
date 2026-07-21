@@ -17,6 +17,9 @@ QBITTORRENT_USERNAME=
 QBITTORRENT_PASSWORD=
 CRON_SECRET=
 
+# Optional Worker secret — iOS home-screen / Safari Web App bearer auth.
+# WEB_APP_TOKEN=
+
 # GitHub Actions Variable only (webhook / Menu Button). Not a Worker secret.
 APP_URL=https://tg-dl.your-subdomain.workers.dev
 

@@ -87,6 +87,7 @@ jobs:
           QBITTORRENT_USERNAME: ${{ secrets.QBITTORRENT_USERNAME }}
           QBITTORRENT_PASSWORD: ${{ secrets.QBITTORRENT_PASSWORD }}
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          WEB_APP_TOKEN: ${{ secrets.WEB_APP_TOKEN }}
           ALLOWED_TELEGRAM_USER_IDS: ${{ vars.ALLOWED_TELEGRAM_USER_IDS }}
           QBITTORRENT_URL: ${{ vars.QBITTORRENT_URL }}
         run: |
@@ -103,6 +104,7 @@ jobs:
               "QBITTORRENT_PASSWORD",
               "CRON_SECRET",
           ]
+          optional_keys = ["WEB_APP_TOKEN"]
           missing = [k for k in keys if not os.environ.get(k, "").strip()]
           if missing:
               print(
@@ -113,6 +115,10 @@ jobs:
               sys.exit(1)
 
           payload = {k: os.environ[k] for k in keys}
+          for key in optional_keys:
+              value = os.environ.get(key, "").strip()
+              if value:
+                  payload[key] = value
 
           with open("worker-secrets.json", "w", encoding="utf-8") as f:
               json.dump(payload, f)
