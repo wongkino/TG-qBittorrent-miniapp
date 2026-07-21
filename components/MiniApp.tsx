@@ -9,6 +9,7 @@ import { RefreshIcon } from "@/components/icons";
 import { RssPanel } from "@/components/RssPanel";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { TorrentList } from "@/components/TorrentList";
+import { WebAppUnlock } from "@/components/WebAppUnlock";
 import {
   addTorrentUrl,
   deleteTorrent,
@@ -19,6 +20,7 @@ import {
   setTorrentCategory,
   syncUserLocale,
 } from "@/lib/client-api";
+import type { ClientAuth } from "@/lib/client-auth";
 import { DEV_PREVIEW_INIT_DATA } from "@/lib/dev/preview";
 import { filterTorrents, type StatusFilter } from "@/lib/format";
 import {
@@ -28,6 +30,12 @@ import {
   type SortKey,
   type Torrent,
 } from "@/lib/types";
+import {
+  clearStoredWebAppToken,
+  getStoredWebAppToken,
+  isStandaloneWebApp,
+  storeWebAppToken,
+} from "@/lib/webapp";
 
 const POLL_MS = 4000;
 const DEV_PREVIEW =
@@ -58,8 +66,10 @@ export function MiniApp() {
 
 function MiniAppInner() {
   const { t, locale } = useI18n();
-  const [initData, setInitData] = useState<string | null>(null);
+  const [auth, setAuth] = useState<ClientAuth | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [needsUnlock, setNeedsUnlock] = useState(false);
+  const [standalone, setStandalone] = useState(false);
   const [userName, setUserName] = useState<string | null>(null);
   const [torrents, setTorrents] = useState<Torrent[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
@@ -79,11 +89,11 @@ function MiniAppInner() {
   }, [locale]);
 
   useEffect(() => {
-    if (!initData) return;
-    void syncUserLocale(initData, locale).catch(() => {
+    if (!auth) return;
+    void syncUserLocale(auth, locale).catch(() => {
       /* Bot sync is best-effort */
     });
-  }, [initData, locale]);
+  }, [auth, locale]);
 
   const visibleTorrents = useMemo(
     () =>
@@ -95,11 +105,11 @@ function MiniAppInner() {
     [torrents, statusFilter, sortKey, sortDir]
   );
 
-  const refreshTorrents = useCallback(async (token: string) => {
+  const refreshTorrents = useCallback(async (session: ClientAuth) => {
     if (refreshInflight.current) return;
     refreshInflight.current = true;
     try {
-      const { torrents: next } = await fetchTorrents(token);
+      const { torrents: next } = await fetchTorrents(session);
       setTorrents((prev) => (torrentsEqual(prev, next) ? prev : next));
       setSelected((prev) => {
         if (prev.size === 0) return prev;
@@ -134,12 +144,12 @@ function MiniAppInner() {
   );
 
   const refreshAll = useCallback(
-    async (token: string) => {
+    async (session: ClientAuth) => {
       if (refreshInflight.current) return;
       refreshInflight.current = true;
       try {
         const { torrents: next, categories: nextCategories } =
-          await fetchSnapshot(token);
+          await fetchSnapshot(session);
         applySnapshot(next, nextCategories);
       } finally {
         refreshInflight.current = false;
@@ -148,11 +158,26 @@ function MiniAppInner() {
     [applySnapshot]
   );
 
+  const connectWithWebAppToken = useCallback(
+    async (token: string) => {
+      const session: ClientAuth = { mode: "bearer", token };
+      await refreshAll(session);
+      storeWebAppToken(token);
+      setAuth(session);
+      setUserName(t("webapp.user"));
+      setNeedsUnlock(false);
+      setAuthError(null);
+    },
+    [refreshAll, t]
+  );
+
   useEffect(() => {
     let cancelled = false;
 
     async function boot() {
       try {
+        setStandalone(isStandaloneWebApp());
+
         const { default: WebApp } = await import("@twa-dev/sdk");
         if (cancelled) return;
 
@@ -160,30 +185,50 @@ function MiniAppInner() {
         WebApp.expand();
 
         const data = WebApp.initData;
-        if (!data) {
-          if (DEV_PREVIEW) {
-            setInitData(DEV_PREVIEW_INIT_DATA);
-            setUserName(t("app.previewUser"));
-            await refreshAll(DEV_PREVIEW_INIT_DATA);
-            return;
-          }
-          setAuthError(t("app.noInitData"));
+        if (data) {
+          const session: ClientAuth = { mode: "tma", initData: data };
+          const user = WebApp.initDataUnsafe.user;
+          setAuth(session);
+          setUserName(
+            user?.first_name || user?.username || (user ? String(user.id) : null)
+          );
+          await refreshAll(session);
           return;
         }
 
-        const user = WebApp.initDataUnsafe.user;
-        setInitData(data);
-        setUserName(
-          user?.first_name || user?.username || (user ? String(user.id) : null)
-        );
-        await refreshAll(data);
+        const storedToken = getStoredWebAppToken();
+        if (storedToken) {
+          try {
+            await connectWithWebAppToken(storedToken);
+            return;
+          } catch {
+            clearStoredWebAppToken();
+          }
+        }
+
+        if (DEV_PREVIEW) {
+          const session: ClientAuth = {
+            mode: "tma",
+            initData: DEV_PREVIEW_INIT_DATA,
+          };
+          setAuth(session);
+          setUserName(t("app.previewUser"));
+          await refreshAll(session);
+          return;
+        }
+
+        setNeedsUnlock(true);
       } catch (err) {
         if (cancelled) return;
         if (DEV_PREVIEW) {
           try {
-            setInitData(DEV_PREVIEW_INIT_DATA);
+            const session: ClientAuth = {
+              mode: "tma",
+              initData: DEV_PREVIEW_INIT_DATA,
+            };
+            setAuth(session);
             setUserName(t("app.previewUser"));
-            await refreshAll(DEV_PREVIEW_INIT_DATA);
+            await refreshAll(session);
             return;
           } catch (previewErr) {
             setAuthError(
@@ -203,14 +248,14 @@ function MiniAppInner() {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional single boot
-  }, [refreshAll]);
+  }, [connectWithWebAppToken, refreshAll]);
 
   useEffect(() => {
-    if (!initData || authError || tab !== "downloads") return;
+    if (!auth || authError || tab !== "downloads") return;
 
     const tick = () => {
       if (document.visibilityState === "hidden") return;
-      void refreshTorrents(initData).catch((err) => {
+      void refreshTorrents(auth).catch((err) => {
         setListError(errMessage(err, t("app.refreshFailed")));
       });
     };
@@ -221,14 +266,14 @@ function MiniAppInner() {
       window.clearInterval(id);
       document.removeEventListener("visibilitychange", tick);
     };
-  }, [initData, authError, refreshTorrents, tab, t]);
+  }, [auth, authError, refreshTorrents, tab, t]);
 
   async function withBusy(hash: string, action: () => Promise<void>) {
-    if (!initData) return;
+    if (!auth) return;
     setBusyHash(hash);
     try {
       await action();
-      await refreshTorrents(initData);
+      await refreshTorrents(auth);
     } catch (err) {
       setListError(errMessage(err, t("app.actionFailed")));
     } finally {
@@ -257,7 +302,7 @@ function MiniAppInner() {
     );
   }
 
-  if (authError || !initData) {
+  if (authError || (!auth && !needsUnlock)) {
     return (
       <main className="shell">
         <header className="header">
@@ -268,6 +313,27 @@ function MiniAppInner() {
       </main>
     );
   }
+
+  if (!auth && needsUnlock) {
+    return (
+      <main className="shell">
+        <header className="header">
+          <h1 className="title">qBittorrent</h1>
+          <HeaderTools />
+        </header>
+        <WebAppUnlock
+          standalone={standalone}
+          onUnlock={connectWithWebAppToken}
+        />
+      </main>
+    );
+  }
+
+  if (!auth) {
+    return null;
+  }
+
+  const session = auth;
 
   const selectedHashes = [...selected];
 
@@ -289,7 +355,7 @@ function MiniAppInner() {
                 aria-label={t("app.refresh")}
                 title={t("app.refresh")}
                 onClick={() => {
-                  void refreshAll(initData).catch((err) => {
+                  void refreshAll(session).catch((err) => {
                     setListError(errMessage(err, t("app.refreshFailed")));
                   });
                 }}
@@ -322,10 +388,10 @@ function MiniAppInner() {
 
       {tab === "rss" ? (
         <RssPanel
-          initData={initData}
+          auth={session}
           categories={categories}
           onAdded={() => {
-            void refreshTorrents(initData).catch(() => {
+            void refreshTorrents(session).catch(() => {
               /* ignore */
             });
           }}
@@ -356,14 +422,14 @@ function MiniAppInner() {
             }
             onClearSelection={() => setSelected(new Set())}
             onBatchPause={() =>
-              void withBusy("*", () => pauseTorrent(initData, selectedHashes))
+              void withBusy("*", () => pauseTorrent(session, selectedHashes))
             }
             onBatchResume={() =>
-              void withBusy("*", () => resumeTorrent(initData, selectedHashes))
+              void withBusy("*", () => resumeTorrent(session, selectedHashes))
             }
             onBatchDelete={(deleteFiles) =>
               void withBusy("*", async () => {
-                await deleteTorrent(initData, selectedHashes, deleteFiles);
+                await deleteTorrent(session, selectedHashes, deleteFiles);
                 setSelected(new Set());
               })
             }
@@ -378,19 +444,19 @@ function MiniAppInner() {
             filterActive={statusFilter !== "all"}
             onToggleSelect={toggleSelect}
             onPause={(hash) =>
-              void withBusy(hash, () => pauseTorrent(initData, hash))
+              void withBusy(hash, () => pauseTorrent(session, hash))
             }
             onResume={(hash) =>
-              void withBusy(hash, () => resumeTorrent(initData, hash))
+              void withBusy(hash, () => resumeTorrent(session, hash))
             }
             onDelete={(hash, deleteFiles) =>
               void withBusy(hash, () =>
-                deleteTorrent(initData, hash, deleteFiles)
+                deleteTorrent(session, hash, deleteFiles)
               )
             }
             onCategoryChange={(hash, category) =>
               void withBusy(hash, () =>
-                setTorrentCategory(initData, hash, category)
+                setTorrentCategory(session, hash, category)
               )
             }
           />
@@ -398,8 +464,8 @@ function MiniAppInner() {
           <AddTorrentForm
             categories={categories}
             onSubmit={async (urls, category) => {
-              await addTorrentUrl(initData, urls, category || undefined);
-              await refreshAll(initData);
+              await addTorrentUrl(session, urls, category || undefined);
+              await refreshAll(session);
             }}
           />
         </>

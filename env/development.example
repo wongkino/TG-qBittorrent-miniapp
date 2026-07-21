@@ -14,3 +14,5 @@ NEXT_PUBLIC_DEV_PREVIEW=1
 # QBITTORRENT_USERNAME=
 # QBITTORRENT_PASSWORD=
 # CRON_SECRET=
+# Optional — bearer token for iOS / Safari home-screen Web App (not Telegram initData):
+# WEB_APP_TOKEN=

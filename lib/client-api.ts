@@ -1,12 +1,6 @@
+import { authHeaders, type ClientAuth } from "@/lib/client-auth";
 import type { Locale } from "@/lib/i18n";
 import type { Torrent } from "@/lib/types";
-
-function headers(initData: string): HeadersInit {
-  return {
-    Authorization: `tma ${initData}`,
-    "Content-Type": "application/json",
-  };
-}
 
 async function parseError(res: Response): Promise<string> {
   try {
@@ -19,12 +13,12 @@ async function parseError(res: Response): Promise<string> {
 
 async function api<T>(
   path: string,
-  initData: string,
+  auth: ClientAuth,
   init?: RequestInit
 ): Promise<T> {
   const res = await fetch(path, {
     ...init,
-    headers: { ...headers(initData), ...init?.headers },
+    headers: { ...authHeaders(auth), ...init?.headers },
     cache: "no-store",
   });
   if (!res.ok) throw new Error(await parseError(res));
@@ -36,64 +30,64 @@ function joinHashes(hashes: string | string[]): string {
   return Array.isArray(hashes) ? hashes.join("|") : hashes;
 }
 
-export function fetchTorrents(initData: string) {
-  return api<{ torrents: Torrent[] }>("/api/qb/torrents", initData);
+export function fetchTorrents(auth: ClientAuth) {
+  return api<{ torrents: Torrent[] }>("/api/qb/torrents", auth);
 }
 
-export function fetchCategories(initData: string) {
-  return api<{ categories: string[] }>("/api/qb/categories", initData);
+export function fetchCategories(auth: ClientAuth) {
+  return api<{ categories: string[] }>("/api/qb/categories", auth);
 }
 
 /** Torrents + categories in one HTTP request (boot / full refresh). */
-export function fetchSnapshot(initData: string) {
+export function fetchSnapshot(auth: ClientAuth) {
   return api<{ torrents: Torrent[]; categories: string[] }>(
     "/api/qb/snapshot",
-    initData
+    auth
   );
 }
 
-export function pauseTorrent(initData: string, hashes: string | string[]) {
-  return api<void>("/api/qb/pause", initData, {
+export function pauseTorrent(auth: ClientAuth, hashes: string | string[]) {
+  return api<void>("/api/qb/pause", auth, {
     method: "POST",
     body: JSON.stringify({ hashes: joinHashes(hashes) }),
   });
 }
 
-export function resumeTorrent(initData: string, hashes: string | string[]) {
-  return api<void>("/api/qb/resume", initData, {
+export function resumeTorrent(auth: ClientAuth, hashes: string | string[]) {
+  return api<void>("/api/qb/resume", auth, {
     method: "POST",
     body: JSON.stringify({ hashes: joinHashes(hashes) }),
   });
 }
 
 export function deleteTorrent(
-  initData: string,
+  auth: ClientAuth,
   hashes: string | string[],
   deleteFiles: boolean
 ) {
-  return api<void>("/api/qb/delete", initData, {
+  return api<void>("/api/qb/delete", auth, {
     method: "POST",
     body: JSON.stringify({ hashes: joinHashes(hashes), deleteFiles }),
   });
 }
 
 export function setTorrentCategory(
-  initData: string,
+  auth: ClientAuth,
   hashes: string | string[],
   category: string
 ) {
-  return api<void>("/api/qb/category", initData, {
+  return api<void>("/api/qb/category", auth, {
     method: "POST",
     body: JSON.stringify({ hashes: joinHashes(hashes), category }),
   });
 }
 
 export function addTorrentUrl(
-  initData: string,
+  auth: ClientAuth,
   urls: string,
   category?: string
 ) {
-  return api<void>("/api/qb/add", initData, {
+  return api<void>("/api/qb/add", auth, {
     method: "POST",
     body: JSON.stringify({ urls, category }),
   });
@@ -117,44 +111,44 @@ export type ClientRssFeed = {
   articles: ClientRssArticle[];
 };
 
-export function fetchRssFeeds(initData: string) {
-  return api<{ feeds: ClientRssFeed[] }>("/api/qb/rss", initData);
+export function fetchRssFeeds(auth: ClientAuth) {
+  return api<{ feeds: ClientRssFeed[] }>("/api/qb/rss", auth);
 }
 
-export function addRssFeed(initData: string, url: string, path?: string) {
-  return api<void>("/api/qb/rss/add", initData, {
+export function addRssFeed(auth: ClientAuth, url: string, path?: string) {
+  return api<void>("/api/qb/rss/add", auth, {
     method: "POST",
     body: JSON.stringify({ url, path }),
   });
 }
 
-export function removeRssFeed(initData: string, path: string) {
-  return api<void>("/api/qb/rss/remove", initData, {
+export function removeRssFeed(auth: ClientAuth, path: string) {
+  return api<void>("/api/qb/rss/remove", auth, {
     method: "POST",
     body: JSON.stringify({ path }),
   });
 }
 
-export function refreshRssFeed(initData: string, path: string) {
-  return api<void>("/api/qb/rss/refresh", initData, {
+export function refreshRssFeed(auth: ClientAuth, path: string) {
+  return api<void>("/api/qb/rss/refresh", auth, {
     method: "POST",
     body: JSON.stringify({ path }),
   });
 }
 
 export function markRssRead(
-  initData: string,
+  auth: ClientAuth,
   path: string,
   articleId?: string
 ) {
-  return api<void>("/api/qb/rss/read", initData, {
+  return api<void>("/api/qb/rss/read", auth, {
     method: "POST",
     body: JSON.stringify({ path, articleId }),
   });
 }
 
-export function syncUserLocale(initData: string, locale: Locale) {
-  return api<{ locale: string }>("/api/qb/locale", initData, {
+export function syncUserLocale(auth: ClientAuth, locale: Locale) {
+  return api<{ locale: string }>("/api/qb/locale", auth, {
     method: "PUT",
     body: JSON.stringify({ locale }),
   });

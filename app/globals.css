@@ -118,12 +118,18 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   letter-spacing: -0.01em;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: contain;
 }
 
 .shell {
   max-width: 680px;
   margin: 0 auto;
-  padding: var(--space-md) var(--space-md) var(--space-xl);
+  padding:
+    max(var(--space-md), env(safe-area-inset-top))
+    max(var(--space-md), env(safe-area-inset-right))
+    max(var(--space-xl), env(safe-area-inset-bottom))
+    max(var(--space-md), env(safe-area-inset-left));
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
@@ -823,6 +829,67 @@ body {
 
 .torrent-row__category .select {
   flex: 1;
+}
+
+.webapp-unlock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: var(--space-lg) var(--space-md);
+  background: var(--bg-elevated);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  animation: fadeUp 0.4s var(--ease) both;
+}
+
+.webapp-unlock__title {
+  margin: 0;
+  font: var(--text-title);
+  letter-spacing: -0.02em;
+}
+
+.webapp-unlock__hint,
+.webapp-unlock__footer {
+  margin: 0;
+  color: var(--hint);
+  font: var(--text-caption);
+  line-height: 1.5;
+}
+
+.webapp-unlock__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.webapp-unlock__label {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+
+.webapp-unlock__input {
+  width: 100%;
+  min-height: var(--touch);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-secondary);
+  color: var(--text);
+  padding: 12px var(--space-md);
+  font: var(--text-body);
+}
+
+.webapp-unlock__input:focus {
+  outline: none;
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+.webapp-unlock__submit {
+  margin-top: var(--space-xs);
 }
 
 @media (prefers-reduced-motion: reduce) {

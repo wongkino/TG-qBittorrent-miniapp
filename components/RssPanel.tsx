@@ -10,6 +10,7 @@ import {
   removeRssFeed,
   type ClientRssFeed,
 } from "@/lib/client-api";
+import type { ClientAuth } from "@/lib/client-auth";
 import { useI18n } from "@/components/I18nProvider";
 import {
   AddIcon,
@@ -19,7 +20,7 @@ import {
 } from "@/components/icons";
 
 type Props = {
-  initData: string;
+  auth: ClientAuth;
   categories: string[];
   onAdded?: () => void;
 };
@@ -28,7 +29,7 @@ function errMessage(err: unknown, fallback: string) {
   return err instanceof Error ? err.message : fallback;
 }
 
-export function RssPanel({ initData, categories, onAdded }: Props) {
+export function RssPanel({ auth, categories, onAdded }: Props) {
   const { t } = useI18n();
   const [feeds, setFeeds] = useState<ClientRssFeed[]>([]);
   const [selectedPath, setSelectedPath] = useState<string | null>(null);
@@ -49,7 +50,7 @@ export function RssPanel({ initData, categories, onAdded }: Props) {
     setLoading(true);
     setError(null);
     try {
-      const { feeds: next } = await fetchRssFeeds(initData);
+      const { feeds: next } = await fetchRssFeeds(auth);
       setFeeds(next);
       setSelectedPath((prev) => {
         if (prev && next.some((f) => f.path === prev)) return prev;
@@ -60,7 +61,7 @@ export function RssPanel({ initData, categories, onAdded }: Props) {
     } finally {
       setLoading(false);
     }
-  }, [initData, t]);
+  }, [auth, t]);
 
   useEffect(() => {
     void reload();
@@ -92,7 +93,7 @@ export function RssPanel({ initData, categories, onAdded }: Props) {
           const feedUrl = url.trim();
           if (!feedUrl) return;
           void withBusy(async () => {
-            await addRssFeed(initData, feedUrl, name.trim() || undefined);
+            await addRssFeed(auth, feedUrl, name.trim() || undefined);
             setUrl("");
             setName("");
           }, t("rss.added"));
@@ -209,7 +210,7 @@ export function RssPanel({ initData, categories, onAdded }: Props) {
                       title={t("rss.refresh")}
                       onClick={() =>
                         void withBusy(
-                          () => refreshRssFeed(initData, selected.path),
+                          () => refreshRssFeed(auth, selected.path),
                           t("rss.refreshed")
                         )
                       }
@@ -233,7 +234,7 @@ export function RssPanel({ initData, categories, onAdded }: Props) {
                           return;
                         }
                         void withBusy(async () => {
-                          await removeRssFeed(initData, selected.path);
+                          await removeRssFeed(auth, selected.path);
                         }, t("rss.removed"));
                       }}
                     >
@@ -267,13 +268,13 @@ export function RssPanel({ initData, categories, onAdded }: Props) {
                             onClick={() =>
                               void withBusy(async () => {
                                 await addTorrentUrl(
-                                  initData,
+                                  auth,
                                   article.torrentUrl,
                                   category.trim() || undefined
                                 );
                                 if (article.id) {
                                   await markRssRead(
-                                    initData,
+                                    auth,
                                     selected.path,
                                     article.id
                                   ).catch(() => undefined);
