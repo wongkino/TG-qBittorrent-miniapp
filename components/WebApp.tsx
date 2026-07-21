@@ -15,7 +15,7 @@ import {
   isStandaloneWebApp,
   readEmailFromIdToken,
   storeGoogleCredential,
-} from "@/lib/webapp";
+} from "@/lib/google-session";
 
 const DEV_PREVIEW =
   process.env.NODE_ENV === "development" &&
@@ -47,9 +47,19 @@ function WebAppInner() {
   const [auth, setAuth] = useState<ClientAuth | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
   const [needsSignIn, setNeedsSignIn] = useState(false);
-  const [standalone, setStandalone] = useState(false);
+  const [standalone] = useState(
+    () => typeof window !== "undefined" && isStandaloneWebApp()
+  );
   const [userName, setUserName] = useState<string | null>(null);
   const [booting, setBooting] = useState(true);
+
+  const handleAuthExpired = useCallback(() => {
+    clearStoredGoogleCredential();
+    setAuth(null);
+    setNeedsSignIn(true);
+    setUserName(null);
+    setAuthError(null);
+  }, []);
 
   const connectWithGoogleCredential = useCallback(async (credential: string) => {
     const session: ClientAuth = { token: credential };
@@ -66,8 +76,6 @@ function WebAppInner() {
 
     async function boot() {
       try {
-        setStandalone(isStandaloneWebApp());
-
         if (DEV_PREVIEW) {
           await connectWithGoogleCredential(DEV_PREVIEW_BEARER);
           setUserName(t("app.previewUser"));
@@ -87,7 +95,7 @@ function WebAppInner() {
         setNeedsSignIn(true);
       } catch (err) {
         if (!cancelled) {
-          setAuthError(errMessage(err, t("webapp.signInFailed")));
+          setAuthError(errMessage(err, t("signIn.failed")));
         }
       } finally {
         if (!cancelled) setBooting(false);
@@ -135,7 +143,7 @@ function WebAppInner() {
           standalone={standalone}
           onCredential={(credential) => {
             void connectWithGoogleCredential(credential).catch((err) => {
-              setAuthError(errMessage(err, t("webapp.signInFailed")));
+              setAuthError(errMessage(err, t("signIn.failed")));
             });
           }}
         />
@@ -147,5 +155,5 @@ function WebAppInner() {
     return null;
   }
 
-  return <QbDashboard auth={auth} userName={userName} />;
+  return <QbDashboard auth={auth} userName={userName} onAuthExpired={handleAuthExpired} />;
 }

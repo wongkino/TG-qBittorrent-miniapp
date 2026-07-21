@@ -3,6 +3,13 @@ export type ClientAuth = {
   token: string;
 };
 
+export class AuthSessionError extends Error {
+  constructor(message = "Session expired") {
+    super(message);
+    this.name = "AuthSessionError";
+  }
+}
+
 export function authHeaders(auth: ClientAuth): HeadersInit {
   return {
     Authorization: `Bearer ${auth.token}`,

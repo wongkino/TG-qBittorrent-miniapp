@@ -15,6 +15,6 @@ NEXT_PUBLIC_DEV_PREVIEW=1
 # QBITTORRENT_PASSWORD=
 # CRON_SECRET=
 #
-# iOS Web App（Next.js /webapp/，Google OAuth）：
+# Web App（Google OAuth）：
 # GOOGLE_CLIENT_ID=
 # ALLOWED_GOOGLE_EMAILS=you@gmail.com

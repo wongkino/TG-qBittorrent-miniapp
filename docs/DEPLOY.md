@@ -40,9 +40,9 @@ Worker 名稱固定為 **`tg-dl`**（`wrangler.jsonc`）。
 4. 設 GitHub Variable **`APP_URL`**（不要尾隨 `/`）
 5. **再跑一次 Deploy**（寫入 webhook + Menu Button）
 6. 確認 Workers → Triggers 有 cron `*/5 * * * *`
-7. （可選）BotFather → Configure Mini App → 同一 HTTPS URL
-8. 打開 Bot 測試；加一筆種子後等約 5 分鐘內看「下載開始」通知
-9. （可選）iOS Web App：設定 `GOOGLE_CLIENT_ID` 與 `ALLOWED_GOOGLE_EMAILS` → Safari 開 `{APP_URL}/webapp/` → Google 登入 → 加入主畫面
+7. 打開 Bot 測試；加一筆種子後等約 5 分鐘內看「下載開始」通知
+8. Web App：設定 `GOOGLE_CLIENT_ID` 與 `ALLOWED_GOOGLE_EMAILS` → 開 `{APP_URL}` → Google 登入
+9. （可選）Safari：**分享 → 加入主畫面**，可全螢幕使用
 
 ---
 
@@ -113,7 +113,7 @@ npm run deploy
 - [ ] `APP_URL` Variable = 該網址
 - [ ] Bot 左側有「開啟 App」
 - [ ] Reply Keyboard 有三鍵
-- [ ] Mini App 能列出種子
+- [ ] Web App 能 Google 登入並列出種子
 - [ ] Bot 能加 magnet
 - [ ] Cloudflare Worker 有 Cron `*/5 * * * *`
 - [ ] 手動 `POST /api/cron/completions` 回 200（或等自動通知）
@@ -128,6 +128,6 @@ npm run deploy
 | `gh variable set` 403 | 預期；改手動設 Variable |
 | qB 502／登入失敗 | `QBITTORRENT_URL`、帳密、公網、CSRF |
 | 通知全無 | Worker Cron 是否啟用、`CRON_SECRET`、白名單、15 分鐘視窗、Workers 日誌 |
-| Menu Button 沒出現 | 二次 Deploy；或 BotFather Configure Mini App |
+| Menu Button 沒出現 | 二次 Deploy；確認 `APP_URL` 正確 |
 
 **切記：** `APP_URL` ≠ `QBITTORRENT_URL`。

@@ -11,6 +11,7 @@ import {
   type ClientRssFeed,
 } from "@/lib/client-api";
 import type { ClientAuth } from "@/lib/client-auth";
+import { AuthSessionError } from "@/lib/client-auth";
 import { useI18n } from "@/components/I18nProvider";
 import {
   AddIcon,
@@ -23,13 +24,18 @@ type Props = {
   auth: ClientAuth;
   categories: string[];
   onAdded?: () => void;
+  onAuthExpired?: () => void;
 };
 
 function errMessage(err: unknown, fallback: string) {
   return err instanceof Error ? err.message : fallback;
 }
 
-export function RssPanel({ auth, categories, onAdded }: Props) {
+function isAuthExpired(err: unknown): boolean {
+  return err instanceof AuthSessionError;
+}
+
+export function RssPanel({ auth, categories, onAdded, onAuthExpired }: Props) {
   const { t } = useI18n();
   const [feeds, setFeeds] = useState<ClientRssFeed[]>([]);
   const [selectedPath, setSelectedPath] = useState<string | null>(null);
@@ -57,15 +63,46 @@ export function RssPanel({ auth, categories, onAdded }: Props) {
         return next[0]?.path ?? null;
       });
     } catch (err) {
+      if (isAuthExpired(err)) {
+        onAuthExpired?.();
+        return;
+      }
       setError(errMessage(err, t("rss.loadFailed")));
     } finally {
       setLoading(false);
     }
-  }, [auth, t]);
+  }, [auth, onAuthExpired, t]);
 
   useEffect(() => {
-    void reload();
-  }, [reload]);
+    let cancelled = false;
+
+    fetchRssFeeds(auth)
+      .then(({ feeds: next }) => {
+        if (cancelled) return;
+        setFeeds(next);
+        setSelectedPath((prev) => {
+          if (prev && next.some((f) => f.path === prev)) return prev;
+          return next[0]?.path ?? null;
+        });
+        setError(null);
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          if (isAuthExpired(err)) {
+            onAuthExpired?.();
+            return;
+          }
+          setError(errMessage(err, t("rss.loadFailed")));
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [auth, onAuthExpired, t]);
 
   async function withBusy(action: () => Promise<void>, okMessage?: string) {
     setBusy(true);
@@ -76,6 +113,10 @@ export function RssPanel({ auth, categories, onAdded }: Props) {
       if (okMessage) setStatus(okMessage);
       await reload();
     } catch (err) {
+      if (isAuthExpired(err)) {
+        onAuthExpired?.();
+        return;
+      }
       setError(errMessage(err, t("app.actionFailed")));
     } finally {
       setBusy(false);

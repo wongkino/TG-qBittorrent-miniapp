@@ -2,7 +2,7 @@
 
 | 文件 | 對象 | 內容 |
 |------|------|------|
-| [USER.md](USER.md) | 使用者 | Mini App／Bot 操作、語系、通知、常見問題 |
+| [USER.md](USER.md) | 使用者 | Web App／Bot 操作、語系、通知、常見問題 |
 | [DEPLOY.md](DEPLOY.md) | 管理員 | Secrets、Deploy、Cron、驗證清單 |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | 開發者 | 架構圖、請求流、目錄、模組 |
 | [DEVELOPMENT.md](DEVELOPMENT.md) | 開發者 | 本機 env、scripts、擴充、i18n |

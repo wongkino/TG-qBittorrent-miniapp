@@ -63,19 +63,19 @@ export function GoogleSignIn({ standalone, onCredential }: Props) {
   }, [clientId, onCredential]);
 
   return (
-    <section className="webapp-unlock">
-      <h2 className="webapp-unlock__title">{t("webapp.title")}</h2>
-      <p className="webapp-unlock__hint">
-        {standalone ? t("webapp.hintStandalone") : t("webapp.hintBrowser")}
+    <section className="sign-in">
+      <h2 className="sign-in__title">{t("signIn.title")}</h2>
+      <p className="sign-in__hint">
+        {standalone ? t("signIn.hintStandalone") : t("signIn.hintBrowser")}
       </p>
       {clientId ? (
-        <div className="webapp-unlock__google">
+        <div className="sign-in__google">
           <div ref={buttonRef} />
         </div>
       ) : (
-        <p className="error">{t("webapp.missingClientId")}</p>
+        <p className="error">{t("signIn.missingClientId")}</p>
       )}
-      <p className="webapp-unlock__footer">{t("webapp.footer")}</p>
+      <p className="sign-in__footer">{t("signIn.footer")}</p>
     </section>
   );
 }

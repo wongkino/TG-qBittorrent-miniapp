@@ -28,7 +28,7 @@
 
 ## 功能速覽
 
-- **Mini App**：下載列表、排序、批次、magnet／URL、分類、RSS、日間／夜間、三語
+- **Web App**：Google 登入、下載列表、排序、批次、magnet／URL、分類、RSS、日間／夜間、四語
 - **Bot**：狀態／列表／說明、magnet、`.torrent`、開啟 App
 - **通知**：開始（`tg-started`）、完成（`tg-notified`）；Cloudflare Cron 每 5 分鐘
 
@@ -66,13 +66,15 @@ npm run dev
 | `QBITTORRENT_USERNAME` | ✅ 可選 | ✅ | ✅ | ✅ | |
 | `QBITTORRENT_PASSWORD` | ✅ 可選 | ✅ | ✅ | ✅ | |
 | `CRON_SECRET` | ✅ 可選 | ✅ | ✅ | ✅ | |
+| `GOOGLE_CLIENT_ID` | ✅ 可選 | ✅ | ✅ | | ✅ |
+| `ALLOWED_GOOGLE_EMAILS` | ✅ 可選 | ✅ | ✅ | | ✅ |
 | `DEV_PREVIEW` / `NEXT_PUBLIC_DEV_PREVIEW` | ✅ dev only | ❌ | ❌ | | |
 | `APP_URL` | ❌ | ❌ | ❌ | | ✅ |
 | `CLOUDFLARE_API_TOKEN` | | | | ✅ | |
 | `CLOUDFLARE_ACCOUNT_ID` | | | | ✅ | |
 | `NEXTJS_ENV` | | ✅ | | | |
 
-**`APP_URL`** = Mini App Workers URL  
+**`APP_URL`** = Web App Workers URL  
 **`QBITTORRENT_URL`** = qBittorrent Web UI  
 兩者不同，勿填反。
 

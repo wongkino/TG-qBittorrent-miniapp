@@ -20,6 +20,7 @@ import {
   syncUserLocale,
 } from "@/lib/client-api";
 import type { ClientAuth } from "@/lib/client-auth";
+import { AuthSessionError } from "@/lib/client-auth";
 import { filterTorrents, type StatusFilter } from "@/lib/format";
 import {
   sortTorrents,
@@ -35,6 +36,10 @@ function errMessage(err: unknown, fallback: string) {
   return err instanceof Error ? err.message : fallback;
 }
 
+function isAuthExpired(err: unknown): boolean {
+  return err instanceof AuthSessionError;
+}
+
 function HeaderTools({ extra }: { extra?: ReactNode }) {
   return (
     <div className="header__actions">
@@ -48,9 +53,10 @@ function HeaderTools({ extra }: { extra?: ReactNode }) {
 type Props = {
   auth: ClientAuth;
   userName: string | null;
+  onAuthExpired?: () => void;
 };
 
-export function QbDashboard({ auth, userName }: Props) {
+export function QbDashboard({ auth, userName, onAuthExpired }: Props) {
   const { t, locale } = useI18n();
   const [torrents, setTorrents] = useState<Torrent[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
@@ -144,6 +150,10 @@ export function QbDashboard({ auth, userName }: Props) {
     void refreshAll(auth)
       .catch((err) => {
         if (!cancelled) {
+          if (isAuthExpired(err)) {
+            onAuthExpired?.();
+            return;
+          }
           setListError(errMessage(err, t("app.refreshFailed")));
         }
       })
@@ -154,7 +164,7 @@ export function QbDashboard({ auth, userName }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [auth, refreshAll, t]);
+  }, [auth, onAuthExpired, refreshAll, t]);
 
   useEffect(() => {
     if (booting || tab !== "downloads") return;
@@ -162,6 +172,10 @@ export function QbDashboard({ auth, userName }: Props) {
     const tick = () => {
       if (document.visibilityState === "hidden") return;
       void refreshTorrents(auth).catch((err) => {
+        if (isAuthExpired(err)) {
+          onAuthExpired?.();
+          return;
+        }
         setListError(errMessage(err, t("app.refreshFailed")));
       });
     };
@@ -172,7 +186,7 @@ export function QbDashboard({ auth, userName }: Props) {
       window.clearInterval(id);
       document.removeEventListener("visibilitychange", tick);
     };
-  }, [auth, booting, refreshTorrents, tab, t]);
+  }, [auth, booting, onAuthExpired, refreshTorrents, tab, t]);
 
   async function withBusy(hash: string, action: () => Promise<void>) {
     setBusyHash(hash);
@@ -180,6 +194,10 @@ export function QbDashboard({ auth, userName }: Props) {
       await action();
       await refreshTorrents(auth);
     } catch (err) {
+      if (isAuthExpired(err)) {
+        onAuthExpired?.();
+        return;
+      }
       setListError(errMessage(err, t("app.actionFailed")));
     } finally {
       setBusyHash(null);
@@ -228,6 +246,10 @@ export function QbDashboard({ auth, userName }: Props) {
                 title={t("app.refresh")}
                 onClick={() => {
                   void refreshAll(auth).catch((err) => {
+                    if (isAuthExpired(err)) {
+                      onAuthExpired?.();
+                      return;
+                    }
                     setListError(errMessage(err, t("app.refreshFailed")));
                   });
                 }}
@@ -260,8 +282,10 @@ export function QbDashboard({ auth, userName }: Props) {
 
       {tab === "rss" ? (
         <RssPanel
+          key={auth.token}
           auth={auth}
           categories={categories}
+          onAuthExpired={onAuthExpired}
           onAdded={() => {
             void refreshTorrents(auth).catch(() => {
               /* ignore */
