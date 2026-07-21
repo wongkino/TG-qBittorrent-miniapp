@@ -9,7 +9,7 @@ import { removeRssItem } from "@/lib/qbittorrent";
 
 export async function POST(request: Request) {
   try {
-    const auth = requireAuth(request);
+    const auth = await requireAuth(request);
     const preview = previewResponse(auth);
     if (preview) return preview;
 

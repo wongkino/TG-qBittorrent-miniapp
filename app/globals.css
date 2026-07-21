@@ -888,8 +888,10 @@ body {
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
 }
 
-.webapp-unlock__submit {
-  margin-top: var(--space-xs);
+.webapp-unlock__google {
+  display: flex;
+  justify-content: center;
+  min-height: var(--touch);
 }
 
 @media (prefers-reduced-motion: reduce) {

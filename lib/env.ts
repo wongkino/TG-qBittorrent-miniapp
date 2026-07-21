@@ -10,3 +10,10 @@ export function parseAllowedTelegramUserIds(): number[] {
     .map((s) => Number(s.trim()))
     .filter((n) => Number.isFinite(n));
 }
+
+export function parseAllowedGoogleEmails(): string[] {
+  return (env("ALLOWED_GOOGLE_EMAILS") ?? "")
+    .split(",")
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
+}

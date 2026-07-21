@@ -3,17 +3,16 @@ import { I18nProvider, useI18n } from "@/components/I18nProvider";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { QbDashboard } from "@/components/QbDashboard";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { WebAppUnlock } from "@/components/WebAppUnlock";
 import { fetchSnapshot } from "@/lib/client-api";
 import type { ClientAuth } from "@/lib/client-auth";
 import {
-  clearStoredWebAppToken,
-  getStoredWebAppToken,
+  clearStoredGoogleCredential,
+  getStoredGoogleCredential,
   isStandaloneWebApp,
-  storeWebAppToken,
+  readEmailFromIdToken,
+  storeGoogleCredential,
 } from "@/lib/webapp";
-
-const DEV_TOKEN = import.meta.env.VITE_WEB_APP_TOKEN?.trim() || "";
+import { GoogleSignIn } from "./GoogleSignIn";
 
 function errMessage(err: unknown, fallback: string) {
   return err instanceof Error ? err.message : fallback;
@@ -40,21 +39,20 @@ function WebAppRoot() {
   const { t } = useI18n();
   const [auth, setAuth] = useState<ClientAuth | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
-  const [needsUnlock, setNeedsUnlock] = useState(false);
+  const [needsSignIn, setNeedsSignIn] = useState(false);
   const [standalone, setStandalone] = useState(false);
+  const [userName, setUserName] = useState<string | null>(null);
   const [booting, setBooting] = useState(true);
 
-  const connectWithWebAppToken = useCallback(
-    async (token: string) => {
-      const session: ClientAuth = { mode: "bearer", token };
-      await fetchSnapshot(session);
-      storeWebAppToken(token);
-      setAuth(session);
-      setNeedsUnlock(false);
-      setAuthError(null);
-    },
-    []
-  );
+  const connectWithGoogleCredential = useCallback(async (credential: string) => {
+    const session: ClientAuth = { mode: "bearer", token: credential };
+    await fetchSnapshot(session);
+    storeGoogleCredential(credential);
+    setAuth(session);
+    setUserName(readEmailFromIdToken(credential));
+    setNeedsSignIn(false);
+    setAuthError(null);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -63,25 +61,20 @@ function WebAppRoot() {
       try {
         setStandalone(isStandaloneWebApp());
 
-        if (import.meta.env.DEV && DEV_TOKEN) {
-          await connectWithWebAppToken(DEV_TOKEN);
-          return;
-        }
-
-        const storedToken = getStoredWebAppToken();
-        if (storedToken) {
+        const stored = getStoredGoogleCredential();
+        if (stored) {
           try {
-            await connectWithWebAppToken(storedToken);
+            await connectWithGoogleCredential(stored);
             return;
           } catch {
-            clearStoredWebAppToken();
+            clearStoredGoogleCredential();
           }
         }
 
-        setNeedsUnlock(true);
+        setNeedsSignIn(true);
       } catch (err) {
         if (!cancelled) {
-          setAuthError(errMessage(err, t("webapp.unlockFailed")));
+          setAuthError(errMessage(err, t("webapp.signInFailed")));
         }
       } finally {
         if (!cancelled) setBooting(false);
@@ -92,7 +85,7 @@ function WebAppRoot() {
     return () => {
       cancelled = true;
     };
-  }, [connectWithWebAppToken, t]);
+  }, [connectWithGoogleCredential, t]);
 
   if (booting) {
     return (
@@ -118,16 +111,20 @@ function WebAppRoot() {
     );
   }
 
-  if (!auth && needsUnlock) {
+  if (!auth && needsSignIn) {
     return (
       <main className="shell">
         <header className="header">
           <h1 className="title">qBittorrent</h1>
           <HeaderTools />
         </header>
-        <WebAppUnlock
+        <GoogleSignIn
           standalone={standalone}
-          onUnlock={connectWithWebAppToken}
+          onCredential={(credential) => {
+            void connectWithGoogleCredential(credential).catch((err) => {
+              setAuthError(errMessage(err, t("webapp.signInFailed")));
+            });
+          }}
         />
       </main>
     );
@@ -137,5 +134,5 @@ function WebAppRoot() {
     return null;
   }
 
-  return <QbDashboard auth={auth} userName={t("webapp.user")} />;
+  return <QbDashboard auth={auth} userName={userName} />;
 }

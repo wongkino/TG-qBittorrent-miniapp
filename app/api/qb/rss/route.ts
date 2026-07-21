@@ -4,7 +4,7 @@ import { listRssFeeds } from "@/lib/qbittorrent";
 
 export async function GET(request: Request) {
   try {
-    const auth = requireAuth(request);
+    const auth = await requireAuth(request);
     const preview = previewResponse(auth, { feeds: mockRssFeeds() });
     if (preview) return preview;
 
