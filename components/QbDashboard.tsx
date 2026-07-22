@@ -108,6 +108,27 @@ export function QbDashboard({
   }, [locale]);
 
   useEffect(() => {
+    if (booting) return;
+    const el = scrollRef.current;
+    if (!el) return;
+
+    const resetScroll = () => {
+      if (el.scrollTop < 0) el.scrollTop = 0;
+    };
+
+    resetScroll();
+    const raf = requestAnimationFrame(resetScroll);
+    const timer = window.setTimeout(resetScroll, 0);
+
+    window.visualViewport?.addEventListener("resize", resetScroll);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.clearTimeout(timer);
+      window.visualViewport?.removeEventListener("resize", resetScroll);
+    };
+  }, [booting]);
+
+  useEffect(() => {
     const sync = () => {
       const next = navigator.onLine;
       setOnline(next);
