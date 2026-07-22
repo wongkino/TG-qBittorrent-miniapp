@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { SafeAreaBootScript } from "@/components/SafeAreaBootScript";
 import { ThemeBootScript } from "@/components/ThemeBootScript";
 import "./globals.css";
 
@@ -42,6 +43,7 @@ export default function RootLayout({
     <html lang="zh-Hant" suppressHydrationWarning data-theme="dark">
       <head>
         <ThemeBootScript />
+        <SafeAreaBootScript />
       </head>
       <body suppressHydrationWarning>{children}</body>
     </html>
